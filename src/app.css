@@ -113,7 +113,6 @@ textarea { min-height: 5rem; }
 .back { display: inline-flex; align-items: center; gap: 0.45rem; margin-left: -0.6rem; padding: 0.35rem 0.75rem 0.35rem 0.6rem; border-radius: 999px; color: var(--muted); font-size: 0.9rem; font-weight: 600; text-decoration: none; }
 .back::before { content: ""; width: 0.45rem; height: 0.45rem; border-left: 2px solid currentColor; border-bottom: 2px solid currentColor; transform: rotate(45deg); }
 .back:hover { color: var(--primary); background: var(--surface); }
-.back:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
 .auth-box { max-width: 420px; margin: 4rem auto; }
 .copy-box { background: var(--bg); border: 1px dashed var(--line); border-radius: 8px; padding: 0.8rem; white-space: pre-wrap; font-size: 0.95rem; }
 .role-switch { display: flex; align-items: center; gap: 0.4rem; }

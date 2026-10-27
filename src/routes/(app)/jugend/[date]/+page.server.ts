@@ -52,14 +52,14 @@ function partAction(side: YouthPartSide): Action {
 		if ((side === 'both') !== full.event.joint) return fail(409, { error: CONFLICT });
 		const leaderGroup = optStr(fd, 'leaderGroup');
 		if (leaderGroup !== null && !groupsFor(side).includes(leaderGroup)) return fail(400, { error: 'Ungültige Gruppe.' });
-		const area = optStr(fd, 'area');
-		if (area !== null && !YOUTH_AREAS.includes(area as never)) return fail(400, { error: 'Ungültiger Bereich.' });
+		const area = YOUTH_AREAS.find((a) => a === str(fd, 'area')) ?? null;
+		if (!area && str(fd, 'area')) return fail(400, { error: 'Ungültiger Bereich.' });
 		saveYouthPart(locals.db, full.event.id, side, {
 			text: optStr(fd, 'text'),
 			details: optStr(fd, 'details'),
 			leaderMemberId: optInt(fd, 'leader'),
 			leaderGroup,
-			area: area as (typeof YOUTH_AREAS)[number] | null,
+			area,
 			teacherMemberId: optInt(fd, 'teacher')
 		});
 		// An idea taken over into the text is planned together with it; foreign or closed ideas are ignored.
