@@ -12,7 +12,7 @@
 	{#if data.canEdit}
 		<form method="POST" action="?/update" use:enhance class="grid-2">
 			<div class="field"><label for="ti">Titel</label><input id="ti" name="title" type="text" required value={data.hymn.title} /></div>
-			<div class="field"><label for="du">Dauer (m:ss)</label><input id="du" name="duration" type="text" value={data.hymn.duration} placeholder="3:45" /></div>
+			<div class="field"><label for="du">Dauer (m:ss)</label><input id="du" name="duration" type="text" value={data.hymn.duration} placeholder="z.B. 3:45" /></div>
 			<div class="actions"><button class="btn btn-primary" type="submit">Speichern</button></div>
 		</form>
 	{:else}

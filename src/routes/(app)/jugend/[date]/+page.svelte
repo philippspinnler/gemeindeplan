@@ -82,7 +82,7 @@
 		<div class="field">
 			<label for="{s.side}_details">Details</label>
 			{#if s.canEdit}
-				<input id="{s.side}_details" name="details" type="text" form={formId} value={p?.details ?? ''} placeholder="z.B. Treffpunkt, Mitbringen, 18:00 Leitungssitzung" />
+				<input id="{s.side}_details" name="details" type="text" form={formId} value={p?.details ?? ''} placeholder="z.B. Treffpunkt, was mitbringen" />
 			{:else}
 				<p>{p?.details ?? '–'}</p>
 			{/if}
@@ -177,7 +177,7 @@
 			<div class="field">
 				<label for="details">Begründung</label>
 				{#if data.canCommon}
-					<input id="details" name="details" type="text" form="commonForm" value={ev.details ?? ''} placeholder="z.B. Mini-MTC ab Jg 12" />
+					<input id="details" name="details" type="text" form="commonForm" value={ev.details ?? ''} placeholder="z.B. Gemeindeanlass" />
 				{:else}
 					<p>{ev.details ?? '–'}</p>
 				{/if}

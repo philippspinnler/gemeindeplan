@@ -25,7 +25,7 @@
 		<form method="POST" action="?/create" class="grid-3">
 			<div class="field"><label for="nr">Nummer</label><input id="nr" name="number" type="number" min="1" required /></div>
 			<div class="field"><label for="ti">Titel</label><input id="ti" name="title" type="text" required /></div>
-			<div class="field"><label for="du">Dauer (m:ss, optional)</label><input id="du" name="duration" type="text" placeholder="3:45" /></div>
+			<div class="field"><label for="du">Dauer (m:ss, optional)</label><input id="du" name="duration" type="text" placeholder="z.B. 3:45" /></div>
 			<div class="actions"><button class="btn btn-primary" type="submit">Anlegen</button></div>
 		</form>
 		<p class="hint">Nummern ab 1001 gehören zum neuen Liederbuch.</p>

@@ -120,7 +120,6 @@
 		form="programForm"
 		{options}
 		value={legacy ? 0 : row.person ? Number(row.person) : null}
-		placeholder="Mitglied wählen …"
 		serialize={(v) => (v === 0 ? row.person : v === null ? '' : String(v))}
 	/>
 {/snippet}
@@ -318,7 +317,7 @@
 									{#each releases as r, i}
 										<li class="calling-row">
 											{@render personSelect('release_person', releases[i], `release_person_${i}`)}
-											<input type="text" name="release_calling" form="programForm" bind:value={releases[i].calling} placeholder="Amt" />
+											<input type="text" name="release_calling" form="programForm" bind:value={releases[i].calling} placeholder="Berufung" />
 											<button class="btn btn-small btn-danger" type="button" onclick={() => { releases.splice(i, 1); autosave.touch('programForm'); }} aria-label="entfernen">✕</button>
 										</li>
 									{/each}
@@ -331,7 +330,7 @@
 									{#each sustainings as s, i}
 										<li class="calling-row">
 											{@render personSelect('sustain_person', sustainings[i], `sustain_person_${i}`)}
-											<input type="text" name="sustain_calling" form="programForm" bind:value={sustainings[i].calling} placeholder="Amt" />
+											<input type="text" name="sustain_calling" form="programForm" bind:value={sustainings[i].calling} placeholder="Berufung" />
 											<button class="btn btn-small btn-danger" type="button" onclick={() => { sustainings.splice(i, 1); autosave.touch('programForm'); }} aria-label="entfernen">✕</button>
 										</li>
 									{/each}
