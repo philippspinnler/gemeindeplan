@@ -204,7 +204,10 @@
 				<div class="field">
 					<label for="topicUrl">Link</label>
 					{#if data.canCommon}
-						<input id="topicUrl" name="topicUrl" type="text" inputmode="url" form="commonForm" value={ev.topicUrl ?? ''} placeholder="https://" />
+						<div class="link-row">
+							<input id="topicUrl" name="topicUrl" type="text" inputmode="url" form="commonForm" value={ev.topicUrl ?? ''} placeholder="https://" />
+							{#if ev.topicUrl}<a class="btn" href={ev.topicUrl} target="_blank" rel="noopener noreferrer">Öffnen</a>{/if}
+						</div>
 					{:else if ev.topicUrl}
 						<p><a href={ev.topicUrl} target="_blank" rel="noopener noreferrer">{ev.topicUrl}</a></p>
 					{:else}
@@ -277,6 +280,8 @@
 </div>
 
 <style>
+	.link-row { display: flex; gap: 0.5rem; }
+	.link-row input { flex: 1; min-width: 0; }
 	.adults { display: flex; flex-direction: column; }
 	.adult { display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding: 0.45rem 0; border-top: 1px solid var(--line); }
 	.adult:first-child { border-top: 0; }
