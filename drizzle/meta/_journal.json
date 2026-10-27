@@ -71,6 +71,13 @@
       "when": 1793089452509,
       "tag": "0009_youth_event_thought",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "6",
+      "when": 1793090062281,
+      "tag": "0010_youth_part_area",
+      "breakpoints": true
     }
   ]
 }

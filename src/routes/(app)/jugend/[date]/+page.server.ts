@@ -1,14 +1,14 @@
 import { error, fail, type ActionFailure } from '@sveltejs/kit';
 import type { Action, Actions, PageServerLoad } from './$types';
 import { formatDateLong, isSunday, parseIso, todayIso, toIso } from '$lib/dates';
-import { YOUTH_LEADER_GROUPS, type Member, type Role, type YouthPartSide } from '$lib/server/db/schema';
+import { YOUTH_AREAS, YOUTH_LEADER_GROUPS, type Member, type Role, type YouthPartSide } from '$lib/server/db/schema';
 import { optInt, optStr, str } from '$lib/server/forms';
 import { displayName } from '$lib/server/members';
 import { can, requireRole } from '$lib/server/permissions';
 import { memberOptions } from '$lib/server/picker';
 import {
 	BASEL_KINDS, ensureYouthEvents, isWednesday, loadYouthEvent, OFF_KINDS, saveYouthAdults, saveYouthCommon, saveYouthPart,
-	SUNDAY_KINDS, WEDNESDAY_KINDS, YOUTH_KIND_LABELS, youthSectionVersions, type YouthEventFull
+	SUNDAY_KINDS, WEDNESDAY_KINDS, YOUTH_AREA_LABELS, YOUTH_KIND_LABELS, youthSectionVersions, type YouthEventFull
 } from '$lib/server/youth';
 import { openIdeasFor, planIdea } from '$lib/server/youth-ideas';
 import { listAdults, listYouth, YOUTH_GROUP_LABELS } from '$lib/server/youth-people';
@@ -52,11 +52,14 @@ function partAction(side: YouthPartSide): Action {
 		if ((side === 'both') !== full.event.joint) return fail(409, { error: CONFLICT });
 		const leaderGroup = optStr(fd, 'leaderGroup');
 		if (leaderGroup !== null && !groupsFor(side).includes(leaderGroup)) return fail(400, { error: 'Ungültige Gruppe.' });
+		const area = optStr(fd, 'area');
+		if (area !== null && !YOUTH_AREAS.includes(area as never)) return fail(400, { error: 'Ungültiger Bereich.' });
 		saveYouthPart(locals.db, full.event.id, side, {
 			text: optStr(fd, 'text'),
 			details: optStr(fd, 'details'),
 			leaderMemberId: optInt(fd, 'leader'),
 			leaderGroup,
+			area: area as (typeof YOUTH_AREAS)[number] | null,
 			teacherMemberId: optInt(fd, 'teacher')
 		});
 		// An idea taken over into the text is planned together with it; foreign or closed ideas are ignored.
@@ -94,6 +97,7 @@ export const load: PageServerLoad = ({ locals, params }) => {
 				leaderId: p.leader?.id ?? null,
 				leaderName: name(p.leader),
 				leaderGroup: p.leaderGroup,
+				area: p.area,
 				teacherId: p.teacher?.id ?? null,
 				teacherName: name(p.teacher)
 			}))
@@ -102,6 +106,7 @@ export const load: PageServerLoad = ({ locals, params }) => {
 		canCommon: can(role, 'youth.common'),
 		canJd: can(role, 'youth.jd'),
 		canJm: can(role, 'youth.jm'),
+		areas: YOUTH_AREAS.map((a) => ({ value: a, label: YOUTH_AREA_LABELS[a] })),
 		kinds: kindsFor(date).map((k) => ({ value: k, label: YOUTH_KIND_LABELS[k] })),
 		// A break only hints on a Wednesday; the event stays editable.
 		off: full.status === 'off' && (OFF_KINDS.includes(full.event.kind) || !full.break),

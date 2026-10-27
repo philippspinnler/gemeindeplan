@@ -102,6 +102,15 @@ describe('youth events', () => {
 		common(e, { joint: true });
 		expect(load('2026-10-21').thought?.firstName).toBe('Mia');
 	});
+	it('each side keeps its own area, a joint activity keeps one', () => {
+		ensureYouthEvents(db, '2026-10-21', 0);
+		const id = load('2026-10-21').event.id;
+		saveYouthPart(db, id, 'jd', { ...none, area: 'sozial' });
+		saveYouthPart(db, id, 'jm', { ...none, area: 'koerperlich' });
+		expect(load('2026-10-21').parts.map((p) => [p.side, p.area])).toEqual([['jd', 'sozial'], ['jm', 'koerperlich']]);
+		common(load('2026-10-21'), { joint: true });
+		expect(load('2026-10-21').parts.map((p) => [p.side, p.area])).toEqual([['both', 'sozial']]);
+	});
 	it('saveYouthPart rejects a side that does not fit', () => {
 		ensureYouthEvents(db, '2026-10-19', 1);
 		const e = load('2026-10-21');

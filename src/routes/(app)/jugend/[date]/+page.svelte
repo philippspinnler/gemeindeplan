@@ -111,6 +111,18 @@
 						<p>{p?.teacherName ?? '–'}</p>
 					{/if}
 				</div>
+			{:else}
+				<div class="field">
+					<label for="{s.side}_area">Bereich</label>
+					{#if s.canEdit}
+						<select id="{s.side}_area" name="area" form={formId}>
+							<option value="" selected={!p?.area}>–</option>
+							{#each data.areas as a}<option value={a.value} selected={a.value === p?.area}>{a.label}</option>{/each}
+						</select>
+					{:else}
+						<p>{data.areas.find((a) => a.value === p?.area)?.label ?? '–'}</p>
+					{/if}
+				</div>
 			{/if}
 		</div>
 		{/if}

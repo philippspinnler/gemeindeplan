@@ -3,7 +3,7 @@ import { addDays, addMonths, isSunday, parseIso } from '../dates';
 import type { Db } from './db';
 import {
 	meetings, youthEventAdults, youthEventParts, youthEvents,
-	YOUTH_PART_SIDES, type Member, type MeetingKind, type YouthBreak, type YouthEvent, type YouthEventKind, type YouthPartSide
+	YOUTH_PART_SIDES, type Member, type YouthArea, type MeetingKind, type YouthBreak, type YouthEvent, type YouthEventKind, type YouthPartSide
 } from './db/schema';
 import { hasProgram, KIND_LABELS, membersById, versionHash } from './meetings';
 import { breakFor, listBreaks, YOUTH_BREAK_KIND_LABELS } from './youth-breaks';
@@ -22,13 +22,14 @@ export const YOUTH_KIND_LABELS: Record<YouthEventKind, string> = {
 	ferien: 'Ferien',
 	keine: 'Keine Aktivität'
 };
+export const YOUTH_AREA_LABELS: Record<YouthArea, string> = { geistig: 'Geistig', sozial: 'Sozial', koerperlich: 'Körperlich', intellektuell: 'Intellektuell' };
 export const SUNDAY_KINDS: YouthEventKind[] = ['klasse', 'erwachsene'];
 export const WEDNESDAY_KINDS: YouthEventKind[] = ['aktivitaet', 'basel', 'basel_wir', 'fireside', 'uebertragung', 'pfahl', 'tempel', 'ferien', 'keine'];
 /** Always joint; with Basel leading nobody from the ward is needed, with us leading it is a normal joint activity. */
 export const BASEL_KINDS: YouthEventKind[] = ['basel', 'basel_wir'];
 export const OFF_KINDS: YouthEventKind[] = ['erwachsene', 'pfahl', 'tempel', 'ferien', 'keine'];
 
-export interface YouthPartFull { side: YouthPartSide; text: string | null; details: string | null; leader: Member | null; leaderGroup: string | null; teacher: Member | null }
+export interface YouthPartFull { side: YouthPartSide; text: string | null; details: string | null; leader: Member | null; leaderGroup: string | null; area: YouthArea | null; teacher: Member | null }
 /** Dates without a stored row are synthesized with `event.id = 0` and the weekday default kind. */
 export interface YouthEventFull {
 	event: YouthEvent;
@@ -42,7 +43,7 @@ export interface YouthEventFull {
 	offLabel: string | null;
 }
 export interface YouthCommonInput { kind: YouthEventKind; joint: boolean; details: string | null; topic: string | null; topicUrl: string | null; snack: string | null; thoughtMemberId?: number | null }
-export interface YouthPartInput { text: string | null; details?: string | null; leaderMemberId: number | null; leaderGroup: string | null; teacherMemberId?: number | null }
+export interface YouthPartInput { text: string | null; details?: string | null; leaderMemberId: number | null; leaderGroup: string | null; area?: YouthArea | null; teacherMemberId?: number | null }
 
 const nowIso = () => new Date().toISOString();
 
@@ -88,7 +89,7 @@ function assemble(db: Db, from: string, to: string, rows: YouthEvent[]): YouthEv
 		const parts: YouthPartFull[] = partRows
 			.filter((p) => p.eventId === event.id)
 			.sort((a, b) => YOUTH_PART_SIDES.indexOf(a.side) - YOUTH_PART_SIDES.indexOf(b.side))
-			.map((p) => ({ side: p.side, text: p.text, details: p.details, leader: pick(p.leaderMemberId), leaderGroup: p.leaderGroup, teacher: pick(p.teacherMemberId) }));
+			.map((p) => ({ side: p.side, text: p.text, details: p.details, leader: pick(p.leaderMemberId), leaderGroup: p.leaderGroup, area: p.area, teacher: pick(p.teacherMemberId) }));
 		const adults = adultRows.filter((a) => a.eventId === event.id).flatMap((a) => (people.has(a.memberId) ? [{ member: people.get(a.memberId)!, present: a.present }] : []));
 		const meetingKind = weekday === 'sunday' ? (meetingKinds.get(date) ?? null) : null;
 		const brk = weekday === 'wednesday' ? breakFor(breaks, date) : null;
@@ -143,7 +144,7 @@ export function saveYouthCommon(db: Db, eventId: number, input: YouthCommonInput
 		const bySide = (s: YouthPartSide) => parts.find((p) => p.side === s);
 		tx.delete(youthEventParts).where(eq(youthEventParts.eventId, eventId)).run();
 		const row = (side: YouthPartSide, p: YouthPartInput) =>
-			tx.insert(youthEventParts).values({ eventId, side, text: p.text, details: p.details ?? null, leaderMemberId: p.leaderMemberId, leaderGroup: p.leaderGroup, teacherMemberId: p.teacherMemberId ?? null }).run();
+			tx.insert(youthEventParts).values({ eventId, side, text: p.text, details: p.details ?? null, leaderMemberId: p.leaderMemberId, leaderGroup: p.leaderGroup, area: p.area ?? null, teacherMemberId: p.teacherMemberId ?? null }).run();
 		if (input.joint) {
 			const jd = bySide('jd');
 			const jm = bySide('jm');
@@ -153,6 +154,7 @@ export function saveYouthCommon(db: Db, eventId: number, input: YouthCommonInput
 				details: [jd?.details, jm?.details].filter(Boolean).join('\n') || null,
 				leaderMemberId: jd?.leaderMemberId ?? jm?.leaderMemberId ?? null,
 				leaderGroup: jd?.leaderGroup ?? jm?.leaderGroup ?? null,
+				area: jd?.area ?? jm?.area ?? null,
 				teacherMemberId: jd?.teacherMemberId ?? jm?.teacherMemberId ?? null
 			});
 		} else {
@@ -194,7 +196,7 @@ export function youthSectionVersions(full: YouthEventFull): Record<'common' | 'j
 	const e = full.event;
 	const part = (side: YouthPartSide) => {
 		const p = full.parts.find((x) => x.side === side);
-		return versionHash(p ? [p.text, p.details, p.leader?.id ?? null, p.leaderGroup, p.teacher?.id ?? null] : null);
+		return versionHash(p ? [p.text, p.details, p.leader?.id ?? null, p.leaderGroup, p.area, p.teacher?.id ?? null] : null);
 	};
 	return {
 		common: versionHash([e.kind, e.joint, e.details, e.topic, e.topicUrl, e.snack, full.thought?.id ?? null]),

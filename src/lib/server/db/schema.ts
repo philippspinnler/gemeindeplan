@@ -35,6 +35,9 @@ export const YOUTH_EVENT_KINDS = ['klasse', 'erwachsene', 'aktivitaet', 'basel',
 export type YouthEventKind = (typeof YOUTH_EVENT_KINDS)[number];
 export const YOUTH_PART_SIDES = ['jd', 'jm', 'both'] as const;
 export type YouthPartSide = (typeof YOUTH_PART_SIDES)[number];
+/** The four areas of personal development (General Handbook 10.2.1.3 / 11.2.1.3). */
+export const YOUTH_AREAS = ['geistig', 'sozial', 'koerperlich', 'intellektuell'] as const;
+export type YouthArea = (typeof YOUTH_AREAS)[number];
 export const YOUTH_BREAK_KINDS = ['ferien', 'pfahl', 'tempel', 'supersamstag', 'tanzabend'] as const;
 
 const now = sql`(strftime('%Y-%m-%dT%H:%M:%fZ', 'now'))`;
@@ -228,6 +231,7 @@ export const youthEventParts = sqliteTable(
 		details: text('details'),
 		leaderMemberId: integer('leader_member_id').references(() => members.id),
 		leaderGroup: text('leader_group'),
+		area: text('area', { enum: YOUTH_AREAS }),
 		/** Sunday class: who teaches (youth or adult). */
 		teacherMemberId: integer('teacher_member_id').references(() => members.id)
 	},

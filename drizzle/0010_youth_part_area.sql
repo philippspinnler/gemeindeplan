@@ -1,0 +1,1 @@
+ALTER TABLE `youth_event_parts` ADD `area` text;
