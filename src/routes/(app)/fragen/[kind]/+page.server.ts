@@ -9,8 +9,8 @@ import { live } from '$lib/server/live';
 import { can, requireRole } from '$lib/server/permissions';
 
 const KINDS = {
-	ansprachen: { title: 'Ansprachen', column: 'Letzte Ansprache', hint: 'Mitglieder, die keine Ansprache halten möchten, sind ausgeblendet.', action: 'ask.talks' as const, noteAction: 'notes.talk' as const, noteField: 'noteTalk' as const, askKind: 'talk' as const, editAction: 'meeting.program' as const },
-	gebete: { title: 'Gebete', column: 'Letztes Gebet', hint: 'Mitglieder, die kein Gebet sprechen möchten, sind ausgeblendet. Pfahlbeamte werden nicht ums Gebet gebeten.', action: 'ask.prayers' as const, noteAction: 'notes.prayer' as const, noteField: 'notePrayer' as const, askKind: 'prayer' as const, editAction: 'meeting.prayers' as const }
+	ansprachen: { title: 'Ansprachen', column: 'Letzte Ansprache', hint: 'Mitglieder, die keine Ansprache halten möchten, und Pfahlbeamte sind ausgeblendet.', action: 'ask.talks' as const, noteAction: 'notes.talk' as const, noteField: 'noteTalk' as const, askKind: 'talk' as const, editAction: 'meeting.program' as const },
+	gebete: { title: 'Gebete', column: 'Letztes Gebet', hint: 'Mitglieder, die kein Gebet sprechen möchten, und Pfahlbeamte sind ausgeblendet.', action: 'ask.prayers' as const, noteAction: 'notes.prayer' as const, noteField: 'notePrayer' as const, askKind: 'prayer' as const, editAction: 'meeting.prayers' as const }
 } as const;
 
 function kindOf(param: string) {

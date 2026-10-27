@@ -52,7 +52,7 @@ export function createMember(db: Db, input: MemberInput): Member {
 			lastName: input.lastName.trim(),
 			affiliation: input.affiliation?.trim() || null,
 			kind: input.kind ?? 'gemeinde',
-			stakeCallingId: input.kind === 'pfahl' ? (input.stakeCallingId ?? null) : null,
+			stakeCallingId: input.stakeCallingId ?? null,
 			active: input.active ?? true,
 			noteTalk: input.noteTalk?.trim() || null,
 			notePrayer: input.notePrayer?.trim() || null,
@@ -70,6 +70,9 @@ export function updateMember(db: Db, id: number, patch: Partial<MemberInput>): v
 		.where(eq(members.id, id))
 		.run();
 }
+
+/** Stake officers from outside the ward, and ward members who also hold a stake calling. */
+export const isStakeOfficer = (m: Pick<Member, 'kind' | 'stakeCallingId'>) => m.kind === 'pfahl' || m.stakeCallingId !== null;
 
 export function displayName(m: Pick<Member, 'firstName' | 'lastName' | 'affiliation'> & { calling?: string | null }): string {
 	const name = `${m.firstName} ${m.lastName}`.trim();

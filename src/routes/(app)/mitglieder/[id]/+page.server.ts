@@ -48,7 +48,7 @@ export const actions: Actions = {
 			firstName,
 			lastName: str(fd, 'lastName'),
 			kind,
-			stakeCallingId: kind === 'pfahl' ? optInt(fd, 'stakeCallingId') : null,
+			stakeCallingId: optInt(fd, 'stakeCallingId'),
 			affiliation: kind === 'gemeinde' ? optStr(fd, 'affiliation') : null,
 			active: str(fd, 'hidden') !== '1',
 			noteTalk: optStr(fd, 'noteTalk'),

@@ -4,7 +4,7 @@ import { formatDateLong, isSunday, todayIso } from '$lib/dates';
 import { HYMN_SLOTS, MEETING_KINDS, isFastLike, type HymnSlot, type MeetingKind } from '$lib/server/db/schema';
 import { optInt, optStr, str, strList } from '$lib/server/forms';
 import { hymnLabel, listHymns } from '$lib/server/hymns';
-import { displayName, listMembers } from '$lib/server/members';
+import { displayName, isStakeOfficer, listMembers } from '$lib/server/members';
 import { listStakeCallings } from '$lib/server/stake-callings';
 import {
 	KIND_LABELS, SLOT_LABELS, createMeeting, getMeetingByDate, hasProgram, loadMeetingFullByDate,
@@ -69,7 +69,7 @@ export const load: PageServerLoad = ({ locals, params }) => {
 	const hymnSlots = HYMN_SLOTS.filter((slot) => slot !== 'zwischen' || !fastLike);
 
 	const ward = all.filter((m) => m.kind === 'gemeinde');
-	const stake = all.filter((m) => m.kind === 'pfahl');
+	const stake = all.filter(isStakeOfficer);
 	const bishopricEntries = getBishopric(locals.db);
 	const bishopricIds = bishopricEntries.map((e) => e.id);
 	const bishopric = ward.filter((m) => bishopricIds.includes(m.id));

@@ -1,14 +1,14 @@
 import { fail, redirect } from '@sveltejs/kit';
 import type { Actions, PageServerLoad } from './$types';
 import { failMessage, int, optInt, str } from '$lib/server/forms';
-import { createMember, listMembers } from '$lib/server/members';
+import { createMember, isStakeOfficer, listMembers } from '$lib/server/members';
 import { createStakeCalling, deleteStakeCalling, listStakeCallings, moveStakeCalling, renameStakeCalling, setStakeCallingPresides } from '$lib/server/stake-callings';
 import { can, requireRole } from '$lib/server/permissions';
 
 export const load: PageServerLoad = ({ locals, url }) => {
 	requireRole(locals.user, 'settings.edit');
 	const showAll = url.searchParams.get('alle') === '1';
-	const officers = listMembers(locals.db, { activeOnly: !showAll, kind: 'pfahl' }).map((m) => ({
+	const officers = listMembers(locals.db, { activeOnly: !showAll }).filter(isStakeOfficer).map((m) => ({
 		id: m.id,
 		name: `${m.firstName} ${m.lastName}`.trim(),
 		calling: m.calling ?? '',

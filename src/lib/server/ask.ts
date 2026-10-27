@@ -1,14 +1,14 @@
 import type { AskRow } from '../ask-sort';
 import type { Db } from './db';
 import type { Member } from './db/schema';
-import { displayName, listMembers } from './members';
+import { displayName, isStakeOfficer, listMembers } from './members';
 import { memberActivity, weeksAgoLabel, weeksAheadLabel } from './stats';
 
 export interface AskTables { talks: AskRow[]; prayers: AskRow[] }
 
-/** Candidates for talks (ward + stake) and prayers (ward only), excluding "does not want" and inactive. */
+/** Active ward members who don't decline; stake officers get their talks from the stake but may still pray in their ward. */
 export function askTables(db: Db, today: string): AskTables {
-	const members = listMembers(db, { activeOnly: true });
+	const members = listMembers(db, { activeOnly: true, kind: 'gemeinde' });
 	const activity = memberActivity(db, today);
 	const row = (m: Member, last: string | null, next: string | null, note: string | null): AskRow => ({
 		id: m.id,
@@ -22,9 +22,9 @@ export function askTables(db: Db, today: string): AskTables {
 		note: note ?? ''
 	});
 	return {
-		talks: members.filter((m) => !m.noTalk).map((m) => row(m, activity.get(m.id)?.lastTalk ?? null, activity.get(m.id)?.nextTalk ?? null, m.noteTalk)),
+		talks: members.filter((m) => !m.noTalk && !isStakeOfficer(m)).map((m) => row(m, activity.get(m.id)?.lastTalk ?? null, activity.get(m.id)?.nextTalk ?? null, m.noteTalk)),
 		prayers: members
-			.filter((m) => m.kind === 'gemeinde' && !m.noPrayer)
+			.filter((m) => !m.noPrayer)
 			.map((m) => row(m, activity.get(m.id)?.lastPrayer ?? null, activity.get(m.id)?.nextPrayer ?? null, m.notePrayer))
 	};
 }

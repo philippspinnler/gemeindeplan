@@ -22,17 +22,19 @@
 				<div class="field"><label for="ln">Nachname (optional)</label><input id="ln" name="lastName" type="text" value={m.lastName} /></div>
 				<input type="hidden" name="kind" value={kind} />
 			</div>
-			{#if kind === 'pfahl'}
+			<div class="grid-2">
 				<div class="field">
-					<label for="calling">Berufung</label>
+					<label for="calling">{kind === 'pfahl' ? 'Berufung' : 'Pfahlberufung (optional)'}</label>
 					<select id="calling" name="stakeCallingId">
 						<option value="">– keine –</option>
 						{#each data.callings as c}<option value={c.id} selected={c.id === m.stakeCallingId}>{c.name}</option>{/each}
 					</select>
+					{#if kind === 'gemeinde'}<span class="hint">Wird bei Ansprachen nicht angefragt, weil der Pfahl einteilt.</span>{/if}
 				</div>
-			{:else}
-				<div class="field"><label for="af">Bemerkung (optional)</label><input id="af" name="affiliation" type="text" value={m.affiliation ?? ''} placeholder="z.B. Missionar" /><span class="hint">Erscheint in Klammern hinter dem Namen.</span></div>
-			{/if}
+				{#if kind === 'gemeinde'}
+					<div class="field"><label for="af">Bemerkung (optional)</label><input id="af" name="affiliation" type="text" value={m.affiliation ?? ''} placeholder="z.B. Missionar" /><span class="hint">Erscheint in Klammern hinter dem Namen.</span></div>
+				{/if}
+			</div>
 			{#if kind === 'gemeinde'}
 				<div class="grid-2">
 					<div class="field"><label for="nt">Notiz Ansprache</label><input id="nt" name="noteTalk" type="text" value={m.noteTalk ?? ''} /></div>
@@ -50,7 +52,7 @@
 			{#if autosave.conflict}<button class="btn btn-primary" type="button" onclick={() => location.reload()}>Seite neu laden</button>{/if}
 		</div>
 	{:else}
-		<p><strong>Art:</strong> {m.kind === 'pfahl' ? `Pfahlbeamter${m.calling ? ` (${m.calling})` : ''}` : `Gemeindemitglied${m.affiliation ? ` (${m.affiliation})` : ''}`} · <strong>Status:</strong> {m.active ? 'auswählbar' : 'ausgeblendet'}</p>
+		<p><strong>Art:</strong> {m.kind === 'pfahl' ? `Pfahlbeamter${m.calling ? ` (${m.calling})` : ''}` : `Gemeindemitglied${m.calling || m.affiliation ? ` (${m.calling || m.affiliation})` : ''}`} · <strong>Status:</strong> {m.active ? 'auswählbar' : 'ausgeblendet'}</p>
 		{#if data.stats && m.kind === 'gemeinde'}
 			{#if m.noteTalk}<p><strong>Notiz Ansprache:</strong> {m.noteTalk}</p>{/if}
 			{#if m.notePrayer}<p><strong>Notiz Gebet:</strong> {m.notePrayer}</p>{/if}
