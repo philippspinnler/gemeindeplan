@@ -51,6 +51,11 @@ input[type='text'], input[type='email'], input[type='password'], input[type='num
 	font: inherit; padding: 0.6rem 0.7rem; border: 1px solid #cbd2d9; border-radius: 8px; background: #fff; width: 100%; min-height: 44px;
 }
 textarea { min-height: 5rem; }
+/* Own chevron: the native one sits tight against the border. */
+select {
+	appearance: none; padding-right: 2.2rem;
+	background: #fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1.5l5 5 5-5' fill='none' stroke='%236b7280' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") no-repeat right 0.8rem center;
+}
 .btn { font: inherit; font-weight: 600; padding: 0.6rem 1rem; min-height: 44px; border-radius: 8px; border: 1px solid var(--line); background: var(--surface); color: var(--text); cursor: pointer; text-decoration: none; display: inline-flex; align-items: center; gap: 0.4rem; }
 .btn-primary { background: var(--primary); border-color: var(--primary); color: #fff; }
 .btn-primary:hover { background: var(--primary-dark); }
@@ -119,7 +124,7 @@ textarea { min-height: 5rem; }
 .copy-box { background: var(--bg); border: 1px dashed var(--line); border-radius: 8px; padding: 0.8rem; white-space: pre-wrap; font-size: 0.95rem; }
 .role-switch { display: flex; align-items: center; gap: 0.4rem; }
 .role-switch label { font-size: 0.9rem; color: var(--muted); }
-.role-switch select { min-height: 36px; padding: 0.2rem 0.5rem; width: auto; }
+.role-switch select { min-height: 36px; padding: 0.2rem 1.9rem 0.2rem 0.5rem; background-position: right 0.55rem center; width: auto; }
 .inline-form { display: inline; }
 .view-banner { background: #fef0c7; color: #7a4b00; padding: 0.5rem 1rem; text-align: center; display: flex; align-items: center; justify-content: center; gap: 0.75rem; flex-wrap: wrap; }
 .has-savebar { padding-bottom: 5rem; }
