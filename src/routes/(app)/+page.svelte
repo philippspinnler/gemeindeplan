@@ -127,12 +127,12 @@
 							<td class="col-day td-main td-inline"><a href="/sonntag/{m.date}">{dayLabel(m.date)}</a></td>
 							<td class="td-inline td-kind">{m.kind === 'normal' ? '' : m.kindLabel}</td>
 							{#if data.prayersOnly}
-								<td data-label="Anfangsgebet">{#if m.prayers.opening}{m.prayers.opening}{:else if m.rated}<span class="badge badge-offen">offen</span>{/if}</td>
-								<td data-label="Schlussgebet">{#if m.prayers.closing}{m.prayers.closing}{:else if m.rated}<span class="badge badge-offen">offen</span>{/if}</td>
+								<td class="td-person" data-label="Anfangsgebet">{#if m.prayers.opening}{m.prayers.opening}{:else if m.rated}<span class="badge badge-offen">offen</span>{/if}</td>
+								<td class="td-person" data-label="Schlussgebet">{#if m.prayers.closing}{m.prayers.closing}{:else if m.rated}<span class="badge badge-offen">offen</span>{/if}</td>
 							{:else}
 							<td>{m.theme ?? ''}</td>
 							{#if data.showProgram}
-								<td data-label={m.presiding ? 'Leitung' : null}>{m.presiding ?? ''}</td>
+								<td class="td-person" data-label={m.presiding ? 'Leitung' : null}>{m.presiding ?? ''}</td>
 								<td data-label={m.rated ? 'Programm' : null}>
 									{#if m.rated}
 										{#if m.missingProgram.length}<span class="badge badge-offen">{m.missingProgram.join(', ')}</span>{:else}<span class="badge badge-zugesagt">bereit</span>{/if}
@@ -140,8 +140,8 @@
 								</td>
 							{/if}
 							{#if data.musicColumns}
-								<td data-label={m.organist ? 'Orgel / Klavier' : null}>{m.organist ?? ''}</td>
-								<td data-label={m.conductor ? 'Dirigieren' : null}>{m.conductor ?? ''}</td>
+								<td class="td-person" data-label={m.organist ? 'Orgel / Klavier' : null}>{m.organist ?? ''}</td>
+								<td class="td-person" data-label={m.conductor ? 'Dirigieren' : null}>{m.conductor ?? ''}</td>
 							{/if}
 							<td data-label={m.rated ? 'Musik' : null}>
 								{#if m.rated}

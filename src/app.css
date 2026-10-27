@@ -148,8 +148,9 @@ select {
 .overview .c-day { width: 4.5rem; }
 .overview .c-kind { width: 9.5rem; }
 .overview .c-status { width: 18%; }
-.overview .c-person { width: 13%; }
-.overview .c-kind, .overview td.td-kind { white-space: nowrap; }
+.overview .c-person { width: 10rem; }
+.overview .c-kind, .overview td.td-kind, .overview td.td-person { white-space: nowrap; }
+.overview td.td-person { overflow: hidden; text-overflow: ellipsis; }
 /* Sundays without a meeting (conferences) are irrelevant for planning */
 .overview tr.no-meeting { color: var(--muted); background: var(--bg); }
 .overview tr.no-meeting a { color: var(--muted); }
