@@ -12,8 +12,7 @@ function summary(e: YouthEventFull, side: 'jd' | 'jm'): string | null {
 	if (!part) return null;
 	const base = e.weekday === 'wednesday' ? part.text : part.leaderGroup ? (YOUTH_GROUP_LABELS[part.leaderGroup] ?? part.leaderGroup) : null;
 	if (!base) return null;
-	const person = e.weekday === 'sunday' ? part.teacher : part.thought;
-	return person ? `${base} · ${person.firstName}` : base;
+	return part.teacher ? `${base} · ${part.teacher.firstName}` : base;
 }
 
 /** Rows for one weekday of the youth list: Sundays (classes) or Wednesdays (activities). */
@@ -38,6 +37,7 @@ export function youthList(db: Db, url: URL, weekday: YouthWeekday) {
 				jd: summary(e, 'jd'),
 				jm: summary(e, 'jm'),
 				extra: weekday === 'sunday' ? e.event.topic : e.event.snack,
+				thought: e.thought?.firstName ?? null,
 				hint: fifth ? '5. Sonntag – Klasse mit Erwachsenen?' : null
 			};
 		});

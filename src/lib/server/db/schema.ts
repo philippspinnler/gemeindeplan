@@ -213,6 +213,8 @@ export const youthEvents = sqliteTable('youth_events', {
 	topic: text('topic'),
 	topicUrl: text('topic_url'),
 	snack: text('snack'),
+	/** Wednesday: one spiritual thought for JD and JM together. */
+	thoughtMemberId: integer('thought_member_id').references(() => members.id),
 	...timestamps
 });
 
@@ -226,7 +228,6 @@ export const youthEventParts = sqliteTable(
 		details: text('details'),
 		leaderMemberId: integer('leader_member_id').references(() => members.id),
 		leaderGroup: text('leader_group'),
-		thoughtMemberId: integer('thought_member_id').references(() => members.id),
 		/** Sunday class: who teaches (youth or adult). */
 		teacherMemberId: integer('teacher_member_id').references(() => members.id)
 	},

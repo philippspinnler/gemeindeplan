@@ -38,7 +38,7 @@ describe('importYouthCsv', () => {
 		const r = importYouthCsv(db, single, null);
 		const wed = loadYouthEvent(db, '2026-10-14')!;
 		const sun = loadYouthEvent(db, '2026-10-18')!;
-		expect(wed.parts.find((p) => p.side === 'jm')?.thought?.firstName).toBe('Vreni');
+		expect(wed.thought?.firstName).toBe('Vreni');
 		expect(wed.parts.find((p) => p.side === 'jm')?.leader).toBeNull();
 		expect(sun.event.kind).toBe('klasse');
 		expect(sun.parts.find((p) => p.side === 'jm')?.leaderGroup).toBe('priester');
@@ -53,7 +53,8 @@ describe('importYouthCsv', () => {
 		expect(a.parts.map((p) => [p.side, p.text])).toEqual([['jd', 'Spiele'], ['jm', 'Fussball']]);
 		const j = loadYouthEvent(db, '2026-10-21')!;
 		expect(j.event.joint).toBe(true);
-		expect(j.parts.map((p) => [p.side, p.text, p.leader?.firstName, p.thought?.firstName])).toEqual([['both', 'Kochen\nund backen', 'Lea', 'Mia']]);
+		expect(j.parts.map((p) => [p.side, p.text, p.leader?.firstName])).toEqual([['both', 'Kochen\nund backen', 'Lea']]);
+		expect(j.thought?.firstName).toBe('Mia');
 		expect(loadYouthEvent(db, '2026-10-28')!.event.kind).toBe('ferien');
 		const c = loadYouthEvent(db, '2026-10-18')!;
 		expect(c.parts.map((p) => [p.side, p.leaderGroup, p.teacher?.firstName])).toEqual([['jd', 'glauben', 'Mia'], ['jm', 'priester', 'Urs']]);
@@ -68,7 +69,7 @@ describe('importYouthCsv', () => {
 		expect(b.event.kind).toBe('basel');
 		expect(b.event.joint).toBe(true);
 		// The bishop may give the thought (adults are in the thought pool) but cannot lead as a youth.
-		expect(b.parts[0].thought?.firstName).toBe('Vreni');
+		expect(b.thought?.firstName).toBe('Vreni');
 		expect(b.event.details).toBe('Leitung JD: Vreni');
 		expect(r.warnings).toEqual(expect.arrayContaining([
 			"2026-11-04: Leitung JD 'Vreni' nicht gefunden",

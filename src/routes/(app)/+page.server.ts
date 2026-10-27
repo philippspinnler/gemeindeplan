@@ -15,7 +15,7 @@ function youthTile(date: string, full: YouthEventFull | null, needText: boolean)
 	const missing = [
 		...(needText && !part?.text ? ['Aktivität'] : []),
 		...(needText ? (part?.leader ? [] : ['Leitung']) : part?.leaderGroup ? [] : ['Leitung']),
-		...(needText ? (part?.thought ? [] : ['Gedanke']) : part?.teacher ? [] : ['Lehrer'])
+		...(needText ? (full?.thought ? [] : ['Gedanke']) : part?.teacher ? [] : ['Lehrer'])
 	];
 	return missing.length ? { date, dateLabel, state: 'todo', text: `offen: ${missing.join(', ')}` } : { date, dateLabel, state: 'ok', text: 'alles geplant' };
 }

@@ -106,11 +106,11 @@ function importAll(db: Db, activitiesCsv: string, classesCsv: string | null, opt
 		}
 		return entries;
 	};
-	const store = (date: string, common: { kind: YouthEventKind; joint: boolean; details: string; topic: string; snack: string }, parts: Partial<Record<'jd' | 'jm' | 'both', { text: string | null; leaderMemberId: number | null; leaderGroup: string | null; thoughtMemberId: number | null }>>, adultList: { memberId: number; present: boolean }[], lost: string[]) => {
+	const store = (date: string, common: { kind: YouthEventKind; joint: boolean; details: string; topic: string; snack: string; thoughtMemberId?: number | null }, parts: Partial<Record<'jd' | 'jm' | 'both', { text: string | null; leaderMemberId: number | null; leaderGroup: string | null }>>, adultList: { memberId: number; present: boolean }[], lost: string[]) => {
 		ensureYouthEvents(db, date, 0);
 		const id = loadYouthEvent(db, date)!.event.id;
 		const details = [common.details, ...lost].filter(Boolean).join('\n') || null;
-		saveYouthCommon(db, id, { kind: common.kind, joint: common.joint, details, topic: common.topic || null, topicUrl: null, snack: common.snack || null });
+		saveYouthCommon(db, id, { kind: common.kind, joint: common.joint, details, topic: common.topic || null, topicUrl: null, snack: common.snack || null, thoughtMemberId: common.thoughtMemberId ?? null });
 		for (const [side, p] of Object.entries(parts)) saveYouthPart(db, id, side as 'jd' | 'jm' | 'both', p);
 		const old = loadYouthEvent(db, date)!.adults.map((a) => ({ memberId: a.member.id, present: null }));
 		saveYouthAdults(db, id, [...old, ...adultList]);
@@ -150,11 +150,11 @@ function importAll(db: Db, activitiesCsv: string, classesCsv: string | null, opt
 		// Airtable has one Details column; in the app details belong to the activity (part), the event keeps them only as off reason.
 		const off = OFF_KINDS.includes(spec.kind);
 		const details = off ? null : r['details'] || null;
-		const part = (side: YouthSide) => ({ text: r[`aktivität ${side}`] || null, details, leaderMemberId: lead[side]?.id ?? null, leaderGroup: null, thoughtMemberId: th[side]?.id ?? null });
+		const part = (side: YouthSide) => ({ text: r[`aktivität ${side}`] || null, details, leaderMemberId: lead[side]?.id ?? null, leaderGroup: null });
 		const jd = part('jd');
 		const jm = part('jm');
-		const both = { text: [jd.text, jm.text].filter(Boolean).join('\n') || null, details, leaderMemberId: jd.leaderMemberId ?? jm.leaderMemberId, leaderGroup: null, thoughtMemberId: jd.thoughtMemberId ?? jm.thoughtMemberId };
-		store(date, { ...spec, details: off ? r['details'] : '', topic: r['thema'], snack: r['snack'] }, spec.joint ? { both } : { jd, jm }, adultEntries(date, r), lost);
+		const both = { text: [jd.text, jm.text].filter(Boolean).join('\n') || null, details, leaderMemberId: jd.leaderMemberId ?? jm.leaderMemberId, leaderGroup: null };
+		store(date, { ...spec, details: off ? r['details'] : '', topic: r['thema'], snack: r['snack'], thoughtMemberId: (th.jd ?? th.jm)?.id ?? null }, spec.joint ? { both } : { jd, jm }, adultEntries(date, r), lost);
 	}
 
 	for (const r of classRows) {
@@ -169,7 +169,7 @@ function importAll(db: Db, activitiesCsv: string, classesCsv: string | null, opt
 			return map[raw.toLowerCase()] ?? null;
 		};
 		// On class rows "Geistiger Gedanke / Klasse" names who teaches.
-		const part = (side: YouthSide, map: Record<string, string>) => ({ text: null, details: r['details'] || null, leaderMemberId: null, leaderGroup: group(side, map), thoughtMemberId: null, teacherMemberId: th[side]?.id ?? null });
+		const part = (side: YouthSide, map: Record<string, string>) => ({ text: null, details: r['details'] || null, leaderMemberId: null, leaderGroup: group(side, map), teacherMemberId: th[side]?.id ?? null });
 		store(date, { kind: 'klasse', joint: false, details: '', topic: r['thema'], snack: '' }, { jd: part('jd', JD_GROUPS), jm: part('jm', JM_GROUPS) }, [], lost);
 	}
 

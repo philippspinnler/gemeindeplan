@@ -75,17 +75,19 @@ describe('youth page items', () => {
 		setYouth(db, lea.id, 'jd', 'licht');
 		ensureYouthEvents(db, '2026-10-20', 1);
 		const e = listYouthEvents(db, '2026-10-21', '2026-10-21')[0];
-		saveYouthPart(db, e.event.id, 'jd', { text: 'Film', leaderMemberId: adult.id, leaderGroup: null, thoughtMemberId: lea.id });
+		saveYouthPart(db, e.event.id, 'jd', { text: 'Film', leaderMemberId: adult.id, leaderGroup: null });
+		saveYouthCommon(db, e.event.id, { kind: 'aktivitaet', joint: false, details: null, topic: null, topicUrl: null, snack: null, thoughtMemberId: lea.id });
 		const item = youthPageItems(db, '2026-10-20').big[0];
 		expect(item.parts).toEqual([
-			{ side: 'jd', label: 'Junge Damen', planned: true, text: 'Film', details: null, leaderName: null, thoughtName: 'Lea', teacherName: null },
-			{ side: 'jm', label: 'Junge Männer', planned: false, text: null, details: null, leaderName: null, thoughtName: null, teacherName: null }
+			{ side: 'jd', label: 'Junge Damen', planned: true, text: 'Film', details: null, leaderName: null, teacherName: null },
+			{ side: 'jm', label: 'Junge Männer', planned: false, text: null, details: null, leaderName: null, teacherName: null }
 		]);
+		expect(item.thoughtName).toBe('Lea');
 		expect(compactText(item)).toBe('Aktivität · Film · Gedanke: Lea');
 		// A leader may give the thought: first name only, like the youth.
 		setLeaders(db, 'jd_beraterin', [adult.id]);
-		saveYouthPart(db, e.event.id, 'jd', { text: 'Film', leaderMemberId: null, leaderGroup: null, thoughtMemberId: adult.id });
-		expect(youthPageItems(db, '2026-10-20').big[0].parts[0].thoughtName).toBe('Urs');
+		saveYouthCommon(db, e.event.id, { kind: 'aktivitaet', joint: false, details: null, topic: null, topicUrl: null, snack: null, thoughtMemberId: adult.id });
+		expect(youthPageItems(db, '2026-10-20').big[0].thoughtName).toBe('Urs');
 	});
 	it('newYouthPageToken is url-safe and unique', () => {
 		const t = newYouthPageToken();

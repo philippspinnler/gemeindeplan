@@ -57,7 +57,6 @@ function partAction(side: YouthPartSide): Action {
 			details: optStr(fd, 'details'),
 			leaderMemberId: optInt(fd, 'leader'),
 			leaderGroup,
-			thoughtMemberId: optInt(fd, 'thought'),
 			teacherMemberId: optInt(fd, 'teacher')
 		});
 		// An idea taken over into the text is planned together with it; foreign or closed ideas are ignored.
@@ -86,6 +85,8 @@ export const load: PageServerLoad = ({ locals, params }) => {
 		dateLabel: formatDateLong(date),
 		full: {
 			event: full.event,
+			thoughtId: full.thought?.id ?? null,
+			thoughtName: name(full.thought),
 			parts: full.parts.map((p) => ({
 				side: p.side,
 				text: p.text,
@@ -93,8 +94,6 @@ export const load: PageServerLoad = ({ locals, params }) => {
 				leaderId: p.leader?.id ?? null,
 				leaderName: name(p.leader),
 				leaderGroup: p.leaderGroup,
-				thoughtId: p.thought?.id ?? null,
-				thoughtName: name(p.thought),
 				teacherId: p.teacher?.id ?? null,
 				teacherName: name(p.teacher)
 			}))
@@ -138,7 +137,8 @@ export const actions: Actions = {
 			details: optStr(fd, 'details'),
 			topic: optStr(fd, 'topic'),
 			topicUrl,
-			snack: optStr(fd, 'snack')
+			snack: optStr(fd, 'snack'),
+			thoughtMemberId: optInt(fd, 'thought')
 		});
 		return { saved: 'common' };
 	},

@@ -43,11 +43,12 @@
 								{#if p.details}<p class="hint">{p.details}</p>{/if}
 								<p class="hint">
 									{#if p.leaderName}Leitung: {p.leaderName}<br />{/if}
-									{#if p.teacherName}Lehrer: {p.teacherName}{:else if p.thoughtName}Gedanke: {p.thoughtName}{/if}
+									{#if p.teacherName}Lehrer: {p.teacherName}{/if}
 								</p>
 							</div>
 						{/each}
 					</div>
+					{#if ev.thoughtName}<p class="hint">Gedanke: {ev.thoughtName}</p>{/if}
 					{#if ev.snack}<p class="hint">Snack: {ev.snack}</p>{/if}
 				{/if}
 			</div>
@@ -70,9 +71,9 @@
 		<h2 class="month-title">{g.label}</h2>
 		<div class="section table-wrap">
 			<table class="table overview stack">
-				<colgroup><col class="c-day" /><col class="c-kind" /><col class="c-person" /><col class="c-person" /><col /><col /></colgroup>
+				<colgroup><col class="c-day" /><col class="c-kind" /><col class="c-person" /><col class="c-person" />{#if !sunday}<col class="c-person" />{/if}<col /><col /></colgroup>
 				<thead>
-					<tr><th class="col-day">Datum</th><th>Typ</th><th>JD</th><th>JM</th><th>{sunday ? 'Thema' : 'Snack'}</th><th>Hinweis</th></tr>
+					<tr><th class="col-day">Datum</th><th>Typ</th><th>JD</th><th>JM</th>{#if !sunday}<th>Gedanke</th>{/if}<th>{sunday ? 'Thema' : 'Snack'}</th><th>Hinweis</th></tr>
 				</thead>
 				<tbody>
 					{#each g.items as r}
@@ -81,11 +82,12 @@
 							<td class="col-day td-main td-inline">{#if off}{r.dateLabel}{:else}<a href="/jugend/{r.date}">{r.dateLabel}</a>{/if}</td>
 							<td class="td-inline td-kind">{r.kindLabel}</td>
 							{#if r.status === 'off'}
-								<td></td><td></td><td></td>
+								<td></td><td></td>{#if !sunday}<td></td>{/if}<td></td>
 								<td>{r.offLabel ?? ''}</td>
 							{:else}
 								<td data-label="JD">{@render cell(r, r.jd)}</td>
 								<td data-label="JM">{@render cell(r, r.jm)}</td>
+								{#if !sunday}<td data-label={r.thought ? 'Gedanke' : null}>{r.thought ?? ''}</td>{/if}
 								<td data-label={r.extra ? (sunday ? 'Thema' : 'Snack') : null}>{r.extra ?? ''}</td>
 								<td>{r.hint ?? ''}</td>
 							{/if}

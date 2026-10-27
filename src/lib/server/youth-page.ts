@@ -18,8 +18,9 @@ export interface YouthPageItem {
 	topic: string | null;
 	topicUrl: string | null;
 	snack: string | null;
+	thoughtName: string | null;
 	joint: boolean;
-	parts: { side: YouthPartSide; label: 'Junge Damen' | 'Junge Männer' | null; planned: boolean; text: string | null; details: string | null; leaderName: string | null; thoughtName: string | null; teacherName: string | null }[];
+	parts: { side: YouthPartSide; label: 'Junge Damen' | 'Junge Männer' | null; planned: boolean; text: string | null; details: string | null; leaderName: string | null; teacherName: string | null }[];
 }
 
 const SIDE_LABELS = { jd: 'Junge Damen', jm: 'Junge Männer', both: null } as const;
@@ -49,14 +50,13 @@ function toItem(e: YouthEventFull, names: Map<number, string>): YouthPageItem {
 	const sides: YouthPartSide[] = e.event.joint ? ['both'] : ['jd', 'jm'];
 	return {
 		date, weekday: e.weekday, ...labels(date), kindLabel, status: e.status, offLabel: e.offLabel,
-		topic: e.event.topic, topicUrl: e.event.topicUrl, snack: e.event.snack, joint: e.event.joint,
+		topic: e.event.topic, topicUrl: e.event.topicUrl, snack: e.event.snack, thoughtName: name(e.thought), joint: e.event.joint,
 		parts: sides.map((side) => {
 			const p = e.parts.find((x) => x.side === side);
 			const leaderName = p ? (name(p.leader) ?? (p.leaderGroup ? (YOUTH_GROUP_LABELS[p.leaderGroup] ?? p.leaderGroup) : null)) : null;
-			const thoughtName = name(p?.thought ?? null);
 			const teacherName = name(p?.teacher ?? null);
 			const text = p?.text ?? null;
-			return { side, label: SIDE_LABELS[side], planned: e.event.kind === 'basel' || Boolean(text || leaderName || thoughtName || teacherName), text, details: p?.details ?? null, leaderName, thoughtName, teacherName };
+			return { side, label: SIDE_LABELS[side], planned: e.event.kind === 'basel' || Boolean(text || leaderName || teacherName), text, details: p?.details ?? null, leaderName, teacherName };
 		})
 	};
 }
@@ -75,7 +75,7 @@ export function youthPageItems(db: Db, today: string, opts: { big: number; small
 		if (b.kind === 'ferien' || date > last || events.some((e) => e.date === date && e.status === 'off' && e.offLabel === offLabel)) continue;
 		small.push({
 			date, weekday: 'other', ...labels(date), kindLabel: YOUTH_BREAK_KIND_LABELS[b.kind], status: 'off',
-			offLabel, topic: null, topicUrl: null, snack: null, joint: false, parts: []
+			offLabel, topic: null, topicUrl: null, snack: null, thoughtName: null, joint: false, parts: []
 		});
 	}
 	small.sort((a, b) => a.date.localeCompare(b.date));
@@ -94,7 +94,7 @@ export function compactText(i: YouthPageItem): string {
 		i.weekday === 'sunday' ? null : join(planned.map((p) => p.leaderName)) && `Leitung: ${join(planned.map((p) => p.leaderName))}`,
 		i.weekday === 'sunday'
 			? join(planned.map((p) => p.teacherName)) && `Lehrer: ${join(planned.map((p) => p.teacherName))}`
-			: join(planned.map((p) => p.thoughtName)) && `Gedanke: ${join(planned.map((p) => p.thoughtName))}`
+			: i.thoughtName && `Gedanke: ${i.thoughtName}`
 	];
 	return parts.filter(Boolean).join(' · ');
 }

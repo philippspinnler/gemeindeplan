@@ -13,7 +13,7 @@ beforeEach(() => {
 	db = createDb(':memory:');
 });
 
-const none = { text: null, leaderMemberId: null, leaderGroup: null, thoughtMemberId: null };
+const none = { text: null, leaderMemberId: null, leaderGroup: null };
 const common = (e: YouthEventFull, over: Partial<Parameters<typeof saveYouthCommon>[2]> = {}) =>
 	saveYouthCommon(db, e.event.id, { kind: e.event.kind, joint: e.event.joint, details: null, topic: null, topicUrl: null, snack: null, ...over });
 const load = (date: string) => loadYouthEvent(db, date)!;
@@ -90,6 +90,17 @@ describe('youth events', () => {
 		expect(load('2026-10-21').parts.map((p) => [p.side, p.text, p.leaderGroup])).toEqual([['both', 'Film\nKart', 'leitung']]);
 		common(e, { joint: false });
 		expect(load('2026-10-21').parts.map((p) => [p.side, p.text])).toEqual([['jd', 'Film\nKart'], ['jm', 'Film\nKart']]);
+	});
+	it('the Wednesday thought belongs to the event and survives a joint toggle', () => {
+		ensureYouthEvents(db, '2026-10-21', 0);
+		const mia = createMember(db, { firstName: 'Mia', lastName: 'Muster' });
+		const before = youthSectionVersions(load('2026-10-21')).common;
+		common(load('2026-10-21'), { thoughtMemberId: mia.id });
+		const e = load('2026-10-21');
+		expect([e.thought?.firstName, e.status]).toEqual(['Mia', 'planned']);
+		expect(youthSectionVersions(e).common).not.toBe(before);
+		common(e, { joint: true });
+		expect(load('2026-10-21').thought?.firstName).toBe('Mia');
 	});
 	it('saveYouthPart rejects a side that does not fit', () => {
 		ensureYouthEvents(db, '2026-10-19', 1);
