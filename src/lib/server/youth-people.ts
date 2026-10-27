@@ -1,8 +1,8 @@
-import { and, asc, eq, inArray } from 'drizzle-orm';
+import { and, eq, inArray } from 'drizzle-orm';
 import { getBishopricIds } from './bishopric';
 import type { Db } from './db';
 import { members, youth, youthLeaders, YOUTH_GROUPS, type Member, type YouthLeaderRole, type YouthSide } from './db/schema';
-import { memberQuery } from './members';
+import { byName, memberQuery } from './members';
 import { UserError } from './forms';
 
 export const YOUTH_GROUP_LABELS: Record<string, string> = {
@@ -24,8 +24,6 @@ export const YOUTH_LEADER_ROLE_LABELS: Record<YouthLeaderRole, string> = {
 };
 
 export interface YouthEntry { id: number; member: Member; side: YouthSide; group: string | null }
-
-const byName = (a: Member, b: Member) => a.lastName.localeCompare(b.lastName) || a.firstName.localeCompare(b.firstName);
 
 function loadMembers(db: Db, ids: number[]): Map<number, Member> {
 	if (!ids.length) return new Map();
@@ -52,9 +50,11 @@ export function removeYouth(db: Db, memberId: number): void {
 }
 
 export function listLeaders(db: Db): { id: number; member: Member; role: YouthLeaderRole }[] {
-	const rows = db.select().from(youthLeaders).orderBy(asc(youthLeaders.id)).all();
+	const rows = db.select().from(youthLeaders).all();
 	const byId = loadMembers(db, rows.map((r) => r.memberId));
-	return rows.flatMap((r) => (byId.has(r.memberId) ? [{ id: r.id, member: byId.get(r.memberId)!, role: r.role }] : []));
+	return rows
+		.flatMap((r) => (byId.has(r.memberId) ? [{ id: r.id, member: byId.get(r.memberId)!, role: r.role }] : []))
+		.sort((a, b) => byName(a.member, b.member));
 }
 
 export function setLeaders(db: Db, role: YouthLeaderRole, memberIds: number[]): void {

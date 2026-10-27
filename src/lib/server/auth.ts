@@ -1,6 +1,7 @@
 import { hash, verify } from '@node-rs/argon2';
 import { and, desc, eq, gt, gte, isNull, lt, ne } from 'drizzle-orm';
 import { createHash, randomBytes } from 'node:crypto';
+import { collator } from '../table-sort';
 import type { Db } from './db';
 import { invites, loginAttempts, sessions, users, type Invite, type Role, type User } from './db/schema';
 
@@ -184,7 +185,7 @@ export async function acceptInvite(db: Db, tok: string, password: string, now: D
 }
 
 export function listUsers(db: Db): User[] {
-	return db.select().from(users).orderBy(users.name).all();
+	return db.select().from(users).all().sort((a, b) => collator.compare(a.name, b.name));
 }
 
 export function listOpenInvites(db: Db, now: Date = new Date()): Invite[] {

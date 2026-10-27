@@ -1,5 +1,6 @@
-import { and, asc, eq, getTableColumns, type SQL } from 'drizzle-orm';
+import { and, eq, getTableColumns, type SQL } from 'drizzle-orm';
 import { normalizeName, stripPrefix } from '../names';
+import { collator } from '../table-sort';
 import type { Db } from './db';
 import { members, stakeCallings, type Member, type MemberKind } from './db/schema';
 
@@ -35,10 +36,12 @@ export function listMembers(db: Db, opts: { activeOnly?: boolean; kind?: MemberK
 	const conds = [];
 	if (opts.activeOnly) conds.push(eq(members.active, true));
 	if (opts.kind) conds.push(eq(members.kind, opts.kind));
-	return memberQuery(db, conds.length ? and(...conds) : undefined)
-		.orderBy(asc(members.lastName), asc(members.firstName))
-		.all();
+	return memberQuery(db, conds.length ? and(...conds) : undefined).all().sort(byName);
 }
+
+/** German alphabetical order; SQLite's own ordering puts umlauts and "von …" after Z. */
+export const byName = (a: Pick<Member, 'firstName' | 'lastName'>, b: Pick<Member, 'firstName' | 'lastName'>) =>
+	collator.compare(a.lastName, b.lastName) || collator.compare(a.firstName, b.firstName);
 
 export function getMember(db: Db, id: number): Member | undefined {
 	return memberQuery(db, eq(members.id, id)).get();

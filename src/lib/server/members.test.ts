@@ -60,3 +60,11 @@ describe('members', () => {
 		expect(again.noteTalk).toBe('gerne kurz');
 	});
 });
+
+describe('listMembers order', () => {
+	it('sorts German style, with umlauts and lowercase prefixes among their letters', () => {
+		const db = createDb(':memory:');
+		for (const [firstName, lastName] of [['Urs', 'Zbinden'], ['Lea', 'von Gunten'], ['Mia', 'Äbi'], ['Reto', 'Moser'], ['Anna', 'Moser']]) createMember(db, { firstName, lastName });
+		expect(listMembers(db).map(displayName)).toEqual(['Mia Äbi', 'Anna Moser', 'Reto Moser', 'Lea von Gunten', 'Urs Zbinden']);
+	});
+});

@@ -1,6 +1,6 @@
 import { formatDateShort } from '../dates';
 import type { Member } from './db/schema';
-import { displayName } from './members';
+import { byName, displayName } from './members';
 import { weeksAgoLabel, type MemberActivity } from './stats';
 
 export interface PickerOption { id: number; label: string; hint: string }
@@ -22,7 +22,6 @@ export function memberOptions(
 		const a = activity.get(m.id);
 		return mode === 'talk' ? (a?.nextTalk ?? null) : mode === 'prayer' ? (a?.nextPrayer ?? null) : null;
 	};
-	const byName = (a: Member, b: Member) => a.lastName.localeCompare(b.lastName, 'de') || a.firstName.localeCompare(b.firstName, 'de');
 	const sorted = [...visible].sort((a, b) => {
 		if (mode === 'plain') return byName(a, b);
 		const la = last(a), lb = last(b);
