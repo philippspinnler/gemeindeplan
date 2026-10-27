@@ -7,6 +7,7 @@ import {
 	classHeld, ensureYouthEvents, isFifthSunday, listYouthEvents, loadYouthEvent, saveYouthAdults, saveYouthCommon, saveYouthPart,
 	youthDatesBetween, youthSectionVersions, type YouthEventFull
 } from './youth';
+import { areaSummary } from './youth-list';
 
 let db: Db;
 beforeEach(() => {
@@ -110,6 +111,17 @@ describe('youth events', () => {
 		expect(load('2026-10-21').parts.map((p) => [p.side, p.area])).toEqual([['jd', 'sozial'], ['jm', 'koerperlich']]);
 		common(load('2026-10-21'), { joint: true });
 		expect(load('2026-10-21').parts.map((p) => [p.side, p.area])).toEqual([['both', 'sozial']]);
+	});
+	it('areaSummary shows one area when sides agree, both in JD / JM order otherwise', () => {
+		ensureYouthEvents(db, '2026-10-21', 0);
+		const id = load('2026-10-21').event.id;
+		expect(areaSummary(load('2026-10-21'))).toBeNull();
+		saveYouthPart(db, id, 'jm', { ...none, area: 'koerperlich' });
+		expect(areaSummary(load('2026-10-21'))).toBe('– / Körperlich');
+		saveYouthPart(db, id, 'jd', { ...none, area: 'koerperlich' });
+		expect(areaSummary(load('2026-10-21'))).toBe('Körperlich');
+		saveYouthPart(db, id, 'jd', { ...none, area: 'geistig' });
+		expect(areaSummary(load('2026-10-21'))).toBe('Geistig / Körperlich');
 	});
 	it('saveYouthPart rejects a side that does not fit', () => {
 		ensureYouthEvents(db, '2026-10-19', 1);

@@ -71,9 +71,9 @@
 		<h2 class="month-title">{g.label}</h2>
 		<div class="section table-wrap">
 			<table class="table overview stack">
-				<colgroup><col class="c-day" /><col class="c-kind" /><col class="c-person" /><col class="c-person" />{#if !sunday}<col class="c-person" />{/if}<col /><col /></colgroup>
+				<colgroup><col class="c-day" /><col class="c-kind" /><col class="c-person" /><col class="c-person" />{#if !sunday}<col class="c-person" /><col class="c-person" />{/if}<col /><col /></colgroup>
 				<thead>
-					<tr><th class="col-day">Datum</th><th>Art</th><th>JD</th><th>JM</th>{#if !sunday}<th>Gedanke</th>{/if}<th>{sunday ? 'Thema' : 'Snack'}</th><th>Hinweis</th></tr>
+					<tr><th class="col-day">Datum</th><th>Art</th><th>JD</th><th>JM</th>{#if !sunday}<th>Bereich</th><th>Gedanke</th>{/if}<th>{sunday ? 'Thema' : 'Snack'}</th><th>Hinweis</th></tr>
 				</thead>
 				<tbody>
 					{#each g.items as r}
@@ -82,12 +82,11 @@
 							<td class="col-day td-main td-inline">{#if off}{r.dateLabel}{:else}<a href="/jugend/{r.date}">{r.dateLabel}</a>{/if}</td>
 							<td class="td-inline td-kind">{r.kindLabel}</td>
 							{#if r.status === 'off'}
-								<td></td><td></td>{#if !sunday}<td></td>{/if}<td></td>
-								<td>{r.offLabel ?? ''}</td>
+								<td colspan={sunday ? 4 : 6}>{r.offLabel ?? ''}</td>
 							{:else}
 								<td data-label="JD">{@render cell(r, r.jd)}</td>
 								<td data-label="JM">{@render cell(r, r.jm)}</td>
-								{#if !sunday}<td data-label={r.thought ? 'Gedanke' : null}>{r.thought ?? ''}</td>{/if}
+								{#if !sunday}<td data-label={r.area ? 'Bereich' : null}>{r.area ?? ''}</td><td data-label={r.thought ? 'Gedanke' : null}>{r.thought ?? ''}</td>{/if}
 								<td data-label={r.extra ? (sunday ? 'Thema' : 'Snack') : null}>{r.extra ?? ''}</td>
 								<td>{r.hint ?? ''}</td>
 							{/if}

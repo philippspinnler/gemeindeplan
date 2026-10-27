@@ -1,7 +1,7 @@
 import { parseIso, todayIso, WEEKDAYS } from '../dates';
 import type { Db } from './db';
 import { overviewRange } from './overview';
-import { ensureYouthEvents, isFifthSunday, listYouthEvents, YOUTH_KIND_LABELS, type YouthEventFull } from './youth';
+import { ensureYouthEvents, isFifthSunday, listYouthEvents, YOUTH_AREA_LABELS, YOUTH_KIND_LABELS, type YouthEventFull } from './youth';
 import { youthPageItems } from './youth-page';
 import { YOUTH_GROUP_LABELS } from './youth-people';
 
@@ -13,6 +13,17 @@ function summary(e: YouthEventFull, side: 'jd' | 'jm'): string | null {
 	const base = e.weekday === 'wednesday' ? part.text : part.leaderGroup ? (YOUTH_GROUP_LABELS[part.leaderGroup] ?? part.leaderGroup) : null;
 	if (!base) return null;
 	return part.teacher ? `${base} · ${part.teacher.firstName}` : base;
+}
+
+/** Area per side in JD / JM order; one value when both match or the activity is joint. */
+export function areaSummary(e: YouthEventFull): string | null {
+	const label = (side: 'jd' | 'jm' | 'both') => {
+		const a = e.parts.find((p) => p.side === side)?.area;
+		return a ? YOUTH_AREA_LABELS[a] : null;
+	};
+	const both = e.event.joint ? [label('both')] : [label('jd'), label('jm')];
+	if (!both.some(Boolean)) return null;
+	return [...new Set(both.map((l) => l ?? '–'))].join(' / ');
 }
 
 /** Rows for one weekday of the youth list: Sundays (classes) or Wednesdays (activities). */
@@ -38,6 +49,7 @@ export function youthList(db: Db, url: URL, weekday: YouthWeekday) {
 				jm: summary(e, 'jm'),
 				extra: weekday === 'sunday' ? e.event.topic : e.event.snack,
 				thought: e.thought?.firstName ?? null,
+				area: areaSummary(e),
 				hint: fifth ? '5. Sonntag – Klasse mit Erwachsenen?' : null
 			};
 		});
