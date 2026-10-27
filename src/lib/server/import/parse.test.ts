@@ -59,17 +59,16 @@ describe('parseSpecial', () => {
 });
 
 describe('parseTalk', () => {
-	it('reads status markers from the topic', () => {
-		expect(parseTalk('Anna Rey', 'Confirm', false)).toEqual({ name: 'Anna Rey', topic: null, status: 'angefragt', durationMinutes: null, note: null });
-		expect(parseTalk('Anna Rey', 'Einladen', false)).toEqual({ name: 'Anna Rey', topic: null, status: 'offen', durationMinutes: null, note: null });
-		expect(parseTalk('Anna Rey', 'Rückfrage??', false)).toEqual({ name: 'Anna Rey', topic: null, status: 'zugesagt', durationMinutes: null, note: 'Rückfrage??' });
-		expect(parseTalk('Anna Rey', 'Nächstenliebe', false)).toEqual({ name: 'Anna Rey', topic: 'Nächstenliebe', status: 'zugesagt', durationMinutes: null, note: null });
-		expect(parseTalk('Anna Rey', 'Confirm', true)).toEqual({ name: 'Anna Rey', topic: null, status: 'zugesagt', durationMinutes: null, note: null });
-		expect(parseTalk('-', '', true)).toEqual({ name: null, topic: null, status: 'zugesagt', durationMinutes: null, note: null });
+	it('reads unconfirmed markers from the topic', () => {
+		expect(parseTalk('Anna Rey', 'Confirm', false)).toEqual({ name: 'Anna Rey', confirmed: false, durationMinutes: null });
+		expect(parseTalk('Anna Rey', 'Einladen', false)).toEqual({ name: 'Anna Rey', confirmed: false, durationMinutes: null });
+		expect(parseTalk('Anna Rey', 'Nächstenliebe', false)).toEqual({ name: 'Anna Rey', confirmed: true, durationMinutes: null });
+		expect(parseTalk('Anna Rey', 'Confirm', true)).toEqual({ name: 'Anna Rey', confirmed: true, durationMinutes: null });
+		expect(parseTalk('-', '', true)).toEqual({ name: null, confirmed: true, durationMinutes: null });
 	});
 	it('reads duration marks from name or topic field and ignores abbreviations', () => {
-		expect(parseTalk("15' Lena Hasler", '', true)).toEqual({ name: 'Lena Hasler', topic: null, status: 'zugesagt', durationMinutes: 15, note: null });
-		expect(parseTalk("Andrin Steiner 5'", 'Glaube', false)).toEqual({ name: 'Andrin Steiner', topic: 'Glaube', status: 'zugesagt', durationMinutes: 5, note: null });
-		expect(parseTalk('GK', '', true)).toEqual({ name: null, topic: null, status: 'zugesagt', durationMinutes: null, note: null });
+		expect(parseTalk("15' Lena Hasler", '', true)).toEqual({ name: 'Lena Hasler', confirmed: true, durationMinutes: 15 });
+		expect(parseTalk("Andrin Steiner 5'", 'Glaube', false)).toEqual({ name: 'Andrin Steiner', confirmed: true, durationMinutes: 5 });
+		expect(parseTalk('GK', '', true)).toEqual({ name: null, confirmed: true, durationMinutes: null });
 	});
 });

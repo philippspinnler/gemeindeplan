@@ -31,7 +31,7 @@ export const load: PageServerLoad = ({ locals, params }) => {
 		});
 		chair = id ? (listMembers(locals.db).find((x) => x.id === id) ?? null) : null;
 	}
-	const talks = full.talks.filter((t) => t.member || t.topic);
+	const talks = full.talks.filter((t) => t.member);
 	const order = programOrder(talks.map((t) => t.position));
 	const hymn = (slot: 'anfang' | 'abendmahl' | 'zwischen' | 'schluss') => {
 		const h = full.hymns[slot];
@@ -65,7 +65,7 @@ export const load: PageServerLoad = ({ locals, params }) => {
 			const t = talks.find((tt) => tt.position === position)!;
 			return {
 				label: `Ansprache ${t.position}`,
-				detail: [t.member ? displayName(t.member) : '', t.topic ?? ''].filter(Boolean).join(' – '),
+				detail: t.member ? displayName(t.member) : '',
 				time: t.durationMinutes ? `${t.durationMinutes} Min.` : ''
 			};
 		}),

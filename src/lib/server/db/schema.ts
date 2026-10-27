@@ -10,8 +10,6 @@ export function isFastLike(kind: MeetingKind): boolean {
 	return FAST_LIKE_KINDS.includes(kind);
 }
 export type MeetingKind = (typeof MEETING_KINDS)[number];
-export const STATUSES = ['offen', 'angefragt', 'zugesagt'] as const;
-export type Status = (typeof STATUSES)[number];
 export const HYMN_SLOTS = ['anfang', 'abendmahl', 'zwischen', 'schluss'] as const;
 export type HymnSlot = (typeof HYMN_SLOTS)[number];
 export const CALLING_KINDS = ['entlassung', 'berufung'] as const;
@@ -140,8 +138,7 @@ export const meetingPrayers = sqliteTable(
 		id: integer('id').primaryKey({ autoIncrement: true }),
 		meetingId: integer('meeting_id').notNull().references(() => meetings.id, { onDelete: 'cascade' }),
 		position: integer('position').notNull(),
-		memberId: integer('member_id').references(() => members.id),
-		status: text('status', { enum: STATUSES }).notNull().default('offen')
+		memberId: integer('member_id').references(() => members.id)
 	},
 	(t) => [uniqueIndex('meeting_prayers_pos').on(t.meetingId, t.position)]
 );
@@ -153,10 +150,8 @@ export const meetingTalks = sqliteTable(
 		meetingId: integer('meeting_id').notNull().references(() => meetings.id, { onDelete: 'cascade' }),
 		position: integer('position').notNull(),
 		memberId: integer('member_id').references(() => members.id),
-		topic: text('topic'),
 		durationMinutes: integer('duration_minutes'),
-		status: text('status', { enum: STATUSES }).notNull().default('offen'),
-		note: text('note')
+		confirmed: integer('confirmed', { mode: 'boolean' }).notNull().default(false)
 	},
 	(t) => [uniqueIndex('meeting_talks_pos').on(t.meetingId, t.position)]
 );

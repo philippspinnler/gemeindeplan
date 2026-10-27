@@ -155,7 +155,7 @@ function importProgram(db: Db, ws: ExcelJS.Worksheet | undefined, resolver: Memb
 			absences: txt(row, 5) || null
 		});
 		const prayers = [7, 8]
-			.map((col, i) => ({ position: i + 1, memberId: resolver.resolve(txt(row, col))?.id ?? null, status: 'zugesagt' as const }))
+			.map((col, i) => ({ position: i + 1, memberId: resolver.resolve(txt(row, col))?.id ?? null }))
 			.filter((p) => p.memberId !== null);
 		savePrayers(db, id, prayers);
 		const talks: TalkInput[] = [];
@@ -164,7 +164,7 @@ function importProgram(db: Db, ws: ExcelJS.Worksheet | undefined, resolver: Memb
 			if (!t.name) return;
 			const member = resolver.resolve(t.name);
 			if (!member) return;
-			talks.push({ position: i + 1, memberId: member.id, topic: t.topic, durationMinutes: t.durationMinutes, status: t.status, note: t.note });
+			talks.push({ position: i + 1, memberId: member.id, durationMinutes: t.durationMinutes, confirmed: t.confirmed });
 		});
 		saveTalks(db, id, talks);
 		const slots = emptySlots();

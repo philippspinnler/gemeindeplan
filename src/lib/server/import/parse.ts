@@ -1,6 +1,6 @@
 import { toIso } from '../../dates';
 import { parseDuration } from '../../duration';
-import type { MeetingKind, Status } from '../db/schema';
+import type { MeetingKind } from '../db/schema';
 
 type Obj = Record<string, unknown>;
 
@@ -94,7 +94,7 @@ export function parseTalk(
 	nameRaw: string,
 	topicRaw: string,
 	isPast: boolean
-): { name: string | null; topic: string | null; status: Status; durationMinutes: number | null; note: string | null } {
+): { name: string | null; confirmed: boolean; durationMinutes: number | null } {
 	let nameText = nameRaw.trim();
 	let topicText = topicRaw.trim();
 	let durationMinutes: number | null = null;
@@ -110,12 +110,7 @@ export function parseTalk(
 		}
 	}
 	const name = isIgnoredToken(nameText) ? null : nameText || null;
-	let topic: string | null = topicText || null;
-	let status: Status = 'zugesagt';
-	let note: string | null = null;
-	if (topic && /confirm/i.test(topic)) { status = 'angefragt'; topic = null; }
-	else if (topic && /einladen/i.test(topic)) { status = 'offen'; topic = null; }
-	else if (topic && /\?\?$/.test(topic)) { note = topic; topic = null; }
-	if (isPast) status = 'zugesagt';
-	return { name, topic, status, durationMinutes, note };
+	// "Confirm"/"einladen" in the topic column mark a talk that is not yet confirmed.
+	const confirmed = isPast || !/confirm|einladen/i.test(topicText);
+	return { name, confirmed, durationMinutes };
 }

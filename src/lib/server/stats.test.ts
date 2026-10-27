@@ -13,8 +13,8 @@ const TODAY = '2026-09-07';
 function sunday(date: string, opts: { talk?: number; prayer?: number; hymn?: number; kind?: 'normal' | 'generalkonferenz' } = {}) {
 	const m = createMeeting(db, date);
 	if (opts.kind) saveGeneral(db, m.id, { kind: opts.kind, theme: null, specialNote: null, presidingMemberId: null, absences: null });
-	if (opts.talk) saveTalks(db, m.id, [{ position: 1, memberId: opts.talk, topic: 'T', durationMinutes: 5, status: 'zugesagt', note: null }]);
-	if (opts.prayer) savePrayers(db, m.id, [{ position: 1, memberId: opts.prayer, status: 'zugesagt' }]);
+	if (opts.talk) saveTalks(db, m.id, [{ position: 1, memberId: opts.talk, durationMinutes: 5, confirmed: true }]);
+	if (opts.prayer) savePrayers(db, m.id, [{ position: 1, memberId: opts.prayer }]);
 	if (opts.hymn) saveMusic(db, m.id, { hymns: { anfang: { hymnNumber: opts.hymn, freeText: null }, abendmahl: { hymnNumber: null, freeText: null }, zwischen: { hymnNumber: null, freeText: null }, schluss: { hymnNumber: null, freeText: null } }, organistMemberId: null, conductorMemberId: null, musicNote: null });
 	return m;
 }
@@ -69,15 +69,15 @@ describe('hymnUsage', () => {
 describe('readiness', () => {
 	it('lists missing parts separately for program and music', () => {
 		const m = sunday('2026-09-13', { hymn: 3 });
-		saveTalks(db, m.id, [{ position: 1, memberId: anna, topic: null, durationMinutes: null, status: 'zugesagt', note: null }]);
+		saveTalks(db, m.id, [{ position: 1, memberId: anna, durationMinutes: null, confirmed: true }]);
 		const r = readiness(loadMeetingFullByDate(db, '2026-09-13')!);
-		expect(r.program).toEqual(['Leitung', 'Anfangsgebet', 'Schlussgebet', 'Ansprachen (1 von 2 zugesagt)']);
+		expect(r.program).toEqual(['Leitung', 'Anfangsgebet', 'Schlussgebet', 'Ansprachen (1 von 2 bestätigt)']);
 		expect(r.music).toEqual(['Abendmahlslied', 'Schlusslied', 'Orgel', 'Dirigieren']);
 	});
 	it('fast Sunday needs no talks, conferences need nothing', () => {
 		const f = sunday('2026-10-04');
 		saveGeneral(db, f.id, { kind: 'fastsonntag', theme: null, specialNote: null, presidingMemberId: anna, absences: null });
-		savePrayers(db, f.id, [{ position: 1, memberId: anna, status: 'zugesagt' }, { position: 2, memberId: beat, status: 'zugesagt' }]);
+		savePrayers(db, f.id, [{ position: 1, memberId: anna }, { position: 2, memberId: beat }]);
 		expect(readiness(loadMeetingFullByDate(db, '2026-10-04')!).program).toEqual([]);
 		sunday('2026-10-11', { kind: 'generalkonferenz' });
 		expect(readiness(loadMeetingFullByDate(db, '2026-10-11')!)).toEqual({ program: [], music: [] });

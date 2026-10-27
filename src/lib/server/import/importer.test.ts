@@ -96,10 +96,10 @@ describe('importWorkbooks', () => {
 		expect(m.presiding?.firstName).toBe('Urs');
 		expect(m.prayers).toHaveLength(1);
 		expect(m.prayers[0].member?.firstName).toBe('Anna');
-		expect(m.talks.map((t) => [t.position, t.member?.lastName, t.topic, t.status, t.note])).toEqual([
-			[1, 'Dürst', 'Glaube', 'zugesagt', null],
-			[2, 'Neuer', null, 'zugesagt', null],
-			[3, 'Rey', null, 'zugesagt', 'Rückfrage??']
+		expect(m.talks.map((t) => [t.position, t.member?.lastName, t.confirmed])).toEqual([
+			[1, 'Dürst', true],
+			[2, 'Neuer', true],
+			[3, 'Rey', true]
 		]);
 		expect(m.hymns.anfang.hymn?.number).toBe(47);
 		expect(m.hymns.abendmahl.hymn?.number).toBe(61);
@@ -110,11 +110,11 @@ describe('importWorkbooks', () => {
 		expect(m.meeting.musicNote).toContain('Dirigieren: Lea');
 		expect(m.meeting.musicNote).toContain('Mia');
 	});
-	it('sets status and type for future Sundays', () => {
+	it('marks future talks unconfirmed and sets the type', () => {
 		const f = loadMeetingFullByDate(db, '2026-10-11')!;
 		expect(f.meeting.kind).toBe('fastsonntag');
 		expect(f.meeting.specialNote).toBeNull();
-		expect(f.talks.map((t) => [t.member?.lastName, t.status])).toEqual([['Rey', 'angefragt'], ['Neu', 'offen']]);
+		expect(f.talks.map((t) => [t.member?.lastName, t.confirmed])).toEqual([['Rey', false], ['Neu', false]]);
 		expect(f.hymns.anfang.hymn?.number).toBe(1019);
 		// Fast Sunday: no intermediate hymn even if the source names one ("PV singt")
 		expect(f.hymns.zwischen).toEqual({ hymn: null, freeText: null });

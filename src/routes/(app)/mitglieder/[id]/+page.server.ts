@@ -28,8 +28,7 @@ export const load: PageServerLoad = ({ locals, params }) => {
 			? memberHistory(locals.db, member.id).map((h) => ({
 					date: h.date,
 					dateLabel: formatDateDe(h.date),
-					what: h.kind === 'talk' ? `Ansprache ${h.position}` : h.position === 1 ? 'Anfangsgebet' : 'Schlussgebet',
-					topic: h.topic
+					what: h.kind === 'talk' ? `Ansprache ${h.position}` : h.position === 1 ? 'Anfangsgebet' : 'Schlussgebet'
 				}))
 			: []
 	};

@@ -1,13 +1,13 @@
 import { error, fail, type ActionFailure } from '@sveltejs/kit';
 import type { Actions, PageServerLoad } from './$types';
 import { formatDateLong, isSunday, todayIso } from '$lib/dates';
-import { HYMN_SLOTS, MEETING_KINDS, STATUSES, isFastLike, type HymnSlot, type MeetingKind, type Status } from '$lib/server/db/schema';
+import { HYMN_SLOTS, MEETING_KINDS, isFastLike, type HymnSlot, type MeetingKind } from '$lib/server/db/schema';
 import { optInt, optStr, str, strList } from '$lib/server/forms';
 import { hymnLabel, listHymns } from '$lib/server/hymns';
 import { displayName, listMembers } from '$lib/server/members';
 import { listStakeCallings } from '$lib/server/stake-callings';
 import {
-	KIND_LABELS, SLOT_LABELS, STATUS_LABELS, createMeeting, getMeetingByDate, hasProgram, loadMeetingFullByDate,
+	KIND_LABELS, SLOT_LABELS, createMeeting, getMeetingByDate, hasProgram, loadMeetingFullByDate,
 	saveAnnouncements, saveCallings, saveConductor, saveGeneral, saveMusic, savePrayers, saveTalks, sectionVersions, type Section, type TalkInput
 } from '$lib/server/meetings';
 import { can, requireRole } from '$lib/server/permissions';
@@ -17,7 +17,6 @@ import { memberActivity, readiness } from '$lib/server/stats';
 
 const DATE = /^\d{4}-\d{2}-\d{2}$/;
 const isKind = (k: string): k is MeetingKind => (MEETING_KINDS as readonly string[]).includes(k);
-const statusOf = (s: string): Status => ((STATUSES as readonly string[]).includes(s) ? (s as Status) : 'offen');
 
 function checkDate(date: string) {
 	if (!DATE.test(date) || !isSunday(date)) error(404, 'Kein gültiges Sonntagsdatum');
@@ -63,7 +62,7 @@ export const load: PageServerLoad = ({ locals, params }) => {
 	const stats = can(role, 'members.stats');
 	const activity = stats || canPrayers ? memberActivity(locals.db, today) : new Map();
 	const showFourth = full.talks.some((t) => t.position === 4);
-	const emptyTalk = (position: number) => ({ position, member: null, topic: null, durationMinutes: null, status: 'offen' as Status, note: null });
+	const emptyTalk = (position: number) => ({ position, member: null, durationMinutes: null, confirmed: false });
 	const kind = full.meeting.kind;
 	const fastLike = isFastLike(kind);
 	const hymnSlots = HYMN_SLOTS.filter((slot) => slot !== 'zwischen' || !fastLike);
@@ -121,7 +120,6 @@ export const load: PageServerLoad = ({ locals, params }) => {
 		open,
 		fastLike,
 		kinds: MEETING_KINDS.map((k) => ({ value: k, label: KIND_LABELS[k] })),
-		statuses: STATUSES.map((s) => ({ value: s, label: STATUS_LABELS[s] })),
 		organistName: full.organist ? displayName(full.organist) : null,
 		conductorName: full.conductor ? displayName(full.conductor) : null,
 		presidingOptions: showProgram ? memberOptions(presidingPool, activity, 'plain', today, full.meeting.presidingMemberId) : [],
@@ -148,10 +146,8 @@ export const load: PageServerLoad = ({ locals, params }) => {
 					return {
 						position,
 						memberId: t.member?.id ?? null,
-						topic: t.topic,
 						durationMinutes: t.durationMinutes,
-						status: t.status,
-						note: t.note,
+						confirmed: t.confirmed,
 						options: memberOptions(all, activity, stats ? 'talk' : 'plain', today, t.member?.id ?? null)
 					};
 				})
@@ -197,20 +193,18 @@ export const actions: Actions = {
 		savePrayers(
 			locals.db,
 			id,
-			[1, 2].map((position) => ({ position, memberId: optInt(fd, `prayer${position}_member`), status: 'zugesagt' as const }))
+			[1, 2].map((position) => ({ position, memberId: optInt(fd, `prayer${position}_member`) }))
 		);
 		const talks: TalkInput[] = [];
 		for (const position of [1, 2, 3, 4]) {
-			if (!fd.has(`talk${position}_status`)) continue;
+			if (!fd.has(`talk${position}_duration`)) continue;
 			const t: TalkInput = {
 				position,
 				memberId: optInt(fd, `talk${position}_member`),
-				topic: optStr(fd, `talk${position}_topic`),
 				durationMinutes: optInt(fd, `talk${position}_duration`),
-				status: statusOf(str(fd, `talk${position}_status`)),
-				note: optStr(fd, `talk${position}_note`)
+				confirmed: fd.get(`talk${position}_confirmed`) === '1'
 			};
-			if (t.memberId === null && t.topic === null && t.durationMinutes === null && t.note === null) continue;
+			if (t.memberId === null && t.durationMinutes === null && !t.confirmed) continue;
 			talks.push(t);
 		}
 		saveTalks(locals.db, id, talks);
@@ -234,7 +228,7 @@ export const actions: Actions = {
 		savePrayers(
 			locals.db,
 			id,
-			[1, 2].map((position) => ({ position, memberId: optInt(fd, `prayer${position}_member`), status: 'zugesagt' as const }))
+			[1, 2].map((position) => ({ position, memberId: optInt(fd, `prayer${position}_member`) }))
 		);
 		return { saved: 'prayers' };
 	},

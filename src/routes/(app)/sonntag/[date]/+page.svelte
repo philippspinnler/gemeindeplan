@@ -125,21 +125,16 @@
 	/>
 {/snippet}
 
-{#snippet talkCard(t: { position: number; memberId: number | null; topic: string | null; durationMinutes: number | null; status: string; note: string | null; options: { id: number; label: string; hint: string }[] } | undefined)}
+{#snippet talkCard(t: { position: number; memberId: number | null; durationMinutes: number | null; confirmed: boolean; options: { id: number; label: string; hint: string }[] } | undefined)}
 	{#if t}
 		<div class="card">
 			<strong>Ansprache {t.position}</strong>
-			<div class="grid-2">
-				<div class="field"><label for="talk{t.position}_member">Sprecher</label><MemberSelect id="talk{t.position}_member" name="talk{t.position}_member" form="programForm" options={t.options} value={t.memberId} /></div>
-				<div class="field"><label for="talk{t.position}_topic">Thema</label><input id="talk{t.position}_topic" name="talk{t.position}_topic" type="text" form="programForm" value={t.topic ?? ''} /></div>
-			</div>
 			<div class="grid-3">
+				<div class="field"><label for="talk{t.position}_member">Sprecher</label><MemberSelect id="talk{t.position}_member" name="talk{t.position}_member" form="programForm" options={t.options} value={t.memberId} /></div>
 				<div class="field"><label for="talk{t.position}_duration">Dauer (Minuten)</label><input id="talk{t.position}_duration" name="talk{t.position}_duration" type="number" min="1" max="60" form="programForm" value={t.durationMinutes ?? ''} /></div>
-				<div class="field">
-					<label for="talk{t.position}_status">Status</label>
-					<select id="talk{t.position}_status" name="talk{t.position}_status" form="programForm">{#each data.missing ? [] : data.statuses as s}<option value={s.value} selected={s.value === t.status}>{s.label}</option>{/each}</select>
+				<div class="field" style="justify-content: flex-end">
+					<label class="check"><input type="checkbox" name="talk{t.position}_confirmed" value="1" form="programForm" checked={t.confirmed} /> Bestätigt</label>
 				</div>
-				<div class="field"><label for="talk{t.position}_note">Notiz</label><input id="talk{t.position}_note" name="talk{t.position}_note" type="text" form="programForm" value={t.note ?? ''} /></div>
 			</div>
 		</div>
 	{/if}

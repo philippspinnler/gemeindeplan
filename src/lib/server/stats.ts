@@ -59,9 +59,9 @@ export function weeksAheadLabel(nextDate: string, today: string): string {
 	return `in ${w} Wochen`;
 }
 
-export function memberHistory(db: Db, memberId: number): { date: string; kind: 'talk' | 'prayer'; position: number; topic: string | null }[] {
+export function memberHistory(db: Db, memberId: number): { date: string; kind: 'talk' | 'prayer'; position: number }[] {
 	const talks = db
-		.select({ date: meetings.date, position: meetingTalks.position, topic: meetingTalks.topic })
+		.select({ date: meetings.date, position: meetingTalks.position })
 		.from(meetingTalks).innerJoin(meetings, eq(meetings.id, meetingTalks.meetingId))
 		.where(eq(meetingTalks.memberId, memberId)).all()
 		.map((r) => ({ ...r, kind: 'talk' as const }));
@@ -69,7 +69,7 @@ export function memberHistory(db: Db, memberId: number): { date: string; kind: '
 		.select({ date: meetings.date, position: meetingPrayers.position })
 		.from(meetingPrayers).innerJoin(meetings, eq(meetings.id, meetingPrayers.meetingId))
 		.where(eq(meetingPrayers.memberId, memberId)).all()
-		.map((r) => ({ ...r, topic: null as string | null, kind: 'prayer' as const }));
+		.map((r) => ({ ...r, kind: 'prayer' as const }));
 	return [...talks, ...prayers].sort((a, b) => (a.date < b.date ? 1 : a.date > b.date ? -1 : 0));
 }
 
@@ -110,8 +110,8 @@ export function readiness(m: MeetingFull): { program: string[]; music: string[] 
 	if (!prayer(1)?.member) program.push('Anfangsgebet');
 	if (!prayer(2)?.member) program.push('Schlussgebet');
 	if (!isFastLike(kind)) {
-		const confirmed = m.talks.filter((t) => t.member && t.status === 'zugesagt').length;
-		if (confirmed < 2) program.push(`Ansprachen (${confirmed} von 2 zugesagt)`);
+		const confirmed = m.talks.filter((t) => t.member && t.confirmed).length;
+		if (confirmed < 2) program.push(`Ansprachen (${confirmed} von 2 bestätigt)`);
 	}
 	for (const slot of ['anfang', 'abendmahl', 'schluss'] as const) {
 		const h = m.hymns[slot];

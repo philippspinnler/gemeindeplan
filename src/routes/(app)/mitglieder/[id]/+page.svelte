@@ -67,10 +67,10 @@
 			<p class="muted">Noch keine Ansprachen oder Gebete erfasst.</p>
 		{:else}
 			<table class="table stack">
-				<thead><tr><th>Datum</th><th>Was</th><th>Thema</th></tr></thead>
+				<thead><tr><th>Datum</th><th>Was</th></tr></thead>
 				<tbody>
 					{#each data.history as h}
-						<tr><td class="td-main td-inline"><a href="/sonntag/{h.date}">{h.dateLabel}</a></td><td class="td-inline">{h.what}</td><td class="muted">{h.topic ?? ''}</td></tr>
+						<tr><td class="td-main td-inline"><a href="/sonntag/{h.date}">{h.dateLabel}</a></td><td class="td-inline">{h.what}</td></tr>
 					{/each}
 				</tbody>
 			</table>

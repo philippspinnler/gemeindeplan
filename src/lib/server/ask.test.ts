@@ -17,10 +17,10 @@ describe('askTables', () => {
 		const hr = ensureStakeCalling(db, 'Hoherat');
 		createMember(db, { firstName: 'Emil', lastName: 'Nef', kind: 'pfahl', stakeCallingId: hr.id });
 		const past = createMeeting(db, '2026-08-30');
-		saveTalks(db, past.id, [{ position: 1, memberId: anna.id, topic: 'T', durationMinutes: 5, status: 'zugesagt', note: null }]);
-		savePrayers(db, past.id, [{ position: 1, memberId: beat.id, status: 'zugesagt' }]);
+		saveTalks(db, past.id, [{ position: 1, memberId: anna.id, durationMinutes: 5, confirmed: true }]);
+		savePrayers(db, past.id, [{ position: 1, memberId: beat.id }]);
 		const future = createMeeting(db, '2026-09-20');
-		savePrayers(db, future.id, [{ position: 2, memberId: anna.id, status: 'angefragt' }]);
+		savePrayers(db, future.id, [{ position: 2, memberId: anna.id }]);
 
 		const t = askTables(db, TODAY);
 		expect(t.talks.map((r) => r.name)).toEqual(['Dora Arnold', 'Emil Nef (Hoherat)', 'Anna Rey']);

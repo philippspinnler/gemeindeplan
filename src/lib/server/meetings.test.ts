@@ -42,12 +42,12 @@ describe('meetings', () => {
 
 		saveGeneral(db, m.id, { kind: 'fastsonntag', theme: 'Familie', specialNote: null, presidingMemberId: joerg.id, absences: 'Reto' });
 		savePrayers(db, m.id, [
-			{ position: 1, memberId: anna.id, status: 'zugesagt' },
-			{ position: 2, memberId: null, status: 'offen' }
+			{ position: 1, memberId: anna.id },
+			{ position: 2, memberId: null }
 		]);
 		saveTalks(db, m.id, [
-			{ position: 1, memberId: anna.id, topic: 'Liebe', durationMinutes: 5, status: 'angefragt', note: null },
-			{ position: 3, memberId: null, topic: null, durationMinutes: 15, status: 'offen', note: 'kurzfristig' }
+			{ position: 1, memberId: anna.id, durationMinutes: 5, confirmed: false },
+			{ position: 3, memberId: null, durationMinutes: 15, confirmed: false }
 		]);
 		saveAnnouncements(db, m.id, ['Pfahl-Plauschtag', 'Neue 2. Stunde']);
 		saveCallings(db, m.id, [{ kind: 'berufung', personName: 'Nadja Moser', calling: 'FHV-Präsidentin' }]);
@@ -67,9 +67,9 @@ describe('meetings', () => {
 		const full = loadMeetingFullByDate(db, '2026-09-13')!;
 		expect(full.meeting.kind).toBe('fastsonntag');
 		expect(full.presiding?.firstName).toBe('Urs');
-		expect(full.prayers.map((p) => [p.position, p.member?.firstName ?? null, p.status])).toEqual([[1, 'Anna', 'zugesagt'], [2, null, 'offen']]);
+		expect(full.prayers.map((p) => [p.position, p.member?.firstName ?? null])).toEqual([[1, 'Anna'], [2, null]]);
 		expect(full.talks.map((t) => t.position)).toEqual([1, 3]);
-		expect(full.talks[1].note).toBe('kurzfristig');
+		expect(full.talks.map((t) => [t.durationMinutes, t.confirmed])).toEqual([[5, false], [15, false]]);
 		expect(full.announcements).toEqual(['Pfahl-Plauschtag', 'Neue 2. Stunde']);
 		expect(full.callings[0].calling).toBe('FHV-Präsidentin');
 		expect(full.hymns.anfang.hymn?.id).toBe(h1.id);
@@ -131,13 +131,13 @@ describe('sectionVersions', () => {
 		const v0 = sectionVersions(loadMeetingFullByDate(db, '2026-09-13')!);
 		expect(sectionVersions(loadMeetingFullByDate(db, '2026-09-13')!)).toEqual(v0);
 
-		saveTalks(db, m.id, [{ position: 1, memberId: anna.id, topic: null, durationMinutes: null, status: 'offen', note: null }]);
+		saveTalks(db, m.id, [{ position: 1, memberId: anna.id, durationMinutes: null, confirmed: false }]);
 		const v1 = sectionVersions(loadMeetingFullByDate(db, '2026-09-13')!);
 		expect(v1.program).not.toBe(v0.program);
 		expect(v1.music).toBe(v0.music);
 		expect(v1.prayers).toBe(v0.prayers);
 
-		savePrayers(db, m.id, [{ position: 1, memberId: anna.id, status: 'zugesagt' }]);
+		savePrayers(db, m.id, [{ position: 1, memberId: anna.id }]);
 		const v2 = sectionVersions(loadMeetingFullByDate(db, '2026-09-13')!);
 		expect(v2.prayers).not.toBe(v1.prayers);
 		expect(v2.program).not.toBe(v1.program);

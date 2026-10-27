@@ -78,6 +78,20 @@
       "when": 1793090062281,
       "tag": "0010_youth_part_area",
       "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "6",
+      "when": 1793090361775,
+      "tag": "0011_talk_confirmed",
+      "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "6",
+      "when": 1793090367337,
+      "tag": "0012_drop_talk_status",
+      "breakpoints": true
     }
   ]
 }

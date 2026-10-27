@@ -4,7 +4,7 @@ import { addMonths, isSunday, sundaysBetween } from '../dates';
 import type { Db } from './db';
 import {
 	announcements, callings, hymns, meetingHymns, meetingPrayers, meetingTalks, meetings, members,
-	HYMN_SLOTS, isFastLike, type CallingKind, type Hymn, type HymnSlot, type Meeting, type MeetingKind, type Member, type Status
+	HYMN_SLOTS, isFastLike, type CallingKind, type Hymn, type HymnSlot, type Meeting, type MeetingKind, type Member
 } from './db/schema';
 import { getHymnByNumber } from './hymns';
 import { memberQuery } from './members';
@@ -31,14 +31,13 @@ export const SLOT_LABELS: Record<HymnSlot, string> = {
 	zwischen: 'Zwischenlied',
 	schluss: 'Schlusslied'
 };
-export const STATUS_LABELS: Record<Status, string> = { offen: 'Offen', angefragt: 'Angefragt', zugesagt: 'Zugesagt' };
 
 export function hasProgram(kind: MeetingKind): boolean {
 	return kind === 'normal' || isFastLike(kind) || kind === 'ostern' || kind === 'weihnachten' || kind === 'gemeindekonferenz';
 }
 
-export interface PrayerRow { position: number; member: Member | null; status: Status }
-export interface TalkRow { position: number; member: Member | null; topic: string | null; durationMinutes: number | null; status: Status; note: string | null }
+export interface PrayerRow { position: number; member: Member | null }
+export interface TalkRow { position: number; member: Member | null; durationMinutes: number | null; confirmed: boolean }
 export interface CallingRow { kind: CallingKind; personName: string; calling: string }
 export interface MeetingFull {
 	meeting: Meeting;
@@ -53,8 +52,8 @@ export interface MeetingFull {
 	announcements: string[];
 	callings: CallingRow[];
 }
-export interface PrayerInput { position: number; memberId: number | null; status: Status }
-export interface TalkInput { position: number; memberId: number | null; topic: string | null; durationMinutes: number | null; status: Status; note: string | null }
+export interface PrayerInput { position: number; memberId: number | null }
+export interface TalkInput { position: number; memberId: number | null; durationMinutes: number | null; confirmed: boolean }
 
 const nowIso = () => new Date().toISOString();
 
@@ -108,8 +107,8 @@ function assemble(db: Db, meeting: Meeting): MeetingFull {
 		chair: pick(meeting.chairMemberId),
 		organist: pick(meeting.organistMemberId),
 		conductor: pick(meeting.conductorMemberId),
-		prayers: prayerRows.map((p) => ({ position: p.position, member: pick(p.memberId), status: p.status })),
-		talks: talkRows.map((t) => ({ position: t.position, member: pick(t.memberId), topic: t.topic, durationMinutes: t.durationMinutes, status: t.status, note: t.note })),
+		prayers: prayerRows.map((p) => ({ position: p.position, member: pick(p.memberId) })),
+		talks: talkRows.map((t) => ({ position: t.position, member: pick(t.memberId), durationMinutes: t.durationMinutes, confirmed: t.confirmed })),
 		hymns: hymnMap,
 		announcements: annRows.map((a) => a.text),
 		callings: callRows.map((c) => ({ kind: c.kind, personName: c.personName, calling: c.calling }))
@@ -226,13 +225,13 @@ export type Section = 'program' | 'prayers' | 'music' | 'conductor';
  */
 export function sectionVersions(full: MeetingFull): Record<Section, string> {
 	const m = full.meeting;
-	const prayers = full.prayers.map((p) => [p.position, p.member?.id ?? null, p.status]);
+	const prayers = full.prayers.map((p) => [p.position, p.member?.id ?? null]);
 	const music = [Object.values(full.hymns).map((h) => [h.hymn?.number ?? null, h.freeText]), m.organistMemberId, m.conductorMemberId, m.musicNote];
 	return {
 		program: versionHash([
 			m.kind, m.theme, m.specialNote, m.presidingMemberId, m.absences, m.guestMemberId, m.chairMemberId, m.stakeChanges,
 			prayers,
-			full.talks.map((t) => [t.position, t.member?.id ?? null, t.topic, t.durationMinutes, t.status, t.note]),
+			full.talks.map((t) => [t.position, t.member?.id ?? null, t.durationMinutes, t.confirmed]),
 			full.announcements,
 			full.callings
 		]),
