@@ -50,7 +50,7 @@ export const actions: Actions = {
 			kind,
 			stakeCallingId: kind === 'pfahl' ? optInt(fd, 'stakeCallingId') : null,
 			affiliation: kind === 'gemeinde' ? optStr(fd, 'affiliation') : null,
-			active: str(fd, 'active') === '1',
+			active: str(fd, 'hidden') !== '1',
 			noteTalk: optStr(fd, 'noteTalk'),
 			notePrayer: optStr(fd, 'notePrayer'),
 			noTalk: kind === 'gemeinde' && fd.get('noTalk') === '1',
