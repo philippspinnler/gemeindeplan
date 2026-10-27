@@ -259,7 +259,6 @@
 									{:else}
 										<p class="hint">Bischofschaft noch nicht festgelegt. Ein Admin kann sie unter Einstellungen erfassen.</p>
 									{/if}
-									{#if data.meeting.absencesLegacy}<p class="hint">Bisheriger Eintrag: {data.meeting.absencesLegacy}</p>{/if}
 								</div>
 							{/if}
 					{/if}

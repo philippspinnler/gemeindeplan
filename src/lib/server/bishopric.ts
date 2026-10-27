@@ -60,17 +60,14 @@ export function chairFor(input: { bishopric: BishopricEntry[]; absentIds: number
 	return null;
 }
 
-export function parseAbsences(text: string | null): { ids: number[]; legacy: string | null } {
-	if (!text) return { ids: [], legacy: null };
-	if (text.startsWith(ABSENCE_PREFIX)) {
-		const ids = text
-			.slice(ABSENCE_PREFIX.length)
-			.split(',')
-			.map(Number)
-			.filter((n) => Number.isInteger(n) && n > 0);
-		return { ids, legacy: null };
-	}
-	return { ids: [], legacy: text };
+/** Free text from the old sheets (without prefix) is ignored. */
+export function parseAbsences(text: string | null): number[] {
+	if (!text?.startsWith(ABSENCE_PREFIX)) return [];
+	return text
+		.slice(ABSENCE_PREFIX.length)
+		.split(',')
+		.map(Number)
+		.filter((n) => Number.isInteger(n) && n > 0);
 }
 
 export function formatAbsences(ids: number[]): string | null {

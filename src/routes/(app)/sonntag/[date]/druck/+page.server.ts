@@ -26,7 +26,7 @@ export const load: PageServerLoad = ({ locals, params }) => {
 		const g = full.guest;
 		const id = chairFor({
 			bishopric: getBishopric(locals.db),
-			absentIds: parseAbsences(m.absences).ids,
+			absentIds: parseAbsences(m.absences),
 			guest: g ? { id: g.id, presides: !!(g.stakeCallingId && callingsById.get(g.stakeCallingId)?.presides) } : null
 		});
 		chair = id ? (listMembers(locals.db).find((x) => x.id === id) ?? null) : null;

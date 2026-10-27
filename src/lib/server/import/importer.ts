@@ -3,6 +3,7 @@ import { isSunday } from '../../dates';
 import { splitFullName, splitListName } from '../../names';
 import type { Db } from '../db';
 import { HYMN_SLOTS, type HymnSlot, type Member } from '../db/schema';
+import { formatAbsences, getBishopricIds } from '../bishopric';
 import { createHymn, getHymnByNumber, updateHymn } from '../hymns';
 import { createMember, listMembers, matchByFirstName, matchMember, stakeFromAffiliation, updateMember } from '../members';
 import { ensureStakeCalling } from '../stake-callings';
@@ -139,6 +140,8 @@ function ensureMeeting(db: Db, date: string, report: ImportReport): number {
 
 function importProgram(db: Db, ws: ExcelJS.Worksheet | undefined, resolver: MemberResolver, today: string, report: ImportReport): void {
 	if (!ws) { report.warnings.push('Blatt Programm fehlt'); return; }
+	const bishopricIds = getBishopricIds(db);
+	const bishopric = listMembers(db).filter((m) => bishopricIds.includes(m.id));
 	ws.eachRow((row, n) => {
 		if (n < 3) return;
 		const date = cellDateIso(val(row, 2));
@@ -152,7 +155,8 @@ function importProgram(db: Db, ws: ExcelJS.Worksheet | undefined, resolver: Memb
 			theme: txt(row, 3) || null,
 			specialNote: spezial.note,
 			presidingMemberId: resolver.resolveFirst(txt(row, 6))?.id ?? null,
-			absences: txt(row, 5) || null
+			// Names that match no bishopric member are dropped and filled in by hand.
+			absences: formatAbsences(txt(row, 5).split(/,|\bund\b/).flatMap((name) => matchByFirstName(bishopric, name.trim())?.id ?? []))
 		});
 		const prayers = [7, 8]
 			.map((col, i) => ({ position: i + 1, memberId: resolver.resolve(txt(row, col))?.id ?? null }))

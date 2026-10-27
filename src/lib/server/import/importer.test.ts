@@ -5,6 +5,7 @@ import path from 'node:path';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { createDb, type Db } from '../db';
 import { getHymnByNumber, listHymns } from '../hymns';
+import { setBishopric } from '../bishopric';
 import { listMembers, matchMember } from '../members';
 import { loadMeetingFullByDate } from '../meetings';
 import { importWorkbooks, type ImportReport } from './importer';
@@ -24,7 +25,7 @@ async function writeFixtures(dir: string) {
 	const pr = av.addWorksheet('Programm');
 	pr.addRow([null, 'Liederplanung']);
 	pr.addRow(['OK', 'Datum', 'Thema', 'Spezial', 'Abwesenheiten', 'Leitung', 'Gebet1', 'Gebet2', 'Nr 1', 'Anfangslied', 'Nr 2', 'Abendmahlslied', 'Ansprache 1', 'Thema 1', 'Ansprache 2', 'Thema 2', 'Nr 3', 'Zwischelied', 'Ansprache 3', 'Thema 3', 'Anpsrache 4', 'Thema 4', 'Nr. 4', 'Schlusslied', 'Orgel', 'Dirigieren']);
-	pr.addRow([null, d(2026, 8, 30), 'Schwächen', null, 'Reto', 'Urs', 'Anna Rey', '-', 47, ' Herr und Gott der Himmelsheere', 61, ' Näher, mein Gott, zu dir', 'HR-Daniel Dürst', 'Glaube', 'Elder Neuer', null, 58, ' Führ, gütges Licht', 'Anna Rey', 'Rückfrage??', null, null, 33, ' Hört, ihr Geschöpfe all, frohlockt!', 'Vreni', 'Lea']);
+	pr.addRow([null, d(2026, 8, 30), 'Schwächen', null, 'Reto, Urs', 'Urs', 'Anna Rey', '-', 47, ' Herr und Gott der Himmelsheere', 61, ' Näher, mein Gott, zu dir', 'HR-Daniel Dürst', 'Glaube', 'Elder Neuer', null, 58, ' Führ, gütges Licht', 'Anna Rey', 'Rückfrage??', null, null, 33, ' Hört, ihr Geschöpfe all, frohlockt!', 'Vreni', 'Lea']);
 	pr.addRow([null, d(2026, 10, 4), null, 'Generalkonferenz']);
 	pr.addRow([null, d(2026, 10, 11), 'Gebet', 'Fastsonntag?', null, 'Urs', null, null, null, null, null, null, 'Anna Rey', 'Confirm', 'Unbekannt Neu', 'Einladen']);
 	pr.addRow([null, 'kein Datum']);
@@ -92,7 +93,8 @@ describe('importWorkbooks', () => {
 		const m = loadMeetingFullByDate(db, '2026-08-30')!;
 		expect(m.meeting.kind).toBe('normal');
 		expect(m.meeting.theme).toBe('Schwächen');
-		expect(m.meeting.absences).toBe('Reto');
+		// No bishopric is set yet, so no name can be assigned.
+		expect(m.meeting.absences).toBeNull();
 		expect(m.presiding?.firstName).toBe('Urs');
 		expect(m.prayers).toHaveLength(1);
 		expect(m.prayers[0].member?.firstName).toBe('Anna');
@@ -138,5 +140,14 @@ describe('importWorkbooks', () => {
 		expect(listMembers(db)).toHaveLength(7);
 		expect(loadMeetingFullByDate(db, '2026-08-30')!.talks).toHaveLength(3);
 		expect(loadMeetingFullByDate(db, '2026-10-18')!.meeting.musicNote).toBe(musicNoteBefore);
+	});
+});
+
+describe('importWorkbooks absences', () => {
+	it('keeps only names that match the bishopric', async () => {
+		const urs = matchMember(listMembers(db), 'Urs Bischof')!;
+		setBishopric(db, [{ id: urs.id, role: 'bischof' }]);
+		await importWorkbooks(db, path.join(dir, 'av.xlsx'), path.join(dir, 'lieder.xlsx'), { today: '2026-09-07' });
+		expect(loadMeetingFullByDate(db, '2026-08-30')!.meeting.absences).toBe(`ids:${urs.id}`);
 	});
 });

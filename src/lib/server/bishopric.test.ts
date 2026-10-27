@@ -27,12 +27,12 @@ describe('bishopric', () => {
 		expect(chairFor({ bishopric, absentIds: [], guest: { id: 51, presides: false } })).toBe(1);
 		expect(chairFor({ bishopric: [], absentIds: [], guest: null })).toBeNull();
 	});
-	it('encodes absences and recognizes legacy data', () => {
+	it('encodes absences and ignores free text from the old sheets', () => {
 		expect(formatAbsences([])).toBeNull();
 		expect(formatAbsences([2, 5, 2])).toBe('ids:2,5');
-		expect(parseAbsences('ids:2,5')).toEqual({ ids: [2, 5], legacy: null });
-		expect(parseAbsences('ids:')).toEqual({ ids: [], legacy: null });
-		expect(parseAbsences('Urs, Reto')).toEqual({ ids: [], legacy: 'Urs, Reto' });
-		expect(parseAbsences(null)).toEqual({ ids: [], legacy: null });
+		expect(parseAbsences('ids:2,5')).toEqual([2, 5]);
+		expect(parseAbsences('ids:')).toEqual([]);
+		expect(parseAbsences('Urs, Reto')).toEqual([]);
+		expect(parseAbsences(null)).toEqual([]);
 	});
 });

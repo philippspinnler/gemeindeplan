@@ -73,12 +73,12 @@ export const load: PageServerLoad = ({ locals, params }) => {
 	const bishopricIds = bishopricEntries.map((e) => e.id);
 	const bishopric = ward.filter((m) => bishopricIds.includes(m.id));
 	const presidingPool = bishopric.length ? ward.filter((m) => bishopricIds.includes(m.id) || m.id === full.meeting.presidingMemberId) : ward;
-	const absences = parseAbsences(full.meeting.absences);
+	const absentIds = parseAbsences(full.meeting.absences);
 	const callingsById = new Map(listStakeCallings(locals.db).map((c) => [c.id, c]));
 	const guest = full.guest;
 	const chairAutoId = chairFor({
 		bishopric: bishopricEntries,
-		absentIds: absences.ids,
+		absentIds,
 		guest: guest ? { id: guest.id, presides: !!(guest.stakeCallingId && callingsById.get(guest.stakeCallingId)?.presides) } : null
 	});
 	const chairAuto = chairAutoId ? (all.find((m) => m.id === chairAutoId) ?? null) : null;
@@ -106,8 +106,7 @@ export const load: PageServerLoad = ({ locals, params }) => {
 			conductorMemberId: full.meeting.conductorMemberId,
 			...(showProgram
 				? {
-						absenceIds: absences.ids,
-						absencesLegacy: absences.legacy,
+						absenceIds: absentIds,
 						presidingMemberId: full.meeting.presidingMemberId,
 						guestMemberId: full.meeting.guestMemberId,
 						chairMemberId: full.meeting.chairMemberId,
