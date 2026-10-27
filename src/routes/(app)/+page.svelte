@@ -78,7 +78,7 @@
 			{#if data.showProgram}
 				<p><strong>Leitung:</strong> {@render value(data.next.presiding)}</p>
 				<p><strong>Gebete:</strong> {@render value(data.next.prayers.opening)} · {@render value(data.next.prayers.closing)}</p>
-				<p><strong>Sprecher:</strong> {@render value(data.next.speakers.length ? data.next.speakers.join(', ') : null)}</p>
+				{#if data.next.hasTalks}<p><strong>Sprecher:</strong> {@render value(data.next.speakers.length ? data.next.speakers.join(', ') : null)}</p>{/if}
 			{/if}
 			<p><strong>Lieder:</strong> {@render value(data.next.hymns.length ? data.next.hymns.join(' · ') : null)}</p>
 			{#if data.showHymns}

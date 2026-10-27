@@ -21,6 +21,7 @@ describe('overview', () => {
 		expect(summarize(loadMeetingFullByDate(db, '2026-09-13')!, { showProgram: false, showPrayers: true }).prayers.closing).toBe('Rey, Anna');
 		expect(s.dateLabel).toBe('So, 13.09.2026');
 		expect(s.kindLabel).toBe('Normal');
+		expect(s.hasTalks).toBe(true);
 		expect(s.speakers).toEqual(['Rey, Anna']);
 		expect(s.missingProgram).toContain('Leitung');
 		expect(s.missingMusic).toContain('Orgel');

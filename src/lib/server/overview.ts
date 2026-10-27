@@ -1,5 +1,5 @@
 import { addDays, formatDateDe } from '../dates';
-import type { MeetingKind } from './db/schema';
+import { isFastLike, type MeetingKind } from './db/schema';
 import { hymnLabel } from './hymns';
 import { displayName } from './members';
 import { KIND_LABELS, hasProgram, type MeetingFull } from './meetings';
@@ -23,6 +23,8 @@ export interface MeetingSummary {
 	rated: boolean;
 	/** Conferences and "no meeting" have no program. */
 	hasProgram: boolean;
+	/** Fast Sundays have testimonies instead of talks. */
+	hasTalks: boolean;
 }
 
 export function summarize(m: MeetingFull, opts: { showProgram: boolean; showPrayers: boolean }): MeetingSummary {
@@ -49,7 +51,8 @@ export function summarize(m: MeetingFull, opts: { showProgram: boolean; showPray
 		organist: m.organist ? displayName(m.organist) : null,
 		conductor: m.conductor ? displayName(m.conductor) : null,
 		rated: isRated(m.meeting.kind),
-		hasProgram: hasProgram(m.meeting.kind)
+		hasProgram: hasProgram(m.meeting.kind),
+		hasTalks: !isFastLike(m.meeting.kind)
 	};
 }
 
