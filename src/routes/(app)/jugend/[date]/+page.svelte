@@ -79,14 +79,16 @@
 				{/if}
 			</div>
 		{/if}
-		<div class="field">
-			<label for="{s.side}_details">Details</label>
-			{#if s.canEdit}
-				<input id="{s.side}_details" name="details" type="text" form={formId} value={p?.details ?? ''} placeholder="z.B. Treffpunkt, was mitbringen" />
-			{:else}
-				<p>{p?.details ?? '–'}</p>
-			{/if}
-		</div>
+		{#if !data.isSunday}
+			<div class="field">
+				<label for="{s.side}_details">Details</label>
+				{#if s.canEdit}
+					<input id="{s.side}_details" name="details" type="text" form={formId} value={p?.details ?? ''} placeholder="z.B. Treffpunkt, was mitbringen" />
+				{:else}
+					<p>{p?.details ?? '–'}</p>
+				{/if}
+			</div>
+		{/if}
 		{#if kind !== 'basel'}
 		<div class="grid-2">
 			<div class="field">
