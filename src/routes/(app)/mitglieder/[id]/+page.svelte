@@ -31,7 +31,7 @@
 					</select>
 				</div>
 			{:else}
-				<div class="field"><label for="af">Bemerkung (optional, erscheint in Klammern)</label><input id="af" name="affiliation" type="text" value={m.affiliation ?? ''} placeholder="z.B. Missionar" /></div>
+				<div class="field"><label for="af">Bemerkung (optional)</label><input id="af" name="affiliation" type="text" value={m.affiliation ?? ''} placeholder="z.B. Missionar" /><span class="hint">Erscheint in Klammern hinter dem Namen.</span></div>
 			{/if}
 			{#if kind === 'gemeinde'}
 				<div class="grid-2">

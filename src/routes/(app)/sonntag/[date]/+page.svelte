@@ -237,8 +237,7 @@
 								<p>{data.meeting.theme ?? '–'}</p>
 							{/if}
 						</div>
-						<div class="grid-2">
-							<div class="field">
+						<div class="field">
 								<label for="specialNote">Besonderes</label>
 								{#if data.showProgram}
 									<input id="specialNote" name="specialNote" type="text" form="programForm" value={data.meeting.specialNote ?? ''} placeholder="z.B. Kindersegnung, FSY-Teilnehmer" />
@@ -263,7 +262,6 @@
 									{#if data.meeting.absencesLegacy}<p class="hint">Bisheriger Eintrag: {data.meeting.absencesLegacy}</p>{/if}
 								</div>
 							{/if}
-						</div>
 					{/if}
 				</div>
 			</div>
@@ -303,7 +301,7 @@
 							{/each}
 						</ul>
 						<div class="actions">
-							<button class="btn" type="button" onclick={() => announcements.push('')}>Zeile hinzufügen</button>
+							<button class="btn btn-small" type="button" onclick={() => announcements.push('')}>Bekanntmachung hinzufügen</button>
 						</div>
 					</div>
 				</div>

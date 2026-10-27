@@ -64,22 +64,33 @@
 						<p>{p?.text ?? '–'}</p>
 					{/if}
 				</div>
-				{#if s.canEdit && s.ideas.length}
+				{#if kind !== 'basel'}
 					<div class="field">
-						<span class="label">Ideen</span>
-						<ul class="row-list">
-							{#each s.ideas as i (i.id)}
-								<li>
-									<span title={i.note ? `${i.text} – ${i.note}` : i.text}>{i.text}</span>
-									<button class="btn btn-small" type="button" title={i.note ? `${i.text} – ${i.note}` : i.text} onclick={() => takeIdea(s.side, i)}>übernehmen</button>
-								</li>
-							{/each}
-						</ul>
+						<label for="{s.side}_area">Bereich</label>
+						{#if s.canEdit}
+							<select id="{s.side}_area" name="area" form={formId}>
+								<option value="" selected={!p?.area}>–</option>
+								{#each data.areas as a}<option value={a.value} selected={a.value === p?.area}>{a.label}</option>{/each}
+							</select>
+						{:else}
+							<p>{data.areas.find((a) => a.value === p?.area)?.label ?? '–'}</p>
+						{/if}
 					</div>
 				{/if}
 			</div>
-		{/if}
-		{#if !data.isSunday}
+			{#if s.canEdit && s.ideas.length}
+				<div class="field">
+					<span class="label">Ideen</span>
+					<ul class="row-list">
+						{#each s.ideas as i (i.id)}
+							<li>
+								<span title={i.note ? `${i.text} – ${i.note}` : i.text}>{i.text}</span>
+								<button class="btn btn-small" type="button" title={i.note ? `${i.text} – ${i.note}` : i.text} onclick={() => takeIdea(s.side, i)}>übernehmen</button>
+							</li>
+						{/each}
+					</ul>
+				</div>
+			{/if}
 			<div class="field">
 				<label for="{s.side}_details">Details</label>
 				{#if s.canEdit}
@@ -111,18 +122,6 @@
 						<MemberSelect id="{s.side}_teacher" name="teacher" form={formId} options={s.thoughtOptions} value={p?.teacherId ?? null} />
 					{:else}
 						<p>{p?.teacherName ?? '–'}</p>
-					{/if}
-				</div>
-			{:else}
-				<div class="field">
-					<label for="{s.side}_area">Bereich</label>
-					{#if s.canEdit}
-						<select id="{s.side}_area" name="area" form={formId}>
-							<option value="" selected={!p?.area}>–</option>
-							{#each data.areas as a}<option value={a.value} selected={a.value === p?.area}>{a.label}</option>{/each}
-						</select>
-					{:else}
-						<p>{data.areas.find((a) => a.value === p?.area)?.label ?? '–'}</p>
 					{/if}
 				</div>
 			{/if}
@@ -187,7 +186,12 @@
 		{:else if data.canCommon}
 			<input type="hidden" name="details" form="commonForm" value={ev.details ?? ''} />
 		{/if}
-		{#if data.isSunday}
+		{#if data.isSunday && data.off}
+			{#if data.canCommon}
+				<input type="hidden" name="topic" form="commonForm" value={ev.topic ?? ''} />
+				<input type="hidden" name="topicUrl" form="commonForm" value={ev.topicUrl ?? ''} />
+			{/if}
+		{:else if data.isSunday}
 			<div class="grid-2">
 				<div class="field">
 					<label for="topic">Thema</label>
