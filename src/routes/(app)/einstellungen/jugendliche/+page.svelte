@@ -4,6 +4,7 @@
 	import MemberSelect from '$lib/components/MemberSelect.svelte';
 	let { data, form } = $props();
 	let newSide = $state<'jd' | 'jm'>('jd');
+	let copied = $state(false);
 	const submitOnChange = (e: Event) => (e.currentTarget as HTMLSelectElement).form?.requestSubmit();
 </script>
 
@@ -22,7 +23,7 @@
 	<form method="POST" action="?/youthToken" use:enhance>
 		<div class="actions">
 			{#if data.youthToken}
-				<button class="btn" type="button" onclick={() => navigator.clipboard.writeText(`${page.url.origin}/j/${data.youthToken}`)}>Link kopieren</button>
+				<button class="btn" type="button" onclick={async () => { await navigator.clipboard.writeText(`${page.url.origin}/j/${data.youthToken}`); copied = true; setTimeout(() => (copied = false), 2000); }}>{copied ? 'Kopiert' : 'Link kopieren'}</button>
 			{/if}
 			<button class="btn" type="submit">{data.youthToken ? 'Neu erzeugen' : 'Link erzeugen'}</button>
 		</div>
@@ -56,7 +57,7 @@
 								{#each data.groups[y.side] as g}<option value={g.id} selected={y.group === g.id}>{g.label}</option>{/each}
 							</select>
 						</td>
-						<td class="td-actions"><button class="btn btn-small" type="submit" form="remove-{y.memberId}">entfernen</button></td>
+						<td class="td-actions"><button class="btn btn-small" type="submit" form="remove-{y.memberId}">Entfernen</button></td>
 					</tr>
 				{/each}
 			</tbody>

@@ -37,7 +37,7 @@
 					<td>
 						<form method="POST" action="?/dismiss" use:enhance>
 							<input type="hidden" name="id" value={i.id} />
-							<button class="btn" type="submit">verwerfen</button>
+							<button class="btn btn-small" type="submit">Verwerfen</button>
 						</form>
 					</td>
 				</tr>

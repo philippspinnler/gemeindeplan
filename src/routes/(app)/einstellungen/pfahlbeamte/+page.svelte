@@ -26,8 +26,7 @@
 			<li>
 				<form method="POST" action="?/renameCalling" use:enhance class="actions" style="flex: 1; margin: 0">
 					<input type="hidden" name="id" value={c.id} />
-					<input type="text" name="name" value={c.name} required style="flex: 1" />
-					<button class="btn btn-small" type="submit">Umbenennen</button>
+					<input type="text" name="name" value={c.name} required style="flex: 1" aria-label="Name der Berufung" onchange={submitOnChange} />
 				</form>
 				<form method="POST" action="?/presidesCalling" use:enhance>
 					<input type="hidden" name="id" value={c.id} />
@@ -58,7 +57,7 @@
 	<div class="section">
 		<form method="POST" action="?/create" class="grid-3">
 			<div class="field"><label for="fn">Vorname</label><input id="fn" name="firstName" type="text" required /></div>
-			<div class="field"><label for="ln">Nachname</label><input id="ln" name="lastName" type="text" /></div>
+			<div class="field"><label for="ln">Nachname (optional)</label><input id="ln" name="lastName" type="text" /></div>
 			<div class="field">
 				<label for="calling">Berufung</label>
 				<select id="calling" name="stakeCallingId">
@@ -66,7 +65,7 @@
 					{#each data.callings as c}<option value={c.id}>{c.name}</option>{/each}
 				</select>
 			</div>
-			<div class="actions"><button class="btn btn-primary" type="submit">Anlegen</button></div>
+			<div class="actions"><button class="btn btn-primary" type="submit">Hinzufügen</button></div>
 		</form>
 	</div>
 {/if}

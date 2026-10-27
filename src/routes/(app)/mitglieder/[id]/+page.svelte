@@ -19,7 +19,7 @@
 			<input type="hidden" name="version" value={data.version} />
 			<div class="grid-2">
 				<div class="field"><label for="fn">Vorname</label><input id="fn" name="firstName" type="text" required value={m.firstName} /></div>
-				<div class="field"><label for="ln">Nachname</label><input id="ln" name="lastName" type="text" value={m.lastName} /></div>
+				<div class="field"><label for="ln">Nachname (optional)</label><input id="ln" name="lastName" type="text" value={m.lastName} /></div>
 				<input type="hidden" name="kind" value={kind} />
 			</div>
 			{#if kind === 'pfahl'}

@@ -215,7 +215,7 @@
 				<div class="section">
 					<div class="grid-2">
 						<div class="field">
-							<label for="kind">Typ</label>
+							<label for="kind">Art</label>
 							{#if data.showProgram}
 								<select id="kind" name="kind" form="programForm">{#each data.kinds as k}<option value={k.value} selected={k.value === data.meeting.kind}>{k.label}</option>{/each}</select>
 							{:else}

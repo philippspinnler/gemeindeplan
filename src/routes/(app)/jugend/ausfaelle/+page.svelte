@@ -16,7 +16,7 @@
 	<form method="POST" action="?/create" use:enhance class="grid-3">
 		<div class="field"><label for="from">Von</label><input id="from" name="fromDate" type="date" required /></div>
 		<div class="field"><label for="to">Bis</label><input id="to" name="toDate" type="date" /></div>
-		<div class="field"><label for="label">Text</label><input id="label" name="label" type="text" placeholder="z.B. Herbstferien" /></div>
+		<div class="field"><label for="label">Bezeichnung</label><input id="label" name="label" type="text" placeholder="z.B. Herbstferien" /></div>
 		<div class="field">
 			<label for="kind">Art</label>
 			<select id="kind" name="kind">
@@ -39,7 +39,7 @@
 					<td>
 						<form method="POST" action="?/delete" use:enhance>
 							<input type="hidden" name="id" value={b.id} />
-							<button class="btn" type="submit">Löschen</button>
+							<button class="btn btn-small btn-danger" type="submit">Löschen</button>
 						</form>
 					</td>
 				</tr>

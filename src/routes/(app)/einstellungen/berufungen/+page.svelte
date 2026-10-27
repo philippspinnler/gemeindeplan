@@ -43,7 +43,7 @@
 					<form method="POST" action="?/leaders" use:enhance>
 						<input type="hidden" name="role" value={l.role} />
 						{#each l.members.filter((o) => o.id !== m.id) as o (o.id)}<input type="hidden" name="memberId" value={o.id} />{/each}
-						<button class="btn btn-small" type="submit">entfernen</button>
+						<button class="btn btn-small" type="submit">Entfernen</button>
 					</form>
 				</li>
 			{/each}
@@ -52,7 +52,7 @@
 			<form method="POST" action="?/leaders" use:enhance onchange={submitOnChange} class="field">
 				<input type="hidden" name="role" value={l.role} />
 				{#each l.members as o (o.id)}<input type="hidden" name="memberId" value={o.id} />{/each}
-				<label for="add-{l.role}">hinzufügen</label>
+				<label for="add-{l.role}">Hinzufügen</label>
 				<MemberSelect id="add-{l.role}" name="memberId" options={data.candidates} value={null} />
 			</form>
 		{/key}

@@ -1,20 +1,27 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
+	import { createAutosave } from '$lib/autosave.svelte';
 	let { data, form } = $props();
+	let formError = $derived(form?.error);
+	const autosave = createAutosave({ deps: () => data, onSaved: () => (formError = undefined) });
 </script>
 
 <p><a class="back" href="/lieder">Lieder</a></p>
 <h1>{data.hymn.number} – {data.hymn.title}</h1>
-{#if form?.error}<div class="error">{form.error}</div>{/if}
-{#if form?.saved}<div class="success">Gespeichert.</div>{/if}
+{#if formError}<div class="error">{formError}</div>{/if}
 
 <div class="section">
 	{#if data.canEdit}
-		<form method="POST" action="?/update" use:enhance class="grid-2">
+		<!-- svelte-ignore a11y_no_static_element_interactions -->
+		<form id="hymnForm" method="POST" action="?/update" use:enhance={() => autosave.saved('hymn')} class="grid-2" {...autosave.handlers}>
+			<input type="hidden" name="version" value={data.version} />
 			<div class="field"><label for="ti">Titel</label><input id="ti" name="title" type="text" required value={data.hymn.title} /></div>
-			<div class="field"><label for="du">Dauer (m:ss)</label><input id="du" name="duration" type="text" value={data.hymn.duration} placeholder="z.B. 3:45" /></div>
-			<div class="actions"><button class="btn btn-primary" type="submit">Speichern</button></div>
+			<div class="field"><label for="du">Dauer (m:ss, optional)</label><input id="du" name="duration" type="text" value={data.hymn.duration} placeholder="z.B. 3:45" /></div>
 		</form>
+		<div class="savebar no-print">
+			<span class="savebar-status" class:err={autosave.status.kind === 'error'}>{autosave.status.text}</span>
+			{#if autosave.conflict}<button class="btn btn-primary" type="button" onclick={() => location.reload()}>Seite neu laden</button>{/if}
+		</div>
 	{:else}
 		<p><strong>Buch:</strong> {data.hymn.book === 'neu' ? 'Neue Lieder' : 'Gesangbuch'} · <strong>Dauer:</strong> {data.hymn.duration || 'unbekannt'}</p>
 	{/if}

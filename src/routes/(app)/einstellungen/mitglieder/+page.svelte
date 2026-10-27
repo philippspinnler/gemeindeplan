@@ -24,9 +24,9 @@
 	<div class="section">
 		<form method="POST" action="?/create" class="grid-3">
 			<div class="field"><label for="fn">Vorname</label><input id="fn" name="firstName" type="text" required /></div>
-			<div class="field"><label for="ln">Nachname</label><input id="ln" name="lastName" type="text" /></div>
-			<div class="field"><label for="af">Bemerkung (optional, in Klammern)</label><input id="af" name="affiliation" type="text" placeholder="z.B. Missionar" /></div>
-			<div class="actions"><button class="btn btn-primary" type="submit">Anlegen</button></div>
+			<div class="field"><label for="ln">Nachname (optional)</label><input id="ln" name="lastName" type="text" /></div>
+			<div class="field"><label for="af">Bemerkung (optional, erscheint in Klammern)</label><input id="af" name="affiliation" type="text" placeholder="z.B. Missionar" /></div>
+			<div class="actions"><button class="btn btn-primary" type="submit">Hinzufügen</button></div>
 		</form>
 	</div>
 {/if}
