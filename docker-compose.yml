@@ -1,8 +1,8 @@
 services:
   app:
-    image: philippspinnler/pulpit:latest
+    image: philippspinnler/gemeindeplan:latest
     build: .
-    container_name: pulpit
+    container_name: gemeindeplan
     ports:
       - '3000:3000'
     volumes:

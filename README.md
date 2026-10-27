@@ -1,4 +1,4 @@
-# Pulpit
+# Gemeindeplan
 
 Planung der Abendmahlsversammlung (Programm, Sprecher, Gebete, Lieder, Leitungszettel) und der Jugendtermine (JD/JM). SvelteKit, SQLite, ein Container.
 
@@ -28,7 +28,7 @@ Die Jugendseite ist ohne Login erreichbar. Link unter Einstellungen → Allgemei
 
 ```bash
 cp .env.example .env     # ORIGIN = öffentliche Adresse, sonst schlagen Formulare fehl
-docker compose up -d     # zieht philippspinnler/pulpit:latest
+docker compose up -d     # zieht philippspinnler/gemeindeplan:latest
 ```
 
 Beim ersten Aufruf wird unter `/setup` das Admin-Konto angelegt. Weitere Personen lädt der Admin unter Einstellungen → Benutzer per Link ein. Das eigene Passwort ändert jede Person über ihren Namen oben rechts (Konto). Passwörter werden mit Argon2 gehasht gespeichert.
@@ -74,4 +74,4 @@ Umgebungsvariablen: `DATABASE_PATH` (Standard `data/app.db`), `DATABASE_KEY` (op
 
 ## Docker-Image
 
-Jeder Push auf `main` baut das Image und veröffentlicht es als `philippspinnler/pulpit:latest` auf Docker Hub (GitHub Actions, Secrets `DOCKERHUB_USERNAME` und `DOCKERHUB_TOKEN`).
+Jeder Push auf `main` baut das Image und veröffentlicht es als `philippspinnler/gemeindeplan:latest` auf Docker Hub (GitHub Actions, Secrets `DOCKERHUB_USERNAME` und `DOCKERHUB_TOKEN`).

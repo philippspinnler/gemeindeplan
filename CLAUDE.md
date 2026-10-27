@@ -1,4 +1,4 @@
-# Pulpit – conventions
+# Gemeindeplan – conventions
 
 - Code, identifiers, comments and test titles are English. UI strings, URLs (`/sonntag`, `/fragen`) and persisted enum values stay German – they are user-facing.
 - Comments only where the code cannot explain itself (a non-obvious decision, a trap, a `ponytail:` ceiling). No comments that restate the code.

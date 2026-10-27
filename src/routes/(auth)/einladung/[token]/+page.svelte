@@ -4,14 +4,14 @@
 
 <main class="container auth-box">
 	<div class="card">
-		<h1>{data.reset ? 'Neues Passwort' : 'Willkommen bei Pulpit'}</h1>
+		<h1>{data.reset ? 'Neues Passwort' : 'Willkommen bei Gemeindeplan'}</h1>
 		{#if data.invalid}
 			<div class="error">Diese Einladung ist ungültig oder abgelaufen. Bitte melde dich beim Admin.</div>
 		{:else}
 			{#if data.reset}
 				<p>Hallo {data.name}, bitte wähle ein neues Passwort für <strong>{data.email}</strong>.</p>
 			{:else}
-				<p>Hallo {data.name}, Pulpit ist unsere Planung für Abendmahlsversammlung und Jugend.</p>
+				<p>Hallo {data.name}, Gemeindeplan ist unsere Planung für Abendmahlsversammlung und Jugend.</p>
 				<p><strong>Deine Rolle: {data.roleLabel}.</strong> {data.roleHelp}</p>
 				<p>Bitte wähle ein Passwort für <strong>{data.email}</strong>.</p>
 			{/if}

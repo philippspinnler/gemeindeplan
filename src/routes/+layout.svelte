@@ -5,7 +5,7 @@
 </script>
 
 <svelte:head>
-	<title>Pulpit</title>
+	<title>Gemeindeplan</title>
 </svelte:head>
 
 {@render children()}

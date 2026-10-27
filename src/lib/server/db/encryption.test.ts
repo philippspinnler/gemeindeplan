@@ -6,7 +6,7 @@ import { afterEach, describe, expect, it } from 'vitest';
 import { createDb } from '.';
 import { createMember, listMembers } from '../members';
 
-const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'pulpit-enc-'));
+const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'gemeindeplan-enc-'));
 afterEach(() => fs.rmSync(dir, { recursive: true, force: true }));
 
 describe('database encryption', () => {
