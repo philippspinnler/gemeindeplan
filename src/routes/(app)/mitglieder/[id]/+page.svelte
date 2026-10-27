@@ -8,7 +8,7 @@
 	const autosave = createAutosave({ deps: () => data, onSaved: () => (formError = undefined) });
 </script>
 
-<p><a href={data.backHref}>← {data.backLabel}</a></p>
+<p><a class="back" href={data.backHref}>{data.backLabel}</a></p>
 <h1>{data.title}</h1>
 {#if formError}<div class="error">{formError}</div>{/if}
 

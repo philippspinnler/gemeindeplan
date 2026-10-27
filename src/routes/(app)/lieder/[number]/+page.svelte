@@ -3,7 +3,7 @@
 	let { data, form } = $props();
 </script>
 
-<p><a href="/lieder">← Lieder</a></p>
+<p><a class="back" href="/lieder">Lieder</a></p>
 <h1>{data.hymn.number} – {data.hymn.title}</h1>
 {#if form?.error}<div class="error">{form.error}</div>{/if}
 {#if form?.saved}<div class="success">Gespeichert.</div>{/if}

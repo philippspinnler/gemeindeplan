@@ -145,7 +145,7 @@
 	{/if}
 {/snippet}
 
-<p class="no-print"><a href="/">← Sonntage</a></p>
+<p class="no-print"><a class="back" href="/">Sonntage</a></p>
 
 {#if data.missing}
 	<h1>{data.dateLabel}</h1>
