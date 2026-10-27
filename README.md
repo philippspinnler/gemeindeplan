@@ -35,6 +35,8 @@ Beim ersten Aufruf wird unter `/setup` das Admin-Konto angelegt. Weitere Persone
 
 Die Datenbank liegt in `./data/app.db`. Backup über Einstellungen → Allgemein → "Datenbank herunterladen".
 
+Mit `DATABASE_KEY` in `.env` ist die Datenbank verschlüsselt gespeichert, auch der Backup-Download. Eine bestehende unverschlüsselte Datei wird beim nächsten Start verschlüsselt. **Ohne den Schlüssel sind Datenbank und Backups unlesbar – im Passwort-Manager aufbewahren, nicht neben den Backups.** Alte unverschlüsselte Backups danach löschen. Das `sqlite3`-Kommandozeilenwerkzeug kann die verschlüsselte Datei nicht öffnen.
+
 ## Import aus den bisherigen Sheets
 
 Beide Google Sheets als `.xlsx` exportieren und bei gestopptem Container auf dem Host importieren:
@@ -68,7 +70,7 @@ npm run check
 npm run db:generate  # Migration nach Schema-Änderung
 ```
 
-Umgebungsvariablen: `DATABASE_PATH` (Standard `data/app.db`), `ORIGIN`, `PORT`.
+Umgebungsvariablen: `DATABASE_PATH` (Standard `data/app.db`), `DATABASE_KEY` (optional, verschlüsselt die Datenbank), `ORIGIN`, `PORT`.
 
 ## Docker-Image
 

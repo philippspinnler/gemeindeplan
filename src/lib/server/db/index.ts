@@ -7,9 +7,29 @@ import * as schema from './schema';
 
 export type Db = BetterSQLite3Database<typeof schema> & { $client: Database.Database };
 
-export function createDb(file: string): Db {
-	if (file !== ':memory:') fs.mkdirSync(path.dirname(file), { recursive: true });
+/** With a key the file is encrypted at rest; an existing plain file is encrypted on first open. */
+function open(file: string, key: string | undefined): Database.Database {
 	const sqlite = new Database(file);
+	if (!key) return sqlite;
+	const pragma = `key='${key.replaceAll("'", "''")}'`;
+	sqlite.pragma(pragma);
+	try {
+		sqlite.prepare('SELECT count(*) FROM sqlite_master').get();
+		return sqlite;
+	} catch {
+		sqlite.close();
+	}
+	const plain = new Database(file);
+	// Rekeying is not supported in WAL mode.
+	plain.pragma('journal_mode = DELETE');
+	plain.pragma(`re${pragma}`);
+	plain.close();
+	return open(file, key);
+}
+
+export function createDb(file: string, key = process.env.DATABASE_KEY): Db {
+	if (file !== ':memory:') fs.mkdirSync(path.dirname(file), { recursive: true });
+	const sqlite = open(file, file === ':memory:' ? undefined : key);
 	sqlite.pragma('journal_mode = WAL');
 	sqlite.pragma('foreign_keys = ON');
 	const db = drizzle(sqlite, { schema }) as Db;

@@ -10,6 +10,7 @@ services:
     environment:
       - ORIGIN=${ORIGIN:-http://localhost:3000}
       - DATABASE_PATH=/data/app.db
+      - DATABASE_KEY=${DATABASE_KEY:-}
       - BODY_SIZE_LIMIT=1048576
       - TZ=Europe/Zurich
     restart: unless-stopped
