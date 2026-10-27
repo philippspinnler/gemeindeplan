@@ -64,6 +64,8 @@ textarea { min-height: 5rem; }
 .btn[aria-disabled='true'] { opacity: 0.4; cursor: default; }
 .sunday-nav .btn { min-width: 36px; justify-content: center; }
 .actions { display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: center; margin-top: 0.5rem; }
+/* A row of labelled fields plus a button: the button lines up with the inputs, not the labels. */
+.actions:has(> .field) { align-items: flex-end; }
 .grid-2 { display: grid; grid-template-columns: 1fr; gap: 0 1rem; }
 .grid-3 { display: grid; grid-template-columns: 1fr; gap: 0 1rem; }
 @media (min-width: 720px) { .grid-2 { grid-template-columns: 1fr 1fr; } .grid-3 { grid-template-columns: 1fr 1fr 1fr; } }
