@@ -61,9 +61,9 @@
 		<div class="section-title">
 			<span class="kind-tag">{data.next.kindLabel}</span>
 			<div class="actions">
-				<a class="btn btn-primary btn-icon" href="/sonntag/{data.next.date}" aria-label="Bearbeiten" title="Bearbeiten"><Icon name="edit" /><span>Bearbeiten</span></a>
+				<a class="btn btn-primary" href="/sonntag/{data.next.date}">Bearbeiten</a>
 				{#if data.showProgram && data.next.hasProgram}
-					<a class="btn btn-icon" href="/sonntag/{data.next.date}/druck?vollbild=1" data-sveltekit-reload aria-label="Vollbild" title="Vollbild"><Icon name="expand" /><span>Vollbild</span></a>
+					<a class="btn btn-icon" href="/sonntag/{data.next.date}/druck?vollbild=1" data-sveltekit-reload aria-label="Tablet-Ansicht" title="Tablet-Ansicht"><Icon name="tablet" /><span>Tablet-Ansicht</span></a>
 					<a class="btn btn-icon" href="/sonntag/{data.next.date}/druck" data-sveltekit-reload aria-label="Drucken" title="Drucken"><Icon name="print" /><span>Drucken</span></a>
 				{/if}
 			</div>

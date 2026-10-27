@@ -16,10 +16,10 @@
 <svelte:head><title>Leitungszettel {data.dateLabel}</title></svelte:head>
 
 {#if fullscreen}
-	<button class="btn btn-small close-fs no-print" type="button" onclick={() => (fullscreen = false)} aria-label="Vollbild beenden">✕</button>
+	<button class="btn btn-small close-fs no-print" type="button" onclick={() => (fullscreen = false)} aria-label="Tablet-Ansicht beenden">✕</button>
 {:else}
 	<div class="toolbar no-print">
-		<button class="btn btn-icon" type="button" aria-label="Vollbild" title="Vollbild" onclick={() => (fullscreen = true)}><Icon name="expand" /><span>Vollbild</span></button>
+		<button class="btn btn-icon" type="button" aria-label="Tablet-Ansicht" title="Tablet-Ansicht" onclick={() => (fullscreen = true)}><Icon name="tablet" /><span>Tablet-Ansicht</span></button>
 		<button class="btn btn-primary btn-icon" type="button" aria-label="Drucken" title="Drucken" onclick={() => window.print()}><Icon name="print" /><span>Drucken</span></button>
 	</div>
 {/if}

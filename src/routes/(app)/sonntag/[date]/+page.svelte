@@ -161,7 +161,7 @@
 			</div>
 			{#if data.canPrint}
 				<div class="actions">
-					<a class="btn btn-icon" href="/sonntag/{data.date}/druck?vollbild=1" data-sveltekit-reload aria-label="Vollbild" title="Vollbild"><Icon name="expand" /><span>Vollbild</span></a>
+					<a class="btn btn-icon" href="/sonntag/{data.date}/druck?vollbild=1" data-sveltekit-reload aria-label="Tablet-Ansicht" title="Tablet-Ansicht"><Icon name="tablet" /><span>Tablet-Ansicht</span></a>
 					<a class="btn btn-icon" href="/sonntag/{data.date}/druck" data-sveltekit-reload aria-label="Drucken" title="Drucken"><Icon name="print" /><span>Drucken</span></a>
 				</div>
 			{/if}
