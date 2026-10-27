@@ -13,6 +13,7 @@ import {
 import { can, requireRole } from '$lib/server/permissions';
 import { chairFor, formatAbsences, getBishopric, parseAbsences } from '$lib/server/bishopric';
 import { memberOptions } from '$lib/server/picker';
+import { whatsappAskUrl } from '$lib/whatsapp';
 import { memberActivity, readiness } from '$lib/server/stats';
 
 const DATE = /^\d{4}-\d{2}-\d{2}$/;
@@ -130,11 +131,14 @@ export const load: PageServerLoad = ({ locals, params }) => {
 		conductorOptions: memberOptions(ward, activity, 'plain', today, full.meeting.conductorMemberId),
 		prayers: showProgram || canPrayers
 			? [1, 2].map((position) => {
-					const memberId = full.prayers.find((x) => x.position === position)?.member?.id ?? null;
+					const member = full.prayers.find((x) => x.position === position)?.member ?? null;
+					const memberId = member?.id ?? null;
+					const label = position === 1 ? 'Anfangsgebet' : 'Schlussgebet';
 					return {
 						position,
-						label: position === 1 ? 'Anfangsgebet' : 'Schlussgebet',
+						label,
 						memberId,
+						askUrl: member ? whatsappAskUrl({ firstName: member.firstName, task: `das ${label} zu sprechen`, date, sender: locals.user!.name }) : null,
 						options: memberOptions(ward, activity, canPrayers ? 'prayer' : 'plain', today, memberId)
 					};
 				})
@@ -147,6 +151,9 @@ export const load: PageServerLoad = ({ locals, params }) => {
 						memberId: t.member?.id ?? null,
 						durationMinutes: t.durationMinutes,
 						confirmed: t.confirmed,
+						askUrl: t.member
+							? whatsappAskUrl({ firstName: t.member.firstName, task: 'eine Ansprache zu geben', date, theme: full.meeting.theme, minutes: t.durationMinutes, sender: locals.user!.name })
+							: null,
 						options: memberOptions(all, activity, stats ? 'talk' : 'plain', today, t.member?.id ?? null)
 					};
 				})

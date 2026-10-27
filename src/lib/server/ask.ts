@@ -13,6 +13,7 @@ export function askTables(db: Db, today: string): AskTables {
 	const row = (m: Member, last: string | null, next: string | null, note: string | null): AskRow => ({
 		id: m.id,
 		name: displayName(m),
+		firstName: m.firstName,
 		sortName: `${m.lastName} ${m.firstName}`.trim(),
 		lastDate: last,
 		nextDate: next,

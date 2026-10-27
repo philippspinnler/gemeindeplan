@@ -1,14 +1,16 @@
 import { error, fail } from '@sveltejs/kit';
 import type { Actions, PageServerLoad } from './$types';
-import { todayIso } from '$lib/dates';
-import { optStr } from '$lib/server/forms';
+import { addDays, formatDateShort, todayIso } from '$lib/dates';
+import { optInt, optStr } from '$lib/server/forms';
 import { askTables } from '$lib/server/ask';
 import { getMember, updateMember } from '$lib/server/members';
+import { assignOpenSlot, openSundays } from '$lib/server/meetings';
+import { live } from '$lib/server/live';
 import { can, requireRole } from '$lib/server/permissions';
 
 const KINDS = {
-	ansprachen: { title: 'Ansprachen', column: 'Letzte Ansprache', hint: 'Mitglieder, die keine Ansprache halten möchten, sind ausgeblendet.', action: 'ask.talks' as const, noteAction: 'notes.talk' as const, noteField: 'noteTalk' as const },
-	gebete: { title: 'Gebete', column: 'Letztes Gebet', hint: 'Mitglieder, die kein Gebet sprechen möchten, sind ausgeblendet. Pfahlbeamte werden nicht ums Gebet gebeten.', action: 'ask.prayers' as const, noteAction: 'notes.prayer' as const, noteField: 'notePrayer' as const }
+	ansprachen: { title: 'Ansprachen', column: 'Letzte Ansprache', hint: 'Mitglieder, die keine Ansprache halten möchten, sind ausgeblendet.', action: 'ask.talks' as const, noteAction: 'notes.talk' as const, noteField: 'noteTalk' as const, askKind: 'talk' as const, editAction: 'meeting.program' as const },
+	gebete: { title: 'Gebete', column: 'Letztes Gebet', hint: 'Mitglieder, die kein Gebet sprechen möchten, sind ausgeblendet. Pfahlbeamte werden nicht ums Gebet gebeten.', action: 'ask.prayers' as const, noteAction: 'notes.prayer' as const, noteField: 'notePrayer' as const, askKind: 'prayer' as const, editAction: 'meeting.prayers' as const }
 } as const;
 
 function kindOf(param: string) {
@@ -19,8 +21,16 @@ function kindOf(param: string) {
 export const load: PageServerLoad = ({ locals, params }) => {
 	const k = kindOf(params.kind);
 	requireRole(locals.user, k.action);
-	const tables = askTables(locals.db, todayIso());
-	return { title: k.title, column: k.column, hint: k.hint, canNote: can(locals.user!.role, k.noteAction), rows: params.kind === 'ansprachen' ? tables.talks : tables.prayers };
+	const today = todayIso();
+	const tables = askTables(locals.db, today);
+	const canAsk = can(locals.user!.role, k.editAction);
+	const sundays = canAsk
+		? openSundays(locals.db, today, addDays(today, 12 * 7), k.askKind).map((s) => ({ ...s, label: formatDateShort(s.date) }))
+		: [];
+	return {
+		title: k.title, column: k.column, hint: k.hint, askKind: k.askKind, canAsk, sundays, sender: locals.user!.name,
+		canNote: can(locals.user!.role, k.noteAction), rows: params.kind === 'ansprachen' ? tables.talks : tables.prayers
+	};
 };
 
 export const actions: Actions = {
@@ -31,6 +41,17 @@ export const actions: Actions = {
 		const id = Number(fd.get('id'));
 		if (!getMember(locals.db, id)) return fail(404, { error: 'Mitglied nicht gefunden' });
 		updateMember(locals.db, id, { [k.noteField]: optStr(fd, 'note') });
+		return { saved: true };
+	},
+	ask: async ({ request, locals, params }) => {
+		const k = kindOf(params.kind);
+		requireRole(locals.user, k.editAction);
+		const fd = await request.formData();
+		const id = Number(fd.get('id'));
+		const date = String(fd.get('date') ?? '');
+		if (!getMember(locals.db, id)) return fail(404, { error: 'Mitglied nicht gefunden' });
+		if (!assignOpenSlot(locals.db, date, k.askKind, id, optInt(fd, 'minutes'))) return fail(409, { error: 'Dieser Sonntag ist inzwischen voll. Bitte einen anderen wählen.' });
+		live.changed(`/sonntag/${date}`);
 		return { saved: true };
 	}
 };

@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { DEFAULT_ASK_SORT, sortAskRows, type AskRow } from './ask-sort';
 
 const row = (id: number, sortName: string, lastDate: string | null, nextDate: string | null = null, note = ''): AskRow => ({
-	id, name: sortName, sortName, lastDate, nextDate, label: '', planned: nextDate !== null, note
+	id, name: sortName, firstName: '', sortName, lastDate, nextDate, label: '', planned: nextDate !== null, note
 });
 const rows = [
 	row(1, 'Muster Anna', '2026-08-01', '2026-10-04'),

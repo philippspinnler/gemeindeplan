@@ -163,6 +163,55 @@ export function saveTalks(db: Db, meetingId: number, talks: TalkInput[]): void {
 	});
 }
 
+export type AskKind = 'talk' | 'prayer';
+/** `free` is minutes left for talks, open slots for prayers; `suggest` the talk length to propose. */
+export interface OpenSunday { date: string; theme: string | null; free: number; suggest: number | null; position: number; memberIds: number[] }
+
+// 30 minutes for talks, 5 of them kept back because members usually run over.
+const TALK_BUDGET = 25;
+const MIN_TALK = 5;
+const DEFAULT_TALK = 12;
+const ASK_POSITIONS: Record<AskKind, number[]> = { talk: [1, 2, 3, 4], prayer: [1, 2] };
+const askRows = (full: MeetingFull, kind: AskKind) => (kind === 'talk' ? full.talks : full.prayers);
+const freePositions = (full: MeetingFull, kind: AskKind) =>
+	ASK_POSITIONS[kind].filter((p) => !askRows(full, kind).some((r) => r.position === p && r.member));
+const talkMinutesLeft = (full: MeetingFull) =>
+	TALK_BUDGET - full.talks.reduce((sum, t) => sum + (t.member ? (t.durationMinutes ?? DEFAULT_TALK) : 0), 0);
+
+function openFor(full: MeetingFull, kind: AskKind): Omit<OpenSunday, 'date' | 'theme' | 'memberIds'> | null {
+	const kindOk = hasProgram(full.meeting.kind) && !(kind === 'talk' && isFastLike(full.meeting.kind));
+	const positions = freePositions(full, kind);
+	if (!kindOk || positions.length === 0) return null;
+	if (kind === 'prayer') return { free: positions.length, suggest: null, position: positions[0] };
+	const left = talkMinutesLeft(full);
+	return left < MIN_TALK ? null : { free: left, suggest: Math.min(DEFAULT_TALK, left), position: positions[0] };
+}
+
+/** Sundays in the range that still have room for a talk or a prayer. */
+export function openSundays(db: Db, from: string, to: string, kind: AskKind): OpenSunday[] {
+	return listMeetings(db, from, to).flatMap((f) => {
+		const open = openFor(f, kind);
+		if (!open) return [];
+		return [{ date: f.meeting.date, theme: f.meeting.theme, ...open, memberIds: askRows(f, kind).flatMap((r) => (r.member ? [r.member.id] : [])) }];
+	});
+}
+
+/** Puts the member unconfirmed into the first free slot; false when the Sunday has no room left. */
+export function assignOpenSlot(db: Db, date: string, kind: AskKind, memberId: number, minutes: number | null = null): boolean {
+	const full = loadMeetingFullByDate(db, date);
+	const open = full && openFor(full, kind);
+	if (!full || !open) return false;
+	const { position } = open;
+	if (kind === 'prayer') {
+		const rest = full.prayers.filter((p) => p.position !== position).map((p) => ({ position: p.position, memberId: p.member?.id ?? null }));
+		savePrayers(db, full.meeting.id, [...rest, { position, memberId }]);
+	} else {
+		const rest = full.talks.filter((t) => t.position !== position).map((t) => ({ position: t.position, memberId: t.member?.id ?? null, durationMinutes: t.durationMinutes, confirmed: t.confirmed }));
+		saveTalks(db, full.meeting.id, [...rest, { position, memberId, durationMinutes: minutes, confirmed: false }]);
+	}
+	return true;
+}
+
 export function saveAnnouncements(db: Db, meetingId: number, texts: string[]): void {
 	db.transaction((tx) => {
 		tx.delete(announcements).where(eq(announcements.meetingId, meetingId)).run();

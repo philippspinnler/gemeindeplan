@@ -6,6 +6,7 @@ export type AskSortState = SortState<AskSortKey>;
 export interface AskRow {
 	id: number;
 	name: string;
+	firstName: string;
 	sortName: string;
 	lastDate: string | null;
 	nextDate: string | null;

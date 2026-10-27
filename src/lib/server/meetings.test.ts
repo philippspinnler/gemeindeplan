@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, it } from 'vitest';
 import { createDb, type Db } from './db';
 import { createHymn } from './hymns';
 import { createMember } from './members';
-import { adjacentMeetingDates, createMeeting, ensureSundays, getMeetingByDate, hasProgram, listMeetings, loadMeetingFullByDate, saveAnnouncements, saveCallings, saveConductor, saveGeneral, saveMusic, savePrayers, saveTalks, sectionVersions } from './meetings';
+import { adjacentMeetingDates, assignOpenSlot, createMeeting, ensureSundays, getMeetingByDate, hasProgram, listMeetings, loadMeetingFullByDate, openSundays, saveAnnouncements, saveCallings, saveConductor, saveGeneral, saveMusic, savePrayers, saveTalks, sectionVersions } from './meetings';
 
 let db: Db;
 beforeEach(() => {
@@ -148,5 +148,38 @@ describe('sectionVersions', () => {
 		expect(v3.conductor).not.toBe(v2.conductor);
 		expect(v3.music).not.toBe(v2.music);
 		expect(v3.program).toBe(v2.program);
+	});
+});
+
+describe('asking for a free slot', () => {
+	it('offers Sundays by talk minutes left and fills the first free slot unconfirmed', () => {
+		const anna = createMember(db, { firstName: 'Anna', lastName: 'Rey' });
+		const lea = createMember(db, { firstName: 'Lea', lastName: 'Muster' });
+		const ben = createMember(db, { firstName: 'Ben', lastName: 'Beispiel' });
+		const m = createMeeting(db, '2026-11-08');
+		const fast = createMeeting(db, '2026-11-01');
+		saveGeneral(db, fast.id, { kind: 'fastsonntag', theme: null, specialNote: null, presidingMemberId: null, absences: null });
+		saveTalks(db, m.id, [{ position: 1, memberId: anna.id, durationMinutes: 10, confirmed: true }]);
+
+		expect(openSundays(db, '2026-10-27', '2026-11-30', 'talk')).toEqual([{ date: '2026-11-08', theme: null, free: 15, suggest: 12, position: 2, memberIds: [anna.id] }]);
+		expect(openSundays(db, '2026-10-27', '2026-11-30', 'prayer').map((s) => s.date)).toEqual(['2026-11-01', '2026-11-08']);
+		expect(assignOpenSlot(db, '2026-11-01', 'talk', lea.id, 12)).toBe(false);
+
+		expect(assignOpenSlot(db, '2026-11-08', 'talk', lea.id, 10)).toBe(true);
+		expect(openSundays(db, '2026-10-27', '2026-11-30', 'talk')[0]).toMatchObject({ free: 5, suggest: 5, position: 3 });
+		expect(assignOpenSlot(db, '2026-11-08', 'talk', ben.id, 5)).toBe(true);
+		expect(loadMeetingFullByDate(db, '2026-11-08')!.talks.map((t) => [t.position, t.member?.firstName, t.durationMinutes, t.confirmed])).toEqual([
+			[1, 'Anna', 10, true],
+			[2, 'Lea', 10, false],
+			[3, 'Ben', 5, false]
+		]);
+		expect(openSundays(db, '2026-10-27', '2026-11-30', 'talk')).toEqual([]);
+		expect(assignOpenSlot(db, '2026-11-08', 'talk', lea.id, 5)).toBe(false);
+	});
+	it('counts two talks of 12 minutes as a full Sunday', () => {
+		const anna = createMember(db, { firstName: 'Anna', lastName: 'Rey' });
+		const m = createMeeting(db, '2026-11-08');
+		saveTalks(db, m.id, [{ position: 1, memberId: anna.id, durationMinutes: 12, confirmed: true }, { position: 2, memberId: anna.id, durationMinutes: null, confirmed: false }]);
+		expect(openSundays(db, '2026-10-27', '2026-11-30', 'talk')).toEqual([]);
 	});
 });

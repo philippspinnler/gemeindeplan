@@ -124,7 +124,7 @@
 	/>
 {/snippet}
 
-{#snippet talkCard(t: { position: number; memberId: number | null; durationMinutes: number | null; confirmed: boolean; options: { id: number; label: string; hint: string }[] } | undefined)}
+{#snippet talkCard(t: { position: number; memberId: number | null; durationMinutes: number | null; confirmed: boolean; askUrl: string | null; options: { id: number; label: string; hint: string }[] } | undefined)}
 	{#if t}
 		<div class="card">
 			<strong>Ansprache {t.position}</strong>
@@ -135,6 +135,9 @@
 					<label class="check"><input type="checkbox" name="talk{t.position}_confirmed" value="1" form="programForm" checked={t.confirmed} /> Bestätigt</label>
 				</div>
 			</div>
+			{#if t.askUrl && !t.confirmed}
+				<div class="actions"><a class="btn btn-small" href={t.askUrl} target="_blank" rel="noopener noreferrer">Per WhatsApp anfragen</a></div>
+			{/if}
 		</div>
 	{/if}
 {/snippet}
@@ -379,7 +382,11 @@
 					<div class="section">
 						<div class="grid-2">
 							{#each data.prayers as p (p.position)}
-								<div class="field"><label for="prayer{p.position}">{p.label}</label><MemberSelect id="prayer{p.position}" name="prayer{p.position}_member" form={prayerForm} options={p.options} value={p.memberId} /></div>
+								<div class="field">
+									<label for="prayer{p.position}">{p.label}</label>
+									<MemberSelect id="prayer{p.position}" name="prayer{p.position}_member" form={prayerForm} options={p.options} value={p.memberId} />
+									{#if p.askUrl}<div class="actions"><a class="btn btn-small" href={p.askUrl} target="_blank" rel="noopener noreferrer">Per WhatsApp anfragen</a></div>{/if}
+								</div>
 							{/each}
 						</div>
 					</div>
