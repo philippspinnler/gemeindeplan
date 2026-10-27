@@ -73,7 +73,7 @@
 			<table class="table overview stack">
 				<colgroup><col class="c-day" /><col class="c-kind" /><col class="c-person" /><col class="c-person" />{#if !sunday}<col class="c-person" />{/if}<col /><col /></colgroup>
 				<thead>
-					<tr><th class="col-day">Datum</th><th>Typ</th><th>JD</th><th>JM</th>{#if !sunday}<th>Gedanke</th>{/if}<th>{sunday ? 'Thema' : 'Snack'}</th><th>Hinweis</th></tr>
+					<tr><th class="col-day">Datum</th><th>Art</th><th>JD</th><th>JM</th>{#if !sunday}<th>Gedanke</th>{/if}<th>{sunday ? 'Thema' : 'Snack'}</th><th>Hinweis</th></tr>
 				</thead>
 				<tbody>
 					{#each g.items as r}

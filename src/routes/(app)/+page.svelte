@@ -117,7 +117,7 @@
 				</colgroup>
 				<thead>
 					<tr>
-						<th class="col-day">Datum</th><th>Typ</th>
+						<th class="col-day">Datum</th><th>Art</th>
 						{#if data.prayersOnly}<th>Anfangsgebet</th><th>Schlussgebet</th>{:else}<th>Thema</th>{#if data.showProgram}<th>Leitung</th><th>Programm</th>{/if}{#if data.musicColumns}<th>Orgel / Klavier</th><th>Dirigieren</th>{/if}<th>Musik</th>{/if}
 					</tr>
 				</thead>

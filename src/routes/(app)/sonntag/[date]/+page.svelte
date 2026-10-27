@@ -227,7 +227,7 @@
 						{/if}
 					</div>
 					{#if !data.hasProgram}
-						<p class="hint">Für diesen Sonntagstyp gibt es kein Programm: keine Leitung, kein Thema, keine Gebete, Ansprachen oder Lieder.</p>
+						<p class="hint">Für diese Art Sonntag gibt es kein Programm: keine Leitung, kein Thema, keine Gebete, Ansprachen oder Lieder.</p>
 					{:else}
 						<div class="field">
 							<label for="theme">Thema</label>
