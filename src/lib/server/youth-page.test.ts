@@ -94,7 +94,7 @@ describe('youth page items', () => {
 			{ side: 'jm', label: 'Junge Männer', planned: false, text: null, details: null, leaderName: null, teacherName: null, topic: null, topicUrl: null }
 		]);
 		expect(item.thoughtName).toBe('Lea');
-		expect(compactText(item)).toBe('Aktivität · Film · Gedanke: Lea');
+		expect(compactText(item)).toBe('Aktivität · Film · Geistiger Gedanke: Lea');
 		// A leader may give the thought: first name only, like the youth.
 		setLeaders(db, 'jd_beraterin', [adult.id]);
 		saveYouthCommon(db, e.event.id, { kind: 'aktivitaet', joint: false, details: null, topic: null, topicUrl: null, snack: null, thoughtMemberId: adult.id });

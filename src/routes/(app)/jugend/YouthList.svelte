@@ -49,7 +49,7 @@
 							</div>
 						{/each}
 					</div>
-					{#if ev.thoughtName}<p class="hint">Gedanke: {ev.thoughtName}</p>{/if}
+					{#if ev.thoughtName}<p class="hint">Geistiger Gedanke: {ev.thoughtName}</p>{/if}
 					{#if ev.snack}<p class="hint">Snack: {ev.snack}</p>{/if}
 				{/if}
 			</div>
@@ -64,7 +64,7 @@
 		{#each data.years as y}<a class="btn btn-small" href="{page.url.pathname}?jahr={y}" class:btn-primary={data.year === y}>{y}</a>{/each}
 	</div>
 </div>
-<p class="hint">{sunday ? 'Sonntagsklassen der Jungen Damen und Jungen Männer: Wer leitet, wer unterrichtet, welches Thema.' : 'Mittwochaktivitäten der Jungen Damen und Jungen Männer: Was, wer leitet, wer den Gedanken gibt.'} Ein Klick auf das Datum öffnet den Termin.</p>
+<p class="hint">{sunday ? 'Sonntagsklassen der Jungen Damen und Jungen Männer: Wer leitet, wer unterrichtet, welches Thema.' : 'Mittwochaktivitäten der Jungen Damen und Jungen Männer: Was, wer leitet, wer den Geistigen Gedanken gibt.'} Ein Klick auf das Datum öffnet den Termin.</p>
 {#if data.rows.length === 0}
 	<div class="section"><p class="muted">Keine Termine in diesem Zeitraum.</p></div>
 {:else}
@@ -74,7 +74,7 @@
 			<table class="table overview stack">
 				<colgroup><col class="c-day" /><col class="c-kind" /><col class="c-person" /><col class="c-person" />{#if !sunday}<col class="c-person" /><col class="c-person" />{/if}<col /><col /></colgroup>
 				<thead>
-					<tr><th class="col-day">Datum</th><th>Art</th><th>JD</th><th>JM</th>{#if !sunday}<th>Bereich</th><th>Gedanke</th>{/if}<th>{sunday ? 'Thema' : 'Snack'}</th><th>Hinweis</th></tr>
+					<tr><th class="col-day">Datum</th><th>Art</th><th>JD</th><th>JM</th>{#if !sunday}<th>Bereich</th><th>Geistiger Gedanke</th>{/if}<th>{sunday ? 'Thema' : 'Snack'}</th><th>Hinweis</th></tr>
 				</thead>
 				<tbody>
 					{#each g.items as r}
@@ -87,7 +87,7 @@
 							{:else}
 								<td data-label="JD">{@render cell(r, r.jd)}</td>
 								<td data-label="JM">{@render cell(r, r.jm)}</td>
-								{#if !sunday}<td data-label={r.area ? 'Bereich' : null}>{r.area ?? ''}</td><td data-label={r.thought ? 'Gedanke' : null}>{r.thought ?? ''}</td>{/if}
+								{#if !sunday}<td data-label={r.area ? 'Bereich' : null}>{r.area ?? ''}</td><td data-label={r.thought ? 'Geistiger Gedanke' : null}>{r.thought ?? ''}</td>{/if}
 								<td data-label={r.extra ? (sunday ? 'Thema' : 'Snack') : null}>{r.extra ?? ''}</td>
 								<td>{r.hint ?? ''}</td>
 							{/if}

@@ -98,7 +98,7 @@ export function compactText(i: YouthPageItem): string {
 		i.weekday === 'sunday' ? null : join(planned.map((p) => p.leaderName)) && `Leitung: ${join(planned.map((p) => p.leaderName))}`,
 		i.weekday === 'sunday'
 			? join(planned.map((p) => p.teacherName)) && `Lehrer: ${join(planned.map((p) => p.teacherName))}`
-			: i.thoughtName && `Gedanke: ${i.thoughtName}`
+			: i.thoughtName && `Geistiger Gedanke: ${i.thoughtName}`
 	];
 	return parts.filter(Boolean).join(' · ');
 }

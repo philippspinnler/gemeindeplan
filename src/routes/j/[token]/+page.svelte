@@ -43,7 +43,7 @@
 						</div>
 					{/each}
 				</div>
-				{#if ev.thoughtName}<p class="meta">Gedanke: {ev.thoughtName}</p>{/if}
+				{#if ev.thoughtName}<p class="meta">Geistiger Gedanke: {ev.thoughtName}</p>{/if}
 				{#if ev.snack}<p class="meta">Snack: {ev.snack}</p>{/if}
 			{/if}
 		</div>

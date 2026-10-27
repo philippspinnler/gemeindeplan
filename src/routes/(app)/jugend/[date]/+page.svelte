@@ -261,7 +261,7 @@
 	</div>
 
 	{#if !data.off && kind === 'basel'}
-		<p class="hint">Basel leitet: Leitung und Gedanke übernimmt Basel, der Snack ist freiwillig.</p>
+		<p class="hint">Basel leitet: Leitung und Geistigen Gedanken übernimmt Basel, der Snack ist freiwillig.</p>
 	{/if}
 	{#if !data.off}
 		{#each sections as s (s.side)}{@render partSection(s)}{/each}
