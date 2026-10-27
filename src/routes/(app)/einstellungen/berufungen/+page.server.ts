@@ -4,7 +4,7 @@ import { todayIso } from '$lib/dates';
 import { BISHOPRIC_ROLES, BISHOPRIC_ROLE_LABELS, getBishopric, setBishopricMember, type BishopricRole } from '$lib/server/bishopric';
 import { YOUTH_LEADER_ROLES } from '$lib/server/db/schema';
 import { optInt, str, strList } from '$lib/server/forms';
-import { getMember, listMembers } from '$lib/server/members';
+import { fullName, getMember, listMembers } from '$lib/server/members';
 import { requireRole } from '$lib/server/permissions';
 import { memberOptions } from '$lib/server/picker';
 import { listLeaders, setLeaders, YOUTH_LEADER_ROLE_LABELS } from '$lib/server/youth-people';
@@ -21,7 +21,7 @@ export const load: PageServerLoad = ({ locals }) => {
 		leaders: YOUTH_LEADER_ROLES.map((role) => ({
 			role,
 			label: YOUTH_LEADER_ROLE_LABELS[role],
-			members: leaders.filter((l) => l.role === role).map((l) => ({ id: l.member.id, name: `${l.member.firstName} ${l.member.lastName}` }))
+			members: leaders.filter((l) => l.role === role).map((l) => ({ id: l.member.id, name: fullName(l.member) }))
 		})),
 		candidates: memberOptions(listMembers(locals.db).filter((m) => m.kind === 'gemeinde'), new Map(), 'plain', todayIso())
 	};

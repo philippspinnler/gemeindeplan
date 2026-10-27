@@ -4,7 +4,7 @@ import { formatDateLong, isSunday, todayIso } from '$lib/dates';
 import { HYMN_SLOTS, MEETING_KINDS, isFastLike, type HymnSlot, type MeetingKind } from '$lib/server/db/schema';
 import { optInt, optStr, str, strList } from '$lib/server/forms';
 import { hymnLabel, listHymns } from '$lib/server/hymns';
-import { displayName, isStakeOfficer, listMembers } from '$lib/server/members';
+import { displayName, isStakeOfficer, listMembers, spokenName } from '$lib/server/members';
 import { listStakeCallings } from '$lib/server/stake-callings';
 import {
 	KIND_LABELS, SLOT_LABELS, createMeeting, getMeetingByDate, hasProgram, loadMeetingFullByDate,
@@ -92,7 +92,7 @@ export const load: PageServerLoad = ({ locals, params }) => {
 		ansprachen: showProgram ? r.program.filter((x) => x.startsWith('Ansprachen')) : [],
 		musik: canMusic ? r.music : canConductor ? r.music.filter((x) => x === 'Dirigieren') : []
 	};
-	const idByName = new Map(all.map((m) => [displayName(m), m.id]));
+	const idByName = new Map(all.map((m) => [spokenName(m), m.id]));
 	const withMemberId = (c: { personName: string; calling: string }) => ({ personName: c.personName, calling: c.calling, memberId: idByName.get(c.personName) ?? null });
 
 	return {
@@ -215,7 +215,7 @@ export const actions: Actions = {
 		}
 		saveTalks(locals.db, id, talks);
 		saveAnnouncements(locals.db, id, strList(fd, 'announcement'));
-		const membersById = new Map(listMembers(locals.db).map((m) => [String(m.id), displayName(m)]));
+		const membersById = new Map(listMembers(locals.db).map((m) => [String(m.id), spokenName(m)]));
 		const personFrom = (v: string) => (v.startsWith('name:') ? v.slice(5).trim() : (membersById.get(v) ?? ''));
 		const pairs = (kind: 'entlassung' | 'berufung', prefix: string) => {
 			const persons = fd.getAll(`${prefix}_person`).map((v) => personFrom(String(v).trim()));

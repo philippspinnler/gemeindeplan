@@ -16,12 +16,12 @@ describe('overview', () => {
 		saveTalks(db, m.id, [{ position: 1, memberId: anna.id, durationMinutes: 5, confirmed: true }]);
 		savePrayers(db, m.id, [{ position: 2, memberId: anna.id }]);
 		const s = summarize(loadMeetingFullByDate(db, '2026-09-13')!, { showProgram: true, showPrayers: true });
-		expect(s.prayers).toEqual({ opening: null, closing: 'Anna Rey' });
+		expect(s.prayers).toEqual({ opening: null, closing: 'Rey, Anna' });
 		expect(summarize(loadMeetingFullByDate(db, '2026-09-13')!, { showProgram: false, showPrayers: false }).prayers).toEqual({ opening: null, closing: null });
-		expect(summarize(loadMeetingFullByDate(db, '2026-09-13')!, { showProgram: false, showPrayers: true }).prayers.closing).toBe('Anna Rey');
+		expect(summarize(loadMeetingFullByDate(db, '2026-09-13')!, { showProgram: false, showPrayers: true }).prayers.closing).toBe('Rey, Anna');
 		expect(s.dateLabel).toBe('So, 13.09.2026');
 		expect(s.kindLabel).toBe('Normal');
-		expect(s.speakers).toEqual(['Anna Rey']);
+		expect(s.speakers).toEqual(['Rey, Anna']);
 		expect(s.missingProgram).toContain('Leitung');
 		expect(s.missingMusic).toContain('Orgel');
 	});

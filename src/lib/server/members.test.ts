@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import { createDb, type Db } from './db';
 import { ensureStakeCalling } from './stake-callings';
-import { createMember, displayName, listMembers, matchByFirstName, matchMember, updateMember } from './members';
+import { createMember, displayName, listMembers, spokenName, matchByFirstName, matchMember, updateMember } from './members';
 
 let db: Db;
 beforeEach(() => {
@@ -28,13 +28,15 @@ describe('members', () => {
 	});
 	it('shows affiliation in the display name', () => {
 		const d = matchMember(listMembers(db), 'HR-Daniel Dürst');
-		expect(d && displayName(d)).toBe('Daniel Dürst (Hoherat)');
-		expect(displayName({ firstName: 'Anna', lastName: 'Rey', affiliation: null })).toBe('Anna Rey');
-		expect(displayName({ firstName: 'Simon', lastName: 'Dürst', affiliation: null, calling: '1. Ratgeber Pfahlpräsidentschaft' })).toBe('Simon Dürst (1. Ratgeber Pfahlpräsidentschaft)');
+		expect(d && displayName(d)).toBe('Dürst, Daniel (Hoherat)');
+		expect(displayName({ firstName: 'Anna', lastName: 'Rey', affiliation: null })).toBe('Rey, Anna');
+		expect(displayName({ firstName: 'Anna', lastName: '', affiliation: null })).toBe('Anna');
+		expect(spokenName({ firstName: 'Anna', lastName: 'Rey', affiliation: null, calling: 'Hoherat' })).toBe('Anna Rey (Hoherat)');
+		expect(displayName({ firstName: 'Simon', lastName: 'Dürst', affiliation: null, calling: '1. Ratgeber Pfahlpräsidentschaft' })).toBe('Dürst, Simon (1. Ratgeber Pfahlpräsidentschaft)');
 		const hr = ensureStakeCalling(db, 'Hoherat');
 		const stake = createMember(db, { firstName: 'Stefan', lastName: 'Landolt', kind: 'pfahl', stakeCallingId: hr.id });
 		expect(stake.calling).toBe('Hoherat');
-		expect(displayName(stake)).toBe('Stefan Landolt (Hoherat)');
+		expect(displayName(stake)).toBe('Landolt, Stefan (Hoherat)');
 		expect(listMembers(db, { kind: 'pfahl' }).map((m) => m.id)).toEqual([stake.id]);
 		expect(listMembers(db, { kind: 'gemeinde' })).toHaveLength(5);
 	});
@@ -65,6 +67,6 @@ describe('listMembers order', () => {
 	it('sorts German style, with umlauts and lowercase prefixes among their letters', () => {
 		const db = createDb(':memory:');
 		for (const [firstName, lastName] of [['Urs', 'Zbinden'], ['Lea', 'von Gunten'], ['Mia', 'Äbi'], ['Reto', 'Moser'], ['Anna', 'Moser']]) createMember(db, { firstName, lastName });
-		expect(listMembers(db).map(displayName)).toEqual(['Mia Äbi', 'Anna Moser', 'Reto Moser', 'Lea von Gunten', 'Urs Zbinden']);
+		expect(listMembers(db).map(displayName)).toEqual(['Äbi, Mia', 'Moser, Anna', 'Moser, Reto', 'von Gunten, Lea', 'Zbinden, Urs']);
 	});
 });

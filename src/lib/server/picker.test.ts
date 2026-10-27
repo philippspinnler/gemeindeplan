@@ -17,7 +17,7 @@ describe('memberOptions', () => {
 	it('sorts by longest pause, "never" first, hides inactive', () => {
 		const o = memberOptions(members, act, 'talk', TODAY);
 		expect(o.map((x) => x.id)).toEqual([4, 1, 2]);
-		expect(o[0]).toEqual({ id: 4, label: 'Dora Arnold (Hoherat)', hint: 'nie' });
+		expect(o[0]).toEqual({ id: 4, label: 'Arnold, Dora (Hoherat)', hint: 'nie' });
 		expect(o[1].hint).toBe('vor 13 Wochen, geplant 20.09.2026');
 		expect(o[2].hint).toBe('vor 1 Woche · gerne kurz');
 	});
@@ -38,7 +38,7 @@ describe('memberOptions', () => {
 	});
 	it('plain sorts by name without hint', () => {
 		const o = memberOptions(members, act, 'plain', TODAY);
-		expect(o.map((x) => x.label)).toEqual(['Dora Arnold (Hoherat)', 'Beat Fischer', 'Anna Rey']);
+		expect(o.map((x) => x.label)).toEqual(['Arnold, Dora (Hoherat)', 'Fischer, Beat', 'Rey, Anna']);
 		expect(o.every((x) => x.hint === '')).toBe(true);
 	});
 });

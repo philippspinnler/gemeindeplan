@@ -3,7 +3,7 @@ import type { Actions, PageServerLoad } from './$types';
 import { todayIso } from '$lib/dates';
 import { YOUTH_GROUPS, YOUTH_SIDES, type YouthSide } from '$lib/server/db/schema';
 import { failMessage, int, str } from '$lib/server/forms';
-import { listMembers } from '$lib/server/members';
+import { fullName, listMembers } from '$lib/server/members';
 import { requireRole } from '$lib/server/permissions';
 import { memberOptions } from '$lib/server/picker';
 import { getSetting, setSetting } from '$lib/server/settings';
@@ -20,7 +20,7 @@ export const load: PageServerLoad = ({ locals }) => {
 		groups: Object.fromEntries(YOUTH_SIDES.map((s) => [s, YOUTH_GROUPS[s].map((g) => ({ id: g, label: YOUTH_GROUP_LABELS[g] }))])) as Record<YouthSide, { id: string; label: string }[]>,
 		youth: entries
 			.sort((a, b) => sideRank(a.side) - sideRank(b.side))
-			.map((e) => ({ memberId: e.member.id, name: `${e.member.lastName}, ${e.member.firstName}`, side: e.side, group: e.group })),
+			.map((e) => ({ memberId: e.member.id, name: fullName(e.member), side: e.side, group: e.group })),
 		candidates: memberOptions(listMembers(locals.db).filter((m) => m.kind === 'gemeinde' && !taken.has(m.id)), new Map(), 'plain', todayIso())
 	};
 };

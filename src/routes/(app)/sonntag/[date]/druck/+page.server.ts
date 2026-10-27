@@ -3,7 +3,7 @@ import type { PageServerLoad } from './$types';
 import { formatDateDe, isSunday } from '$lib/dates';
 import { programOrder } from '$lib/schedule';
 import { hymnLabel } from '$lib/server/hymns';
-import { displayName } from '$lib/server/members';
+import { spokenName } from '$lib/server/members';
 import { KIND_LABELS, hasProgram, loadMeetingFullByDate } from '$lib/server/meetings';
 import { isFastLike } from '$lib/server/db/schema';
 import { requireRole } from '$lib/server/permissions';
@@ -39,7 +39,7 @@ export const load: PageServerLoad = ({ locals, params }) => {
 	};
 	const prayer = (pos: number) => {
 		const p = full.prayers.find((x) => x.position === pos);
-		return p?.member ? displayName(p.member) : '';
+		return p?.member ? spokenName(p.member) : '';
 	};
 	return {
 		date: params.date,
@@ -48,9 +48,9 @@ export const load: PageServerLoad = ({ locals, params }) => {
 		isFast: isFastLike(m.kind),
 		hasProgram: hasProgram(m.kind),
 		wardName: settings.ward_name,
-		presiding: full.presiding ? displayName(full.presiding) : '',
-		chair: chair ? displayName(chair) : '',
-		guest: full.guest ? displayName(full.guest) : '',
+		presiding: full.presiding ? spokenName(full.presiding) : '',
+		chair: chair ? spokenName(chair) : '',
+		guest: full.guest ? spokenName(full.guest) : '',
 		theme: m.theme ?? '',
 		specialNote: m.specialNote ?? '',
 		announcements: full.announcements,
@@ -65,12 +65,12 @@ export const load: PageServerLoad = ({ locals, params }) => {
 			const t = talks.find((tt) => tt.position === position)!;
 			return {
 				label: `Ansprache ${t.position}`,
-				detail: t.member ? displayName(t.member) : '',
+				detail: t.member ? spokenName(t.member) : '',
 				time: t.durationMinutes ? `${t.durationMinutes} Min.` : ''
 			};
 		}),
-		organist: full.organist ? displayName(full.organist) : '',
-		conductor: full.conductor ? displayName(full.conductor) : '',
+		organist: full.organist ? spokenName(full.organist) : '',
+		conductor: full.conductor ? spokenName(full.conductor) : '',
 		texts: PRINT_TEXTS
 	};
 };

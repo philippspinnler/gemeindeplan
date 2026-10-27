@@ -24,10 +24,10 @@ describe('askTables', () => {
 		savePrayers(db, future.id, [{ position: 2, memberId: anna.id }]);
 
 		const t = askTables(db, TODAY);
-		expect(t.talks.map((r) => r.name)).toEqual(['Dora Arnold', 'Anna Rey']);
-		expect(t.talks.find((r) => r.name === 'Anna Rey')).toMatchObject({ lastDate: '2026-08-30', label: 'vor 1 Woche', nextDate: null, planned: false });
-		expect(t.prayers.map((r) => r.name)).toEqual(['Beat Fischer', 'Fritz Gasser (Hoherat)', 'Anna Rey']);
-		expect(t.prayers.find((r) => r.name === 'Anna Rey')).toMatchObject({ lastDate: null, nextDate: '2026-09-20', label: 'nächste Woche', planned: true });
-		expect(t.prayers.find((r) => r.name === 'Beat Fischer')).toMatchObject({ lastDate: '2026-08-30', note: 'gerne' });
+		expect(t.talks.map((r) => r.name)).toEqual(['Arnold, Dora', 'Rey, Anna']);
+		expect(t.talks.find((r) => r.name === 'Rey, Anna')).toMatchObject({ lastDate: '2026-08-30', label: 'vor 1 Woche', nextDate: null, planned: false });
+		expect(t.prayers.map((r) => r.name)).toEqual(['Fischer, Beat', 'Gasser, Fritz (Hoherat)', 'Rey, Anna']);
+		expect(t.prayers.find((r) => r.name === 'Rey, Anna')).toMatchObject({ lastDate: null, nextDate: '2026-09-20', label: 'nächste Woche', planned: true });
+		expect(t.prayers.find((r) => r.name === 'Fischer, Beat')).toMatchObject({ lastDate: '2026-08-30', note: 'gerne' });
 	});
 });

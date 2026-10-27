@@ -77,11 +77,21 @@ export function updateMember(db: Db, id: number, patch: Partial<MemberInput>): v
 /** Stake officers from outside the ward, and ward members who also hold a stake calling. */
 export const isStakeOfficer = (m: Pick<Member, 'kind' | 'stakeCallingId'>) => m.kind === 'pfahl' || m.stakeCallingId !== null;
 
-export function displayName(m: Pick<Member, 'firstName' | 'lastName' | 'affiliation'> & { calling?: string | null }): string {
-	const name = `${m.firstName} ${m.lastName}`.trim();
+type Named = Pick<Member, 'firstName' | 'lastName' | 'affiliation'> & { calling?: string | null };
+
+/** "Nachname, Vorname", the order lists are sorted by. */
+export const fullName = (m: Pick<Member, 'firstName' | 'lastName'>) => (m.lastName ? `${m.lastName}, ${m.firstName}` : m.firstName);
+
+const withSuffix = (name: string, m: Named) => {
 	const suffix = m.calling || m.affiliation;
 	return suffix ? `${name} (${suffix})` : name;
-}
+};
+
+/** "Nachname, Vorname (Berufung)" for lists and pickers. */
+export const displayName = (m: Named) => withSuffix(fullName(m), m);
+
+/** "Vorname Nachname (Berufung)" for text that is read aloud: the Leitungszettel and callings. */
+export const spokenName = (m: Named) => withSuffix(`${m.firstName} ${m.lastName}`.trim(), m);
 
 export function matchMember(all: Member[], raw: string): Member | null {
 	const { name } = stripPrefix(raw);
