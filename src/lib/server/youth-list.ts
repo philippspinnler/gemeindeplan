@@ -1,7 +1,7 @@
 import { parseIso, todayIso, WEEKDAYS } from '../dates';
 import type { Db } from './db';
 import { overviewRange } from './overview';
-import { ensureYouthEvents, isFifthSunday, listYouthEvents, YOUTH_AREA_LABELS, YOUTH_KIND_LABELS, type YouthEventFull } from './youth';
+import { ensureYouthEvents, isFifthSunday, listYouthEvents, topicLine, YOUTH_AREA_LABELS, YOUTH_KIND_LABELS, type YouthEventFull } from './youth';
 import { youthPageItems } from './youth-page';
 import { YOUTH_GROUP_LABELS } from './youth-people';
 
@@ -47,7 +47,7 @@ export function youthList(db: Db, url: URL, weekday: YouthWeekday) {
 				offLabel: e.offLabel,
 				jd: summary(e, 'jd'),
 				jm: summary(e, 'jm'),
-				extra: weekday === 'sunday' ? e.event.topic : e.event.snack,
+				extra: weekday === 'sunday' ? topicLine(e.event) : e.event.snack,
 				thought: e.thought?.firstName ?? null,
 				area: areaSummary(e),
 				hint: fifth ? '5. Sonntag – Klasse mit Erwachsenen?' : null

@@ -210,6 +210,9 @@ export const youthEvents = sqliteTable('youth_events', {
 	details: text('details'),
 	topic: text('topic'),
 	topicUrl: text('topic_url'),
+	/** Sunday: JM's own lesson when it differs; topic and topicUrl then belong to JD. */
+	topicJm: text('topic_jm'),
+	topicUrlJm: text('topic_url_jm'),
 	snack: text('snack'),
 	/** Wednesday: one spiritual thought for JD and JM together. */
 	thoughtMemberId: integer('thought_member_id').references(() => members.id),

@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { untrack } from 'svelte';
 	import { enhance } from '$app/forms';
 	import MemberSelect from '$lib/components/MemberSelect.svelte';
 	import { createAutosave } from '$lib/autosave.svelte';
@@ -13,6 +14,12 @@
 	const ev = $derived(data.full.event);
 	/** Follows the select before it is saved; "Mit Basel" is always joint. */
 	let kind = $derived(ev.kind);
+	/** JM has its own lesson fields. Reset per date only, so a fresh tick survives saving other fields. */
+	let ownJm = $state(false);
+	$effect.pre(() => {
+		void data.full.event.date;
+		ownJm = untrack(() => !!(ev.topicJm || ev.topicUrlJm));
+	});
 	const kindLabel = $derived(data.kinds.find((k) => k.value === ev.kind)?.label ?? ev.kind);
 	const part = (side: Side) => data.full.parts.find((p) => p.side === side);
 	const canBoth = $derived(data.canJd || data.canJm);
@@ -48,6 +55,32 @@
 		autosave.touch(`${side}Form`);
 	}
 </script>
+
+{#snippet topicFields(key: '' | 'Jm', suffix: string, topic: string | null, url: string | null)}
+	<div class="grid-2">
+		<div class="field">
+			<label for="topic{key}">Thema{suffix}</label>
+			{#if data.canCommon}
+				<input id="topic{key}" name="topic{key}" type="text" form="commonForm" value={topic ?? ''} />
+			{:else}
+				<p>{topic ?? '–'}</p>
+			{/if}
+		</div>
+		<div class="field">
+			<label for="topicUrl{key}">Link{suffix}</label>
+			{#if data.canCommon}
+				<div class="link-row">
+					<input id="topicUrl{key}" name="topicUrl{key}" type="text" inputmode="url" form="commonForm" value={url ?? ''} placeholder="https://" />
+					{#if url}<a class="btn" href={url} target="_blank" rel="noopener noreferrer">Öffnen</a>{/if}
+				</div>
+			{:else if url}
+				<p><a href={url} target="_blank" rel="noopener noreferrer">{url}</a></p>
+			{:else}
+				<p>–</p>
+			{/if}
+		</div>
+	</div>
+{/snippet}
 
 {#snippet partSection(s: { side: Side; title: string; canEdit: boolean; options: { id: number; label: string; hint: string }[]; thoughtOptions: { id: number; label: string; hint: string }[]; groups: Option[]; ideas: Idea[] })}
 	{@const p = part(s.side)}
@@ -190,31 +223,17 @@
 			{#if data.canCommon}
 				<input type="hidden" name="topic" form="commonForm" value={ev.topic ?? ''} />
 				<input type="hidden" name="topicUrl" form="commonForm" value={ev.topicUrl ?? ''} />
+				<input type="hidden" name="topicJm" form="commonForm" value={ev.topicJm ?? ''} />
+				<input type="hidden" name="topicUrlJm" form="commonForm" value={ev.topicUrlJm ?? ''} />
 			{/if}
 		{:else if data.isSunday}
-			<div class="grid-2">
-				<div class="field">
-					<label for="topic">Thema</label>
-					{#if data.canCommon}
-						<input id="topic" name="topic" type="text" form="commonForm" value={ev.topic ?? ''} />
-					{:else}
-						<p>{ev.topic ?? '–'}</p>
-					{/if}
-				</div>
-				<div class="field">
-					<label for="topicUrl">Link</label>
-					{#if data.canCommon}
-						<div class="link-row">
-							<input id="topicUrl" name="topicUrl" type="text" inputmode="url" form="commonForm" value={ev.topicUrl ?? ''} placeholder="https://" />
-							{#if ev.topicUrl}<a class="btn" href={ev.topicUrl} target="_blank" rel="noopener noreferrer">Öffnen</a>{/if}
-						</div>
-					{:else if ev.topicUrl}
-						<p><a href={ev.topicUrl} target="_blank" rel="noopener noreferrer">{ev.topicUrl}</a></p>
-					{:else}
-						<p>–</p>
-					{/if}
-				</div>
-			</div>
+			{@render topicFields('', ownJm && !ev.joint ? ' JD' : '', ev.topic, ev.topicUrl)}
+			{#if !ev.joint}
+				{#if data.canCommon}
+					<label class="check"><input type="checkbox" form="commonForm" bind:checked={ownJm} /> JM hat eine andere Lektion</label>
+				{/if}
+				{#if ownJm}{@render topicFields('Jm', ' JM', ev.topicJm, ev.topicUrlJm)}{/if}
+			{/if}
 		{:else}
 			<div class="grid-2">
 				{#if !data.off && kind !== 'basel'}

@@ -2,7 +2,7 @@ import { randomBytes } from 'node:crypto';
 import { addDays, MONTHS_LONG, MONTHS_SHORT, parseIso, WEEKDAYS, WEEKDAYS_LONG } from '../dates';
 import type { Db } from './db';
 import type { Member, YouthPartSide } from './db/schema';
-import { BASEL_KINDS, listYouthEvents, YOUTH_KIND_LABELS, type YouthEventFull } from './youth';
+import { BASEL_KINDS, hasJmTopic, listYouthEvents, YOUTH_KIND_LABELS, type YouthEventFull } from './youth';
 import { listBreaks, YOUTH_BREAK_KIND_LABELS } from './youth-breaks';
 import { listAdults, listYouth, YOUTH_GROUP_LABELS } from './youth-people';
 
@@ -20,7 +20,8 @@ export interface YouthPageItem {
 	snack: string | null;
 	thoughtName: string | null;
 	joint: boolean;
-	parts: { side: YouthPartSide; label: 'Junge Damen' | 'Junge Männer' | null; planned: boolean; text: string | null; details: string | null; leaderName: string | null; teacherName: string | null }[];
+	/** Set when JD and JM have different lessons; the shared topic above is then empty. */
+	parts: { side: YouthPartSide; label: 'Junge Damen' | 'Junge Männer' | null; planned: boolean; text: string | null; details: string | null; leaderName: string | null; teacherName: string | null; topic: string | null; topicUrl: string | null }[];
 }
 
 const SIDE_LABELS = { jd: 'Junge Damen', jm: 'Junge Männer', both: null } as const;
@@ -48,15 +49,18 @@ function toItem(e: YouthEventFull, names: Map<number, string>): YouthPageItem {
 	const kindLabel = e.status === 'off' ? 'Kein JD/JM' : e.event.joint && !BASEL_KINDS.includes(e.event.kind) ? 'Gemeinsam' : YOUTH_KIND_LABELS[e.event.kind];
 	// Both sides are always listed, so an unplanned side is visible as such; with Basel leading there is nothing left to plan.
 	const sides: YouthPartSide[] = e.event.joint ? ['both'] : ['jd', 'jm'];
+	const split = hasJmTopic(e.event);
+	const sideTopic = (side: YouthPartSide) =>
+		!split ? { topic: null, topicUrl: null } : side === 'jm' ? { topic: e.event.topicJm, topicUrl: e.event.topicUrlJm } : { topic: e.event.topic, topicUrl: e.event.topicUrl };
 	return {
 		date, weekday: e.weekday, ...labels(date), kindLabel, status: e.status, offLabel: e.offLabel,
-		topic: e.event.topic, topicUrl: e.event.topicUrl, snack: e.event.snack, thoughtName: name(e.thought), joint: e.event.joint,
+		topic: split ? null : e.event.topic, topicUrl: split ? null : e.event.topicUrl, snack: e.event.snack, thoughtName: name(e.thought), joint: e.event.joint,
 		parts: sides.map((side) => {
 			const p = e.parts.find((x) => x.side === side);
 			const leaderName = p ? (name(p.leader) ?? (p.leaderGroup ? (YOUTH_GROUP_LABELS[p.leaderGroup] ?? p.leaderGroup) : null)) : null;
 			const teacherName = name(p?.teacher ?? null);
 			const text = p?.text ?? null;
-			return { side, label: SIDE_LABELS[side], planned: e.event.kind === 'basel' || Boolean(text || leaderName || teacherName), text, details: p?.details ?? null, leaderName, teacherName };
+			return { side, label: SIDE_LABELS[side], planned: e.event.kind === 'basel' || Boolean(text || leaderName || teacherName), text, details: p?.details ?? null, leaderName, teacherName, ...sideTopic(side) };
 		})
 	};
 }
@@ -90,7 +94,7 @@ export function compactText(i: YouthPageItem): string {
 	const planned = i.parts.filter((p) => p.planned);
 	const parts = [
 		i.kindLabel,
-		i.weekday === 'sunday' ? i.topic : join(planned.map((p) => p.text)),
+		i.weekday === 'sunday' ? (i.topic ?? join(i.parts.map((p) => p.topic))) : join(planned.map((p) => p.text)),
 		i.weekday === 'sunday' ? null : join(planned.map((p) => p.leaderName)) && `Leitung: ${join(planned.map((p) => p.leaderName))}`,
 		i.weekday === 'sunday'
 			? join(planned.map((p) => p.teacherName)) && `Lehrer: ${join(planned.map((p) => p.teacherName))}`

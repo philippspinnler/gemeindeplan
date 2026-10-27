@@ -135,13 +135,16 @@ export const actions: Actions = {
 		const kind = kindsFor(params.date).find((k) => k === str(fd, 'kind'));
 		if (!kind) return fail(400, { error: 'Ungültige Art.' });
 		const topicUrl = optStr(fd, 'topicUrl');
-		if (topicUrl && !/^https?:\/\//i.test(topicUrl)) return fail(400, { error: 'Der Link muss mit http:// oder https:// beginnen.' });
+		const topicUrlJm = optStr(fd, 'topicUrlJm');
+		if ([topicUrl, topicUrlJm].some((u) => u && !/^https?:\/\//i.test(u))) return fail(400, { error: 'Der Link muss mit http:// oder https:// beginnen.' });
 		saveYouthCommon(locals.db, full.event.id, {
 			kind,
 			joint: BASEL_KINDS.includes(kind) || fd.get('joint') === '1',
 			details: optStr(fd, 'details'),
 			topic: optStr(fd, 'topic'),
 			topicUrl,
+			topicJm: optStr(fd, 'topicJm'),
+			topicUrlJm,
 			snack: optStr(fd, 'snack'),
 			thoughtMemberId: optInt(fd, 'thought')
 		});

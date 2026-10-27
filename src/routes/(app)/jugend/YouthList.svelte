@@ -38,6 +38,7 @@
 						{#each ev.parts as p (p.side)}
 							<div>
 								{#if p.label}<div class="kind-tag">{p.label}</div>{/if}
+								{#if p.topic || p.topicUrl}<p class="next-topic">{#if p.topicUrl}<a href={p.topicUrl} rel="noopener noreferrer">{p.topic ?? 'Unterlage'}</a>{:else}{p.topic}{/if}</p>{/if}
 								{#if !p.planned}<p class="muted">noch nicht geplant</p>{/if}
 								{#if p.text && ev.weekday !== 'sunday'}<p class="next-what">{p.text}</p>{/if}
 								{#if p.details}<p class="hint">{p.details}</p>{/if}

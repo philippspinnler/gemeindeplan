@@ -14,6 +14,17 @@ beforeEach(() => {
 const dates = (xs: { date: string }[]) => xs.map((x) => x.date);
 
 describe('youth page items', () => {
+	it('shows one shared lesson, or a lesson per side when JM differs', () => {
+		ensureYouthEvents(db, '2026-10-19', 1);
+		const sunday = () => youthPageItems(db, '2026-10-24').big[0];
+		const id = loadYouthEvent(db, '2026-10-25')!.event.id;
+		saveYouthCommon(db, id, { kind: 'klasse', joint: false, details: null, topic: 'Glaube', topicUrl: 'https://x.test/a', snack: null });
+		expect([sunday().topic, sunday().parts.map((p) => p.topic)]).toEqual(['Glaube', [null, null]]);
+		saveYouthCommon(db, id, { kind: 'klasse', joint: false, details: null, topic: 'Tochter Gottes', topicUrl: 'https://x.test/a', topicJm: 'Sohn Gottes', topicUrlJm: 'https://x.test/b', snack: null });
+		expect(sunday().topic).toBeNull();
+		expect(sunday().parts.map((p) => [p.side, p.topic, p.topicUrl])).toEqual([['jd', 'Tochter Gottes', 'https://x.test/a'], ['jm', 'Sohn Gottes', 'https://x.test/b']]);
+		expect(compactText(sunday())).toContain('Tochter Gottes / Sohn Gottes');
+	});
 	it('picks the next five Sunday/Wednesday dates from today inclusive', () => {
 		let r = youthPageItems(db, '2026-10-20');
 		expect([dates(r.big), dates(r.small)]).toEqual([['2026-10-21', '2026-10-25'], ['2026-10-28', '2026-11-01', '2026-11-04']]);
@@ -79,8 +90,8 @@ describe('youth page items', () => {
 		saveYouthCommon(db, e.event.id, { kind: 'aktivitaet', joint: false, details: null, topic: null, topicUrl: null, snack: null, thoughtMemberId: lea.id });
 		const item = youthPageItems(db, '2026-10-20').big[0];
 		expect(item.parts).toEqual([
-			{ side: 'jd', label: 'Junge Damen', planned: true, text: 'Film', details: null, leaderName: null, teacherName: null },
-			{ side: 'jm', label: 'Junge Männer', planned: false, text: null, details: null, leaderName: null, teacherName: null }
+			{ side: 'jd', label: 'Junge Damen', planned: true, text: 'Film', details: null, leaderName: null, teacherName: null, topic: null, topicUrl: null },
+			{ side: 'jm', label: 'Junge Männer', planned: false, text: null, details: null, leaderName: null, teacherName: null, topic: null, topicUrl: null }
 		]);
 		expect(item.thoughtName).toBe('Lea');
 		expect(compactText(item)).toBe('Aktivität · Film · Gedanke: Lea');
