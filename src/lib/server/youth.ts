@@ -41,6 +41,8 @@ export interface YouthEventFull {
 	break: YouthBreak | null;
 	status: 'off' | 'open' | 'planned';
 	offLabel: string | null;
+	/** The holiday or event that cancels this date, if that is why it is off. */
+	offBreak: YouthBreak | null;
 }
 export interface YouthCommonInput { kind: YouthEventKind; joint: boolean; details: string | null; topic: string | null; topicUrl: string | null; topicJm?: string | null; topicUrlJm?: string | null; snack: string | null; thoughtMemberId?: number | null }
 export interface YouthPartInput { text: string | null; details?: string | null; leaderMemberId: number | null; leaderGroup: string | null; area?: YouthArea | null; teacherMemberId?: number | null }
@@ -106,6 +108,7 @@ function assemble(db: Db, from: string, to: string, rows: YouthEvent[]): YouthEv
 
 		let status: YouthEventFull['status'] = planned ? 'planned' : 'open';
 		let offLabel: string | null = null;
+		let offBreak: YouthBreak | null = null;
 		if (meetingKind && !classHeld(meetingKind)) {
 			status = 'off';
 			offLabel = KIND_LABELS[meetingKind];
@@ -115,8 +118,9 @@ function assemble(db: Db, from: string, to: string, rows: YouthEvent[]): YouthEv
 		} else if (brk && isOpen) {
 			status = 'off';
 			offLabel = brk.label ?? YOUTH_BREAK_KIND_LABELS[brk.kind];
+			offBreak = brk;
 		}
-		return { event, thought: pick(event.thoughtMemberId), weekday, parts, adults, meetingKind, break: brk, status, offLabel };
+		return { event, thought: pick(event.thoughtMemberId), weekday, parts, adults, meetingKind, break: brk, status, offLabel, offBreak };
 	});
 }
 

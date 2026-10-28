@@ -1,7 +1,9 @@
 import { parseIso, todayIso, WEEKDAYS } from '../dates';
 import type { Db } from './db';
+import type { YouthBreak } from './db/schema';
 import { overviewRange } from './overview';
 import { ensureYouthEvents, isFifthSunday, listYouthEvents, topicLine, YOUTH_AREA_LABELS, YOUTH_KIND_LABELS, type YouthEventFull } from './youth';
+import { YOUTH_BREAK_KIND_LABELS } from './youth-breaks';
 import { youthPageItems } from './youth-page';
 import { YOUTH_GROUP_LABELS } from './youth-people';
 
@@ -26,6 +28,17 @@ export function areaSummary(e: YouthEventFull): string | null {
 	return [...new Set(both.map((l) => l ?? '–'))].join(' / ');
 }
 
+const dayLabel = (iso: string) => {
+	const d = parseIso(iso);
+	return `${WEEKDAYS[d.getUTCDay()]} ${d.getUTCDate()}.${d.getUTCMonth() + 1}.`;
+};
+
+/** Text for a Wednesday cancelled by a stake or temple date: when it really takes place and what. */
+export function eventOffLabel(b: YouthBreak): string {
+	const days = b.toDate === b.fromDate ? dayLabel(b.fromDate) : `${dayLabel(b.fromDate)} – ${dayLabel(b.toDate)}`;
+	return b.label ? `${days}: ${b.label}` : days;
+}
+
 /** Rows for one weekday of the youth list: Sundays (classes) or Wednesdays (activities). */
 export function youthList(db: Db, url: URL, weekday: YouthWeekday) {
 	const today = todayIso();
@@ -39,12 +52,14 @@ export function youthList(db: Db, url: URL, weekday: YouthWeekday) {
 			const fifth = isFifthSunday(e.event.date) && e.event.kind !== 'erwachsene';
 			const d = parseIso(e.event.date);
 			const usual = e.event.kind === (weekday === 'sunday' ? 'klasse' : 'aktivitaet');
+			const event = e.offBreak && e.offBreak.kind !== 'ferien' ? e.offBreak : null;
 			return {
 				date: e.event.date,
 				dateLabel: `${WEEKDAYS[d.getUTCDay()]} ${d.getUTCDate()}.`,
-				kindLabel: usual ? '' : YOUTH_KIND_LABELS[e.event.kind],
+				kindLabel: event ? YOUTH_BREAK_KIND_LABELS[event.kind] : usual ? '' : YOUTH_KIND_LABELS[e.event.kind],
 				status: e.status,
-				offLabel: e.offLabel,
+				offLabel: event ? eventOffLabel(event) : e.offLabel,
+				isEvent: !!event,
 				jd: summary(e, 'jd'),
 				jm: summary(e, 'jm'),
 				extra: weekday === 'sunday' ? topicLine(e.event) : e.event.snack,

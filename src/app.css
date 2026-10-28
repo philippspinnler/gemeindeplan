@@ -160,6 +160,9 @@ select {
 /* Sundays without a meeting (conferences) are irrelevant for planning */
 .overview tr.no-meeting { color: var(--muted); background: var(--bg); }
 .overview tr.no-meeting a { color: var(--muted); }
+/* Temple and stake dates replace the Wednesday activity, so they stand out instead of fading. */
+.overview tr.stake-event { background: #e8f1f8; }
+.overview tr.stake-event td.td-kind { color: var(--primary); font-weight: 600; }
 @media (max-width: 640px) { .overview td.td-kind { white-space: normal; } }
 .overview td { overflow-wrap: anywhere; }
 
