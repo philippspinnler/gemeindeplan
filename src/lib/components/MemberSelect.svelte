@@ -11,7 +11,7 @@
 		value = null,
 		form = undefined,
 		placeholder = 'Name tippen …',
-		emptyLabel = '– niemand –',
+		emptyLabel = undefined,
 		serialize = (id: number | null) => (id === null ? '' : String(id)),
 		numbered = false,
 		noMatch = 'Kein Treffer. Andere Schreibweise versuchen.'
@@ -22,7 +22,7 @@
 		value?: number | null;
 		form?: string;
 		placeholder?: string;
-		/** Label of the entry that clears the selection (e.g. "automatisch: …"). */
+		/** Label of an extra entry that clears the selection, only where empty means something (e.g. "automatisch: …"); otherwise ✕ or Backspace clear it. */
 		emptyLabel?: string;
 		/** Form value for the selected id; allows special cases such as free-text names. */
 		serialize?: (id: number | null) => string;
@@ -82,6 +82,8 @@
 				e.preventDefault();
 				if (matches[active]) choose(matches[active]);
 			}
+		} else if ((e.key === 'Backspace' || e.key === 'Delete') && !query && current) {
+			choose(null);
 		} else if (e.key === 'Escape') {
 			open = false;
 			query = '';
@@ -120,7 +122,7 @@
 		<!-- Keyboard goes through the input (arrows, Enter, Escape); the entries themselves are for mouse and touch only. -->
 		<!-- svelte-ignore a11y_click_events_have_key_events -->
 		<ul class="combo-list" id="{id}-list" role="listbox">
-			{#if current}
+			{#if current && emptyLabel}
 				<li class="combo-item combo-none" role="option" aria-selected="false" tabindex="-1" onmousedown={(e) => e.preventDefault()} onclick={() => choose(null)}>{emptyLabel}</li>
 			{/if}
 			{#each matches as o, i (o.id)}

@@ -99,7 +99,7 @@
 		<div class="field">
 			<label for="hymn_{h.slot}">{h.label}</label>
 			{#if data.canMusic}
-				<MemberSelect id="hymn_{h.slot}" name="hymn_{h.slot}" form="musicForm" options={data.missing ? [] : data.hymnList} value={h.number} numbered placeholder="Nummer oder Titel tippen" emptyLabel="– kein Lied –" noMatch={'Kein Treffer. Lieder werden unter "Lieder" angelegt.'} />
+				<MemberSelect id="hymn_{h.slot}" name="hymn_{h.slot}" form="musicForm" options={data.missing ? [] : data.hymnList} value={h.number} numbered placeholder="Nummer oder Titel tippen" noMatch={'Kein Treffer. Lieder werden unter "Lieder" angelegt.'} />
 				{#if h.slot === 'zwischen'}
 					<input type="text" name="zwischen_text" form="musicForm" value={h.freeText ?? ''} placeholder="oder Musikeinlage, z.B. PV singt" />
 				{/if}
