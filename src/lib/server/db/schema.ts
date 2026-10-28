@@ -23,10 +23,6 @@ export const YOUTH_GROUPS: Record<YouthSide, readonly string[]> = {
 	jd: ['hoffnung', 'glauben', 'licht'],
 	jm: ['diakone', 'lehrer', 'priester']
 };
-export const YOUTH_LEADER_GROUPS: Record<YouthSide, readonly string[]> = {
-	jd: [...YOUTH_GROUPS.jd, 'leitung'],
-	jm: [...YOUTH_GROUPS.jm, 'leitung']
-};
 export const YOUTH_LEADER_ROLES = ['jm_berater', 'jd_beraterin', 'jd_praesidentin', 'jd_ratgeberin1', 'jd_ratgeberin2'] as const;
 export type YouthLeaderRole = (typeof YOUTH_LEADER_ROLES)[number];
 export const YOUTH_EVENT_KINDS = ['klasse', 'erwachsene', 'aktivitaet', 'basel', 'basel_wir'] as const;

@@ -11,8 +11,7 @@ export const YOUTH_GROUP_LABELS: Record<string, string> = {
 	priester: 'Priester',
 	hoffnung: 'JD der Hoffnung',
 	glauben: 'JD des Glaubens',
-	licht: 'JD des Lichts',
-	leitung: 'Leitung'
+	licht: 'JD des Lichts'
 };
 
 export const YOUTH_LEADER_ROLE_LABELS: Record<YouthLeaderRole, string> = {

@@ -61,8 +61,8 @@ const ACTIVITY_KINDS: Record<string, { kind: YouthEventKind; joint: boolean }> =
 };
 /** Rows that cancel the Wednesday become entries under "Ausfälle & Pfahltermine". */
 const BREAK_KINDS: Record<string, YouthBreak['kind']> = { 'pfahl-aktivität': 'pfahl', 'tempel taufen': 'tempel', 'keine aktivität': 'ferien' };
-const JM_GROUPS: Record<string, string> = { 'priester kollegium': 'priester', 'lehrer kollegium': 'lehrer', 'diakons kollegium': 'diakone', leitung: 'leitung' };
-const JD_GROUPS: Record<string, string> = { 'jd der hoffnung': 'hoffnung', 'jd des glaubens': 'glauben', 'jd des lichts': 'licht', leitung: 'leitung' };
+const JM_GROUPS: Record<string, string> = { 'priester kollegium': 'priester', 'lehrer kollegium': 'lehrer', 'diakons kollegium': 'diakone' };
+const JD_GROUPS: Record<string, string> = { 'jd der hoffnung': 'hoffnung', 'jd des glaubens': 'glauben', 'jd des lichts': 'licht' };
 
 /** One CSV (Airtable's single "JD/JM" table, class rows = "JD/AP Klassen") or two (activities, classes). */
 export function importYouthCsv(db: Db, activitiesCsv: string, classesCsv: string | null, opts: { log?: (s: string) => void } = {}): YouthImportReport {
@@ -162,7 +162,8 @@ function importAll(db: Db, activitiesCsv: string, classesCsv: string | null, opt
 		const th = thoughts(date, r['geistiger gedanke / klasse'], lost);
 		const group = (side: YouthSide, map: Record<string, string>) => {
 			const raw = r[`leitung ${side}`];
-			if (raw && !map[raw.toLowerCase()]) warn(`${date}: Leitung ${side.toUpperCase()} '${raw}' unbekannt`);
+			// "Leitung" (adults lead) is no longer a choice; the youth always lead, so it stays empty.
+			if (raw && raw.toLowerCase() !== 'leitung' && !map[raw.toLowerCase()]) warn(`${date}: Leitung ${side.toUpperCase()} '${raw}' unbekannt`);
 			return map[raw.toLowerCase()] ?? null;
 		};
 		// On class rows "Geistiger Gedanke / Klasse" names who teaches.

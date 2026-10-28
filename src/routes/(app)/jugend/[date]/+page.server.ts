@@ -1,7 +1,7 @@
 import { error, fail, type ActionFailure } from '@sveltejs/kit';
 import type { Action, Actions, PageServerLoad } from './$types';
 import { formatDateLong, isSunday, parseIso, todayIso, toIso } from '$lib/dates';
-import { YOUTH_AREAS, YOUTH_LEADER_GROUPS, type Member, type Role, type YouthPartSide } from '$lib/server/db/schema';
+import { YOUTH_AREAS, YOUTH_GROUPS, type Member, type Role, type YouthPartSide } from '$lib/server/db/schema';
 import { optInt, optStr, str } from '$lib/server/forms';
 import { displayName } from '$lib/server/members';
 import { can, requireRole } from '$lib/server/permissions';
@@ -31,7 +31,7 @@ function requireSide(user: App.Locals['user'], side: YouthPartSide) {
 }
 
 const kindsFor = (date: string) => (isSunday(date) ? SUNDAY_KINDS : WEDNESDAY_KINDS);
-const groupsFor = (side: YouthPartSide) => (side === 'both' ? [...new Set([...YOUTH_LEADER_GROUPS.jd, ...YOUTH_LEADER_GROUPS.jm])] : YOUTH_LEADER_GROUPS[side]);
+const groupsFor = (side: YouthPartSide): readonly string[] => (side === 'both' ? [...YOUTH_GROUPS.jd, ...YOUTH_GROUPS.jm] : YOUTH_GROUPS[side]);
 
 /** Load the event and check the form still has the current version of its section. */
 function eventFor(locals: App.Locals, date: string, section: keyof ReturnType<typeof youthSectionVersions>, fd: FormData): YouthEventFull | ActionFailure<{ error: string }> {
@@ -86,7 +86,7 @@ export const load: PageServerLoad = ({ locals, params }) => {
 	const present = new Map(full.adults.map((a) => [a.member.id, a.present]));
 	const adultMembers = unique([...listAdults(locals.db), ...full.adults.map((a) => a.member)]);
 	const teacherOptions = (side: 'jd' | 'jm') => memberOptions(unique([...youthOf(side), ...listAdultsFor(locals.db, side)]), new Map(), 'plain', today);
-	const groups = (side: 'jd' | 'jm') => YOUTH_LEADER_GROUPS[side].map((g) => ({ value: g, label: YOUTH_GROUP_LABELS[g] ?? g }));
+	const groups = (side: 'jd' | 'jm') => YOUTH_GROUPS[side].map((g) => ({ value: g, label: YOUTH_GROUP_LABELS[g] }));
 
 	return {
 		date,
