@@ -110,8 +110,8 @@
 						<col />
 					{:else}
 						<col class="c-theme" />
-						{#if data.showProgram}<col class="c-person" /><col class="c-status" />{/if}
-						{#if data.musicColumns}<col class="c-person" /><col class="c-person" />{/if}
+						{#if data.showProgram}<col class="c-name" /><col class="c-status" />{/if}
+						{#if data.musicColumns}<col class="c-name" /><col class="c-name" />{/if}
 						<col class="c-status" />
 					{/if}
 				</colgroup>
