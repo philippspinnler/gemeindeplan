@@ -58,7 +58,6 @@
 </main>
 
 <style>
-	:global(body) { background: #f4f3ef; }
 	main { max-width: 440px; margin: 0 auto; padding: 14px; font-family: -apple-system, system-ui, sans-serif; color: #1a1a1a; }
 	.ev { background: #fff; border-radius: 12px; padding: 12px 14px; margin-bottom: 10px; box-shadow: 0 1px 3px rgba(0,0,0,.08); }
 	.ev.big { padding: 16px; }
