@@ -72,7 +72,7 @@
 		<h2 class="month-title">{g.label}</h2>
 		<div class="section table-wrap">
 			<table class="table overview stack">
-				<colgroup><col class="c-day" /><col class="c-kind" /><col class="c-person" /><col class="c-person" />{#if !sunday}<col class="c-person" /><col class="c-person" />{/if}<col /><col /></colgroup>
+				<colgroup><col class="c-day" /><col class="c-kind" /><col class="c-person" /><col class="c-person" />{#if !sunday}<col class="c-short" /><col class="c-short" />{/if}<col /><col /></colgroup>
 				<thead>
 					<tr><th class="col-day">Datum</th><th>Art</th><th>JD</th><th>JM</th>{#if !sunday}<th>Bereich</th><th>Geistiger Gedanke</th>{/if}<th>{sunday ? 'Thema' : 'Snack'}</th><th>Hinweis</th></tr>
 				</thead>
