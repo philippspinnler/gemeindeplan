@@ -25,9 +25,10 @@ describe('youth page items', () => {
 		expect(sunday().parts.map((p) => [p.side, p.topic, p.topicUrl])).toEqual([['jd', 'Tochter Gottes', 'https://x.test/a'], ['jm', 'Sohn Gottes', 'https://x.test/b']]);
 		expect(compactText(sunday())).toContain('Tochter Gottes / Sohn Gottes');
 	});
-	it('picks the next five Sunday/Wednesday dates from today inclusive', () => {
+	it('shows two cards from today inclusive, then a month of dates after the last card', () => {
 		let r = youthPageItems(db, '2026-10-20');
-		expect([dates(r.big), dates(r.small)]).toEqual([['2026-10-21', '2026-10-25'], ['2026-10-28', '2026-11-01', '2026-11-04']]);
+		expect(dates(r.big)).toEqual(['2026-10-21', '2026-10-25']);
+		expect(dates(r.small)).toEqual(['2026-10-28', '2026-11-01', '2026-11-04', '2026-11-08', '2026-11-11', '2026-11-15', '2026-11-18', '2026-11-22', '2026-11-25']);
 		r = youthPageItems(db, '2026-10-22');
 		expect(dates(r.big)).toEqual(['2026-10-25', '2026-10-28']);
 		expect(youthPageItems(db, '2026-10-25').big[0].date).toBe('2026-10-25');
@@ -40,7 +41,7 @@ describe('youth page items', () => {
 		]).run();
 		const r = youthPageItems(db, '2026-10-20');
 		expect(dates(r.big)).toEqual(['2026-10-21', '2026-10-25']);
-		expect(r.small.map((i) => [i.date, i.weekday])).toEqual([['2026-10-23', 'other'], ['2026-10-28', 'wednesday'], ['2026-10-30', 'other'], ['2026-11-01', 'sunday'], ['2026-11-04', 'wednesday']]);
+		expect(r.small.map((i) => [i.date, i.weekday]).slice(0, 5)).toEqual([['2026-10-23', 'other'], ['2026-10-28', 'wednesday'], ['2026-10-30', 'other'], ['2026-11-01', 'sunday'], ['2026-11-04', 'wednesday']]);
 		expect(r.small[2]).toMatchObject({ kindLabel: 'Pfahl-Aktivität', offLabel: 'Mini-MTC' });
 		expect(compactText(r.small[2])).toBe('Pfahl-Aktivität – Mini-MTC');
 	});

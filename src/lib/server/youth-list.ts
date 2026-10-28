@@ -82,6 +82,6 @@ export function youthList(db: Db, url: URL, weekday: YouthWeekday) {
 	const years: number[] = [];
 	for (let y = Number(today.slice(0, 4)) - 1; y <= Number(today.slice(0, 4)) + 1; y++) years.push(y);
 	// Same cards as the public youth page, limited to this weekday.
-	const next = year ? [] : youthPageItems(db, today, { big: 2, small: 0, weekday }).big;
+	const next = year ? [] : youthPageItems(db, today, { big: 2, days: 0, weekday }).big;
 	return { weekday, rows, years, year, today, next };
 }

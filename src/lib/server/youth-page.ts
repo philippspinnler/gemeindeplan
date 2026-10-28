@@ -65,14 +65,15 @@ function toItem(e: YouthEventFull, names: Map<number, string>): YouthPageItem {
 	};
 }
 
-export function youthPageItems(db: Db, today: string, opts: { big: number; small: number; weekday?: 'sunday' | 'wednesday' } = { big: 2, small: 3 }): { big: YouthPageItem[]; small: YouthPageItem[] } {
-	const total = opts.big + opts.small;
+/** The next `big` dates as cards, then everything up to `days` after the last card as the "Danach" list. */
+export function youthPageItems(db: Db, today: string, opts: { big: number; days: number; weekday?: 'sunday' | 'wednesday' } = { big: 2, days: 31 }): { big: YouthPageItem[]; small: YouthPageItem[] } {
 	// Leaders may give the thought, so their first names are allowed here too (still no last names).
 	const names = shortNames([...listYouth(db).map((y) => y.member), ...listAdults(db)]);
-	const events = listYouthEvents(db, today, addDays(today, 7 * total)).filter((e) => !opts.weekday || e.weekday === opts.weekday).slice(0, total).map((e) => toItem(e, names));
-	const big = events.slice(0, opts.big);
-	const small = events.slice(opts.big);
-	const last = events[events.length - 1]?.date ?? today;
+	const upcoming = listYouthEvents(db, today, addDays(today, 7 * opts.big + opts.days)).filter((e) => !opts.weekday || e.weekday === opts.weekday);
+	const big = upcoming.slice(0, opts.big).map((e) => toItem(e, names));
+	const last = addDays(big[big.length - 1]?.date ?? today, opts.days);
+	const small = upcoming.slice(opts.big).filter((e) => e.event.date <= last).map((e) => toItem(e, names));
+	const events = [...big, ...small];
 	for (const b of listBreaks(db, today)) {
 		const date = b.fromDate < today ? today : b.fromDate;
 		const offLabel = b.label ?? YOUTH_BREAK_KIND_LABELS[b.kind];
