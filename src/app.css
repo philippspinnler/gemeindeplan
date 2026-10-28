@@ -168,12 +168,12 @@ select {
 	.container { padding: 0.75rem; }
 	h1 { font-size: 1.35rem; }
 	.section, .card { padding: 0.8rem 0.9rem; }
-	.topnav .inner { flex-direction: column; align-items: stretch; gap: 0.35rem; padding: 0.45rem 0.75rem; }
+	.topnav .inner { flex-wrap: nowrap; gap: 0.25rem; padding: 0.45rem 0.75rem; }
 	.topnav a { padding: 0.45rem 0.55rem; font-size: 0.95rem; }
 	.subnav a, .subnav button { padding: 0.45rem 0.65rem; font-size: 0.95rem; }
 	.btn { padding: 0.5rem 0.8rem; }
-	.nav-user { justify-content: space-between; }
-	.role-switch label { display: none; }
+	.nav-account { padding: 0.45rem; }
+	.nav-account span:not([aria-hidden]) { display: none; }
 	.section-title { flex-direction: column; align-items: stretch; gap: 0.5rem; }
 	.section-title .actions { margin-top: 0; }
 	.subnav { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; margin-left: -0.75rem; margin-right: -0.75rem; padding: 0 0.75rem; }
