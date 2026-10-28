@@ -263,7 +263,9 @@ export const youthBreaks = sqliteTable('youth_breaks', {
 	fromDate: text('from_date').notNull(),
 	toDate: text('to_date').notNull(),
 	label: text('label'),
-	kind: text('kind', { enum: YOUTH_BREAK_KINDS }).notNull()
+	kind: text('kind', { enum: YOUTH_BREAK_KINDS }).notNull(),
+	/** Stake and temple dates may leave the Wednesday activity in place; holidays always cancel it. */
+	cancels: integer('cancels', { mode: 'boolean' }).notNull().default(true)
 });
 
 export type User = typeof users.$inferSelect;

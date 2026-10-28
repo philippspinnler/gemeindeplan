@@ -1,0 +1,1 @@
+ALTER TABLE `youth_breaks` ADD `cancels` integer DEFAULT true NOT NULL;

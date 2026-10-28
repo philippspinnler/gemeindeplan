@@ -157,7 +157,7 @@ describe('youth events', () => {
 
 describe('eventOffLabel', () => {
 	it('names the real day of a stake or temple date', () => {
-		const b = { id: 1, fromDate: '2027-01-09', toDate: '2027-01-09', label: 'Tempelbesuch', kind: 'tempel' as const };
+		const b = { id: 1, fromDate: '2027-01-09', toDate: '2027-01-09', label: 'Tempelbesuch', kind: 'tempel' as const, cancels: true };
 		expect(eventOffLabel(b)).toBe('Sa 9.1.: Tempelbesuch');
 		expect(eventOffLabel({ ...b, toDate: '2027-01-10', label: null })).toBe('Sa 9.1. – So 10.1.');
 	});

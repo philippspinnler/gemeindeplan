@@ -3,7 +3,7 @@ import type { Db } from './db';
 import type { YouthBreak } from './db/schema';
 import { overviewRange } from './overview';
 import { ensureYouthEvents, isFifthSunday, listYouthEvents, topicLine, YOUTH_AREA_LABELS, YOUTH_KIND_LABELS, type YouthEventFull } from './youth';
-import { YOUTH_BREAK_KIND_LABELS } from './youth-breaks';
+import { breaksFor, listBreaks, YOUTH_BREAK_KIND_LABELS } from './youth-breaks';
 import { youthPageItems } from './youth-page';
 import { YOUTH_GROUP_LABELS } from './youth-people';
 
@@ -46,6 +46,7 @@ export function youthList(db: Db, url: URL, weekday: YouthWeekday) {
 	const yearParam = url.searchParams.get('jahr');
 	const year = yearParam && /^\d{4}$/.test(yearParam) ? Number(yearParam) : null;
 	const range = overviewRange(today, year);
+	const breaks = weekday === 'wednesday' ? listBreaks(db, range.from) : [];
 	const rows = listYouthEvents(db, range.from, range.to)
 		.filter((e) => e.weekday === weekday)
 		.map((e) => {
@@ -65,7 +66,9 @@ export function youthList(db: Db, url: URL, weekday: YouthWeekday) {
 				extra: weekday === 'sunday' ? topicLine(e.event) : e.event.snack,
 				thought: e.thought?.firstName ?? null,
 				area: areaSummary(e),
-				hint: fifth ? '5. Sonntag – Klasse mit Erwachsenen?' : null
+				hint: fifth
+					? '5. Sonntag – Klasse mit Erwachsenen?'
+					: breaksFor(breaks, e.event.date).filter((b) => !b.cancels).map((b) => `${YOUTH_BREAK_KIND_LABELS[b.kind]} ${eventOffLabel(b)}`).join(' · ') || null
 			};
 		});
 	const years: number[] = [];
