@@ -3,7 +3,9 @@ import { createDb } from '$lib/server/db';
 import type { Role } from '$lib/server/db/schema';
 import { createUser } from '$lib/server/auth';
 import { listIdeas, createIdea } from '$lib/server/youth-ideas';
-import { ensureYouthEvents, loadYouthEvent, saveYouthCommon, youthSectionVersions } from '$lib/server/youth';
+import { ensureYouthEvents, loadYouthEvent, saveYouthCommon, saveYouthPart, youthSectionVersions } from '$lib/server/youth';
+import { createMember } from '$lib/server/members';
+import { setYouth } from '$lib/server/youth-people';
 import { createMeeting, saveGeneral } from '$lib/server/meetings';
 import { actions, load } from './+page.server';
 
@@ -87,5 +89,14 @@ describe('youth event actions', () => {
 		const data = load({ locals, params: { date: '2026-10-25' } } as never) as { off: boolean; offNotice: string | null };
 		expect(data.off).toBe(true);
 		expect(data.offNotice).toBe('Generalkonferenz');
+	});
+
+	it('keeps an assigned teacher from the other side selectable', () => {
+		const { db, locals } = setup('admin');
+		const boy = createMember(db, { firstName: 'Urs', lastName: 'Koller' });
+		setYouth(db, boy.id, 'jm', 'priester');
+		saveYouthPart(db, loadYouthEvent(db, WED)!.event.id, 'jd', { text: null, leaderMemberId: null, leaderGroup: null, teacherMemberId: boy.id });
+		const data = load({ locals, params: { date: WED } } as never) as { jdThoughtOptions: { id: number }[] };
+		expect(data.jdThoughtOptions.map((o) => o.id)).toContain(boy.id);
 	});
 });

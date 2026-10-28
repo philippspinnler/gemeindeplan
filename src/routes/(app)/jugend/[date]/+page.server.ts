@@ -77,10 +77,15 @@ export const load: PageServerLoad = ({ locals, params }) => {
 	const full = loadYouthEvent(locals.db, date)!;
 	const role = locals.user!.role;
 	const today = todayIso();
-	const options = (side: 'jd' | 'jm') => memberOptions(listYouth(locals.db, side).map((y) => y.member), new Map(), 'plain', today);
+	const unique = (ms: (Member | null)[]) => ms.filter((m, i, all): m is Member => !!m && all.findIndex((x) => x?.id === m.id) === i);
+	// Whoever is already assigned stays selectable, even from the other side; otherwise the picker would look empty.
+	const assigned = (side: 'jd' | 'jm') => full.parts.filter((p) => p.side === side || p.side === 'both').flatMap((p) => [p.leader, p.teacher]);
+	const youthOf = (side: 'jd' | 'jm') => [...listYouth(locals.db, side).map((y) => y.member), ...assigned(side)];
+	const options = (side: 'jd' | 'jm') => memberOptions(unique(youthOf(side)), new Map(), 'plain', today);
 	const name = (m: Member | null) => (m ? displayName(m) : null);
 	const present = new Map(full.adults.map((a) => [a.member.id, a.present]));
-	const adultMembers = [...listAdults(locals.db), ...full.adults.map((a) => a.member)].filter((m, i, all) => all.findIndex((x) => x.id === m.id) === i);
+	const adultMembers = unique([...listAdults(locals.db), ...full.adults.map((a) => a.member)]);
+	const thoughtOptions = (side: 'jd' | 'jm') => memberOptions(unique([...youthOf(side), ...adultMembers, full.thought]), new Map(), 'plain', today);
 	const groups = (side: 'jd' | 'jm') => YOUTH_LEADER_GROUPS[side].map((g) => ({ value: g, label: YOUTH_GROUP_LABELS[g] ?? g }));
 
 	return {
@@ -113,8 +118,8 @@ export const load: PageServerLoad = ({ locals, params }) => {
 		offNotice: full.meetingKind && full.status === 'off' ? full.offLabel : null,
 		jdOptions: options('jd'),
 		jmOptions: options('jm'),
-		jdThoughtOptions: memberOptions([...listYouth(locals.db, 'jd').map((y) => y.member), ...adultMembers], new Map(), 'plain', today),
-		jmThoughtOptions: memberOptions([...listYouth(locals.db, 'jm').map((y) => y.member), ...adultMembers], new Map(), 'plain', today),
+		jdThoughtOptions: thoughtOptions('jd'),
+		jmThoughtOptions: thoughtOptions('jm'),
 		adults: adultMembers.map((m) => ({ id: m.id, name: displayName(m), present: present.get(m.id) ?? null })),
 		groupsJd: groups('jd'),
 		groupsJm: groups('jm'),
