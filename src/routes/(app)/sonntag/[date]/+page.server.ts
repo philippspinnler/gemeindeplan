@@ -4,7 +4,7 @@ import { formatDateLong, isSunday, todayIso } from '$lib/dates';
 import { HYMN_SLOTS, MEETING_KINDS, isFastLike, type HymnSlot, type MeetingKind } from '$lib/server/db/schema';
 import { optInt, optStr, str, strList } from '$lib/server/forms';
 import { hymnLabel, listHymns } from '$lib/server/hymns';
-import { displayName, isStakeOfficer, listMembers, spokenName } from '$lib/server/members';
+import { displayName, isStakeOfficer, listMembers, spokenName, withCalling } from '$lib/server/members';
 import { listStakeCallings } from '$lib/server/stake-callings';
 import {
 	KIND_LABELS, SLOT_LABELS, createMeeting, getMeetingByDate, hasProgram, loadMeetingFullByDate,
@@ -13,6 +13,7 @@ import {
 import { can, requireRole } from '$lib/server/permissions';
 import { chairFor, formatAbsences, getBishopric, parseAbsences } from '$lib/server/bishopric';
 import { memberOptions } from '$lib/server/picker';
+import { getMusicCallings } from '$lib/server/music-callings';
 import { whatsappAskUrl } from '$lib/whatsapp';
 import { memberActivity, readiness } from '$lib/server/stats';
 
@@ -71,6 +72,7 @@ export const load: PageServerLoad = ({ locals, params }) => {
 	const ward = all.filter((m) => m.kind === 'gemeinde');
 	const stake = all.filter(isStakeOfficer);
 	const bishopricEntries = getBishopric(locals.db);
+	const music = getMusicCallings(locals.db);
 	const bishopricIds = bishopricEntries.map((e) => e.id);
 	const bishopric = ward.filter((m) => bishopricIds.includes(m.id));
 	const presidingPool = bishopric.length ? ward.filter((m) => bishopricIds.includes(m.id) || m.id === full.meeting.presidingMemberId) : ward;
@@ -127,8 +129,8 @@ export const load: PageServerLoad = ({ locals, params }) => {
 		chairOptions: showProgram ? chairPool.map((m) => ({ id: m.id, label: displayName(m) })) : [],
 		chairAutoName: showProgram && chairAuto ? displayName(chairAuto) : null,
 		absenceOptions: showProgram ? bishopric.map((m) => ({ id: m.id, label: displayName(m) })) : [],
-		organistOptions: memberOptions(ward, activity, 'plain', today, full.meeting.organistMemberId),
-		conductorOptions: memberOptions(ward, activity, 'plain', today, full.meeting.conductorMemberId),
+		organistOptions: memberOptions(withCalling(ward, music.organist, full.meeting.organistMemberId), activity, 'plain', today, full.meeting.organistMemberId),
+		conductorOptions: memberOptions(withCalling(ward, music.dirigent, full.meeting.conductorMemberId), activity, 'plain', today, full.meeting.conductorMemberId),
 		prayers: showProgram || canPrayers
 			? [1, 2].map((position) => {
 					const member = full.prayers.find((x) => x.position === position)?.member ?? null;

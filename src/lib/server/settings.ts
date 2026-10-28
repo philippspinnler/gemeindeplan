@@ -5,7 +5,8 @@ import { settings } from './db/schema';
 export const SETTING_DEFAULTS = {
 	ward_name: 'Gemeinde',
 	youth_page_token: '',
-	bishopric: '[]'
+	bishopric: '[]',
+	music_callings: '{}'
 } as const;
 
 export type SettingKey = keyof typeof SETTING_DEFAULTS;

@@ -6,6 +6,30 @@
 	const submitOnChange = (e: Event) => (e.currentTarget as HTMLFormElement).requestSubmit();
 </script>
 
+{#snippet roleList(l: { role: string; label: string; members: { id: number; name: string }[] }, action: string)}
+	<h3>{l.label}</h3>
+	<ul class="row-list">
+		{#each l.members as m (m.id)}
+			<li>
+				<span style="flex: 1">{m.name}</span>
+				<form method="POST" action="?/{action}" use:enhance>
+					<input type="hidden" name="role" value={l.role} />
+					{#each l.members.filter((o) => o.id !== m.id) as o (o.id)}<input type="hidden" name="memberId" value={o.id} />{/each}
+					<button class="btn btn-small" type="submit">Entfernen</button>
+				</form>
+			</li>
+		{/each}
+	</ul>
+	{#key l.members.map((m) => m.id).join()}
+		<form method="POST" action="?/{action}" use:enhance onchange={submitOnChange} class="field">
+			<input type="hidden" name="role" value={l.role} />
+			{#each l.members as o (o.id)}<input type="hidden" name="memberId" value={o.id} />{/each}
+			<label for="add-{l.role}">Hinzufügen</label>
+			<MemberSelect id="add-{l.role}" name="memberId" options={data.candidates} value={null} />
+		</form>
+	{/key}
+{/snippet}
+
 {#if form?.error}<div class="error">{form.error}</div>{/if}
 {#if form?.saved}<div class="success">Gespeichert.</div>{/if}
 
@@ -34,27 +58,11 @@
 			</form>
 		{/each}
 	</div>
-	{#each data.leaders.filter((l) => !SINGLE.includes(l.role)) as l (l.role)}
-		<h3>{l.label}</h3>
-		<ul class="row-list">
-			{#each l.members as m (m.id)}
-				<li>
-					<span style="flex: 1">{m.name}</span>
-					<form method="POST" action="?/leaders" use:enhance>
-						<input type="hidden" name="role" value={l.role} />
-						{#each l.members.filter((o) => o.id !== m.id) as o (o.id)}<input type="hidden" name="memberId" value={o.id} />{/each}
-						<button class="btn btn-small" type="submit">Entfernen</button>
-					</form>
-				</li>
-			{/each}
-		</ul>
-		{#key l.members.map((m) => m.id).join()}
-			<form method="POST" action="?/leaders" use:enhance onchange={submitOnChange} class="field">
-				<input type="hidden" name="role" value={l.role} />
-				{#each l.members as o (o.id)}<input type="hidden" name="memberId" value={o.id} />{/each}
-				<label for="add-{l.role}">Hinzufügen</label>
-				<MemberSelect id="add-{l.role}" name="memberId" options={data.candidates} value={null} />
-			</form>
-		{/key}
-	{/each}
+	{#each data.leaders.filter((l) => !SINGLE.includes(l.role)) as l (l.role)}{@render roleList(l, 'leaders')}{/each}
+</div>
+
+<div class="section">
+	<h2>Musik</h2>
+	<p class="hint">Am Sonntag stehen bei Orgel / Klavier und Dirigieren nur diese Personen zur Auswahl. Ist niemand eingetragen, erscheinen alle Mitglieder.</p>
+	{#each data.music as l (l.role)}{@render roleList(l, 'music')}{/each}
 </div>

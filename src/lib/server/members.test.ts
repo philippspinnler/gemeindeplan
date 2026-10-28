@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import { createDb, type Db } from './db';
 import { ensureStakeCalling } from './stake-callings';
-import { createMember, displayName, listMembers, spokenName, matchByFirstName, matchMember, updateMember } from './members';
+import { createMember, displayName, listMembers, spokenName, matchByFirstName, matchMember, updateMember, withCalling } from './members';
 
 let db: Db;
 beforeEach(() => {
@@ -60,6 +60,16 @@ describe('members', () => {
 		const again = listMembers(db).find((m) => m.id === a.id)!;
 		expect(again.active).toBe(false);
 		expect(again.noteTalk).toBe('gerne kurz');
+	});
+});
+
+describe('withCalling', () => {
+	it('offers only called members plus the assigned one, everyone while nobody is called', () => {
+		const all = listMembers(db);
+		const [anna, thomas] = [matchMember(all, 'Anna Rey')!, matchMember(all, 'Thomas Moser')!];
+		expect(withCalling(all, [], null)).toEqual(all);
+		expect(withCalling(all, [anna.id], null)).toEqual([anna]);
+		expect(withCalling(all, [anna.id], thomas.id)).toEqual([thomas, anna]);
 	});
 });
 

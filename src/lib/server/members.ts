@@ -77,6 +77,11 @@ export function updateMember(db: Db, id: number, patch: Partial<MemberInput>): v
 /** Stake officers from outside the ward, and ward members who also hold a stake calling. */
 export const isStakeOfficer = (m: Pick<Member, 'kind' | 'stakeCallingId'>) => m.kind === 'pfahl' || m.stakeCallingId !== null;
 
+/** Members holding the calling plus the one already assigned; everyone while nobody holds it yet. */
+export function withCalling(ward: Member[], calledIds: number[], currentId: number | null): Member[] {
+	return calledIds.length ? ward.filter((m) => calledIds.includes(m.id) || m.id === currentId) : ward;
+}
+
 type Named = Pick<Member, 'firstName' | 'lastName' | 'affiliation'> & { calling?: string | null };
 
 /** "Nachname, Vorname", the order lists are sorted by. */
