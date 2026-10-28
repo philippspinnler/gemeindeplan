@@ -33,9 +33,6 @@
 	const isActive = (href: string) => (href === '/' ? section === '/' : section.startsWith(href));
 	const role = $derived(data.user?.role);
 	const accountRole = $derived(data.accountRole);
-	function submitOnChange(e: Event) {
-		(e.currentTarget as HTMLSelectElement).form?.requestSubmit();
-	}
 </script>
 
 <nav class="topnav no-print">
@@ -50,18 +47,20 @@
 			{/if}
 		</div>
 		<div class="nav-user">
-		{#if accountRole === 'admin'}
-			<form method="POST" action="/ansicht" class="role-switch">
-				<label for="role-view-select">Ansicht als</label>
-				<select id="role-view-select" name="role" onchange={submitOnChange}>
-					{#each Object.entries(ROLE_LABELS) as [value, label] (value)}
-						<option {value} selected={value === role}>{label}</option>
-					{/each}
-				</select>
-			</form>
-		{/if}
-		<a href="/konto" class="nav-account" class:active={isActive('/konto')} title="Konto und Passwort"><Icon name="user" size={16} /><span>{data.user?.name}</span></a>
-		<form method="POST" action="/logout"><button class="btn btn-small" type="submit">Abmelden</button></form>
+			<button class="nav-account" class:active={isActive('/konto')} type="button" popovertarget="user-menu" aria-label={data.user?.name}><Icon name="user" size={16} /><span>{data.user?.name}</span><span aria-hidden="true">▾</span></button>
+			<!-- svelte-ignore a11y_click_events_have_key_events, a11y_no_static_element_interactions -->
+			<div id="user-menu" class="user-menu" popover onclick={(e) => (e.currentTarget as HTMLElement).hidePopover()}>
+				<a href="/konto">Konto und Passwort</a>
+				{#if accountRole === 'admin'}
+					<form method="POST" action="/ansicht">
+						<div class="user-menu-title">Ansicht als</div>
+						{#each Object.entries(ROLE_LABELS) as [value, label] (value)}
+							<button type="submit" name="role" {value} aria-current={value === role}>{label}</button>
+						{/each}
+					</form>
+				{/if}
+				<form method="POST" action="/logout"><button type="submit">Abmelden</button></form>
+			</div>
 		</div>
 	</div>
 </nav>

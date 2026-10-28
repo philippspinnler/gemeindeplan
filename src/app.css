@@ -30,7 +30,15 @@ h2 { font-size: 1.25rem; margin: 0 0 0.75rem; }
 .nav-links::-webkit-scrollbar { display: none; }
 .nav-links a { white-space: nowrap; }
 .nav-user { display: flex; align-items: center; gap: 0.75rem; flex-shrink: 0; }
-.nav-account { color: var(--muted) !important; font-weight: 500; }
+.nav-account { color: var(--muted); font-weight: 500; font: inherit; background: none; border: 0; border-radius: var(--radius); padding: 0.5rem 0.75rem; cursor: pointer; anchor-name: --user-menu; }
+.nav-account:hover, .nav-account.active { background: var(--bg); }
+.user-menu { position-anchor: --user-menu; inset: auto; top: anchor(bottom); right: anchor(right); margin: 0.25rem 0 0; min-width: 14rem; padding: 0.35rem; background: var(--surface); color: var(--text); border: 1px solid var(--line); border-radius: var(--radius); box-shadow: 0 6px 20px rgb(0 0 0 / 0.12); }
+.user-menu form + form, .user-menu a + form { border-top: 1px solid var(--line); margin-top: 0.35rem; padding-top: 0.35rem; }
+.user-menu a, .user-menu button { display: block; width: 100%; text-align: left; font: inherit; color: var(--text); background: none; border: 0; border-radius: var(--radius); padding: 0.45rem 0.6rem; text-decoration: none; cursor: pointer; }
+.user-menu a:hover, .user-menu button:hover { background: var(--bg); }
+.user-menu button[aria-current='true'] { font-weight: 600; }
+.user-menu button[aria-current='true']::after { content: ' ✓'; }
+.user-menu-title { font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.04em; color: var(--muted); padding: 0.35rem 0.6rem 0.15rem; }
 .subnav { display: flex; flex-wrap: wrap; gap: 0.25rem; margin: -0.25rem 0 1rem; border-bottom: 1px solid var(--line); }
 .subnav a { text-decoration: none; padding: 0.5rem 0.9rem; color: var(--muted); font-weight: 500; border-bottom: 2px solid transparent; margin-bottom: -1px; }
 .subnav a.active { color: var(--primary); border-bottom-color: var(--primary); }
@@ -122,9 +130,6 @@ select {
 .back:hover { color: var(--primary); background: var(--surface); }
 .auth-box { max-width: 420px; margin: 4rem auto; }
 .copy-box { background: var(--bg); border: 1px dashed var(--line); border-radius: 8px; padding: 0.8rem; white-space: pre-wrap; font-size: 0.95rem; }
-.role-switch { display: flex; align-items: center; gap: 0.4rem; }
-.role-switch label { font-size: 0.9rem; color: var(--muted); }
-.role-switch select { min-height: 36px; padding: 0.2rem 1.9rem 0.2rem 0.5rem; background-position: right 0.55rem center; width: auto; }
 .inline-form { display: inline; }
 .view-banner { background: #fef0c7; color: #7a4b00; padding: 0.5rem 1rem; text-align: center; display: flex; align-items: center; justify-content: center; gap: 0.75rem; flex-wrap: wrap; }
 .has-savebar { padding-bottom: 5rem; }
