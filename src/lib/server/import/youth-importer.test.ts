@@ -46,7 +46,7 @@ describe('importYouthCsv', () => {
 	});
 	it('maps activity kinds, joint and texts', () => {
 		const r = importYouthCsv(db, activities, classes);
-		expect(r.events).toBe(6);
+		expect(r.events).toBe(5);
 		const a = loadYouthEvent(db, '2026-10-14')!;
 		expect(a.event).toMatchObject({ kind: 'aktivitaet', joint: false, details: null, topic: 'Glaube', snack: 'Znüni' });
 		expect(a.parts.map((p) => p.details)).toEqual(['Treffpunkt, Kirche', 'Treffpunkt, Kirche']);
@@ -55,7 +55,6 @@ describe('importYouthCsv', () => {
 		expect(j.event.joint).toBe(true);
 		expect(j.parts.map((p) => [p.side, p.text, p.leader?.firstName])).toEqual([['both', 'Kochen\nund backen', 'Lea']]);
 		expect(j.thought?.firstName).toBe('Mia');
-		expect(loadYouthEvent(db, '2026-10-28')!.event.kind).toBe('ferien');
 		const c = loadYouthEvent(db, '2026-10-18')!;
 		expect(c.parts.map((p) => [p.side, p.leaderGroup, p.teacher?.firstName])).toEqual([['jd', 'glauben', 'Mia'], ['jm', 'priester', 'Urs']]);
 	});
@@ -84,10 +83,10 @@ describe('importYouthCsv', () => {
 		expect(loadYouthEvent(db, '2026-10-14')!.parts.map((p) => p.leader?.firstName ?? null)).toEqual(['Mia', null]);
 	});
 
-	it('turns a Friday stake row into a break', () => {
+	it('turns stake and no-activity rows into breaks', () => {
 		const r = importYouthCsv(db, activities, classes);
-		expect(r.breaks).toBe(1);
-		expect(listBreaks(db).map((b) => [b.fromDate, b.toDate, b.kind, b.label])).toEqual([['2026-10-23', '2026-10-23', 'pfahl', 'Pfahlball']]);
+		expect(r.breaks).toBe(2);
+		expect(listBreaks(db).map((b) => [b.fromDate, b.toDate, b.kind, b.label])).toEqual([['2026-10-23', '2026-10-23', 'pfahl', 'Pfahlball'], ['2026-10-28', '2026-10-28', 'ferien', 'Schulferien']]);
 	});
 
 	it('re-import overwrites', () => {
@@ -98,6 +97,6 @@ describe('importYouthCsv', () => {
 		expect(a.event.snack).toBe('Pizza');
 		expect(a.adults).toEqual([]);
 		expect(a.parts).toHaveLength(2);
-		expect(listBreaks(db)).toHaveLength(1);
+		expect(listBreaks(db)).toHaveLength(2);
 	});
 });

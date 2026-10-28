@@ -14,20 +14,14 @@ export const YOUTH_KIND_LABELS: Record<YouthEventKind, string> = {
 	erwachsene: 'Klasse mit den Erwachsenen',
 	aktivitaet: 'Aktivität',
 	basel: 'Mit Basel – Basel leitet',
-	basel_wir: 'Mit Basel – wir leiten',
-	fireside: 'Fireside',
-	uebertragung: 'Übertragung',
-	pfahl: 'Pfahl-Aktivität',
-	tempel: 'Tempel',
-	ferien: 'Ferien',
-	keine: 'Keine Aktivität'
+	basel_wir: 'Mit Basel – wir leiten'
 };
 export const YOUTH_AREA_LABELS: Record<YouthArea, string> = { geistig: 'Geistig', sozial: 'Sozial', koerperlich: 'Körperlich', intellektuell: 'Intellektuell' };
 export const SUNDAY_KINDS: YouthEventKind[] = ['klasse', 'erwachsene'];
-export const WEDNESDAY_KINDS: YouthEventKind[] = ['aktivitaet', 'basel', 'basel_wir', 'fireside', 'uebertragung', 'pfahl', 'tempel', 'ferien', 'keine'];
+export const WEDNESDAY_KINDS: YouthEventKind[] = ['aktivitaet', 'basel', 'basel_wir'];
 /** Always joint; with Basel leading nobody from the ward is needed, with us leading it is a normal joint activity. */
 export const BASEL_KINDS: YouthEventKind[] = ['basel', 'basel_wir'];
-export const OFF_KINDS: YouthEventKind[] = ['erwachsene', 'pfahl', 'tempel', 'ferien', 'keine'];
+export const OFF_KINDS: YouthEventKind[] = ['erwachsene'];
 
 export interface YouthPartFull { side: YouthPartSide; text: string | null; details: string | null; leader: Member | null; leaderGroup: string | null; area: YouthArea | null; teacher: Member | null }
 /** Dates without a stored row are synthesized with `event.id = 0` and the weekday default kind. */

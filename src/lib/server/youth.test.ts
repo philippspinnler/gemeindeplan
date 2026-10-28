@@ -52,9 +52,8 @@ describe('youth events', () => {
 	});
 	it('off kinds append details', () => {
 		ensureYouthEvents(db, '2026-10-19', 1);
-		const e = load('2026-10-21');
-		common(e, { kind: 'tempel', details: 'Basel' });
-		expect(load('2026-10-21').offLabel).toBe('Tempel: Basel');
+		common(load('2026-10-25'), { kind: 'erwachsene', details: 'Gemeindeanlass' });
+		expect(load('2026-10-25').offLabel).toBe('Klasse mit den Erwachsenen: Gemeindeanlass');
 	});
 	it('break cancels an open Wednesday but not one with content', () => {
 		ensureYouthEvents(db, '2026-10-19', 1);
@@ -70,7 +69,7 @@ describe('youth events', () => {
 	it('a Sunday topic or a special Wednesday kind counts as planned', () => {
 		ensureYouthEvents(db, '2026-10-19', 1);
 		common(load('2026-10-25'), { topic: 'Glaube' });
-		common(load('2026-10-21'), { kind: 'fireside' });
+		common(load('2026-10-21'), { kind: 'basel', joint: true });
 		expect([load('2026-10-25').status, load('2026-10-21').status]).toEqual(['planned', 'planned']);
 	});
 	it('with Basel leading nothing is needed, with us leading someone must be planned', () => {

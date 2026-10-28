@@ -1,8 +1,8 @@
 import { isSunday, toIso } from '../../dates';
 import type { Db } from '../db';
-import type { Member, YouthEventKind, YouthSide } from '../db/schema';
+import type { Member, YouthBreak, YouthEventKind, YouthSide } from '../db/schema';
 import { matchByFirstName } from '../members';
-import { ensureYouthEvents, isWednesday, loadYouthEvent, OFF_KINDS, saveYouthAdults, saveYouthCommon, saveYouthPart, YOUTH_KIND_LABELS } from '../youth';
+import { ensureYouthEvents, isWednesday, loadYouthEvent, saveYouthAdults, saveYouthCommon, saveYouthPart } from '../youth';
 import { createBreak, listBreaks } from '../youth-breaks';
 import { listAdults, listYouth } from '../youth-people';
 
@@ -56,11 +56,11 @@ const ACTIVITY_KINDS: Record<string, { kind: YouthEventKind; joint: boolean }> =
 	'aktivitäten pratteln jd ap': { kind: 'aktivitaet', joint: false },
 	'jd/ap pratteln gemeinsam': { kind: 'aktivitaet', joint: true },
 	'gemeinsam mit basel': { kind: 'basel', joint: true },
-	'pfahl-aktivität': { kind: 'pfahl', joint: false },
-	'tempel taufen': { kind: 'tempel', joint: false },
-	fireside: { kind: 'fireside', joint: false },
-	übertragung: { kind: 'uebertragung', joint: false }
+	fireside: { kind: 'aktivitaet', joint: false },
+	übertragung: { kind: 'aktivitaet', joint: false }
 };
+/** Rows that cancel the Wednesday become entries under "Ausfälle & Pfahltermine". */
+const BREAK_KINDS: Record<string, YouthBreak['kind']> = { 'pfahl-aktivität': 'pfahl', 'tempel taufen': 'tempel', 'keine aktivität': 'ferien' };
 const JM_GROUPS: Record<string, string> = { 'priester kollegium': 'priester', 'lehrer kollegium': 'lehrer', 'diakons kollegium': 'diakone', leitung: 'leitung' };
 const JD_GROUPS: Record<string, string> = { 'jd der hoffnung': 'hoffnung', 'jd des glaubens': 'glauben', 'jd des lichts': 'licht', leitung: 'leitung' };
 
@@ -127,34 +127,31 @@ function importAll(db: Db, activitiesCsv: string, classesCsv: string | null, opt
 		if (!date) { warn(`Ungültiges Datum '${r['datum']}' in den Aktivitäten`); continue; }
 		const label = r['art der aktivität'];
 		const lower = label.toLowerCase();
-		const spec = lower === 'keine aktivität'
-			? { kind: (r['details'].toLowerCase().includes('ferien') ? 'ferien' : 'keine') as YouthEventKind, joint: false }
-			: ACTIVITY_KINDS[lower];
-		if (!spec) { warn(`${date}: Art der Aktivität '${label}' unbekannt, Zeile übersprungen`); continue; }
-		if (!isWednesday(date)) {
-			if (spec.kind === 'pfahl' || spec.kind === 'tempel') {
-				const label = r['details'] || YOUTH_KIND_LABELS[spec.kind];
-				if (!listBreaks(db).some((b) => b.fromDate === date && b.toDate === date && b.kind === spec.kind)) {
-					createBreak(db, { fromDate: date, toDate: date, label, kind: spec.kind });
-					report.breaks++;
-					opts.log?.(`Pause ${date}: ${label}`);
-				}
-			} else warn(`${date}: kein Mittwoch, Zeile übersprungen`);
+		const breakKind = BREAK_KINDS[lower];
+		if (breakKind) {
+			const text = r['details'] || label;
+			if (!listBreaks(db).some((b) => b.fromDate === date && b.toDate === date && b.kind === breakKind)) {
+				createBreak(db, { fromDate: date, toDate: date, label: text, kind: breakKind });
+				report.breaks++;
+				opts.log?.(`Pause ${date}: ${text}`);
+			}
 			continue;
 		}
+		const spec = ACTIVITY_KINDS[lower];
+		if (!spec) { warn(`${date}: Art der Aktivität '${label}' unbekannt, Zeile übersprungen`); continue; }
+		if (!isWednesday(date)) { warn(`${date}: kein Mittwoch, Zeile übersprungen`); continue; }
 		const lost: string[] = [];
 		const th = thoughts(date, r['geistiger gedanke / klasse'], lost);
 		// "Leitung" means the adult leaders run it: no person to resolve.
 		const leader = (side: YouthSide) => (r[`leitung ${side}`].trim().toLowerCase() === 'leitung' ? null : resolve(date, `Leitung ${side.toUpperCase()}`, r[`leitung ${side}`], youth[side], lost));
 		const lead = { jd: leader('jd'), jm: leader('jm') };
-		// Airtable has one Details column; in the app details belong to the activity (part), the event keeps them only as off reason.
-		const off = OFF_KINDS.includes(spec.kind);
-		const details = off ? null : r['details'] || null;
+		// Airtable has one Details column; in the app details belong to the activity (part).
+		const details = r['details'] || null;
 		const part = (side: YouthSide) => ({ text: r[`aktivität ${side}`] || null, details, leaderMemberId: lead[side]?.id ?? null, leaderGroup: null });
 		const jd = part('jd');
 		const jm = part('jm');
 		const both = { text: [jd.text, jm.text].filter(Boolean).join('\n') || null, details, leaderMemberId: jd.leaderMemberId ?? jm.leaderMemberId, leaderGroup: null };
-		store(date, { ...spec, details: off ? r['details'] : '', topic: r['thema'], snack: r['snack'], thoughtMemberId: (th.jd ?? th.jm)?.id ?? null }, spec.joint ? { both } : { jd, jm }, adultEntries(date, r), lost);
+		store(date, { ...spec, details: '', topic: r['thema'], snack: r['snack'], thoughtMemberId: (th.jd ?? th.jm)?.id ?? null }, spec.joint ? { both } : { jd, jm }, adultEntries(date, r), lost);
 	}
 
 	for (const r of classRows) {
