@@ -1,4 +1,4 @@
-import { addDays, formatDateDe } from '../dates';
+import { addMonths, formatDateDe } from '../dates';
 import { isFastLike, type MeetingKind } from './db/schema';
 import { hymnLabel } from './hymns';
 import { displayName } from './members';
@@ -58,5 +58,5 @@ export function summarize(m: MeetingFull, opts: { showProgram: boolean; showPray
 
 export function overviewRange(today: string, year: number | null): { from: string; to: string } {
 	if (year) return { from: `${year}-01-01`, to: `${year}-12-31` };
-	return { from: today, to: addDays(today, 12 * 7) };
+	return { from: today, to: addMonths(today, 6) };
 }

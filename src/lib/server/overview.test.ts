@@ -6,7 +6,7 @@ import { overviewRange, summarize } from './overview';
 
 describe('overview', () => {
 	it('overviewRange', () => {
-		expect(overviewRange('2026-09-07', null)).toEqual({ from: '2026-09-07', to: '2026-11-30' });
+		expect(overviewRange('2026-09-07', null)).toEqual({ from: '2026-09-07', to: '2027-03-07' });
 		expect(overviewRange('2026-09-07', 2027)).toEqual({ from: '2027-01-01', to: '2027-12-31' });
 	});
 	it('summarize', () => {

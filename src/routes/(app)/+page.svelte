@@ -96,7 +96,7 @@
 	</div>
 </div>
 {#if data.meetings.length === 0}
-	<div class="section"><p class="muted">Keine Sonntage in diesem Zeitraum. Ein Admin kann sie unter Einstellungen anlegen.</p></div>
+	<div class="section"><p class="muted">Keine Sonntage in diesem Zeitraum.</p></div>
 {:else}
 	{#each groups as g}
 		<h2 class="month-title">{g.label}</h2>
