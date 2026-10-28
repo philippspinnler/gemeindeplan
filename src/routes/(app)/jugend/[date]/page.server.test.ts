@@ -96,7 +96,7 @@ describe('youth event actions', () => {
 		const boy = createMember(db, { firstName: 'Urs', lastName: 'Koller' });
 		setYouth(db, boy.id, 'jm', 'priester');
 		saveYouthPart(db, loadYouthEvent(db, WED)!.event.id, 'jd', { text: null, leaderMemberId: null, leaderGroup: null, teacherMemberId: boy.id });
-		const data = load({ locals, params: { date: WED } } as never) as { jdThoughtOptions: { id: number }[] };
-		expect(data.jdThoughtOptions.map((o) => o.id)).toContain(boy.id);
+		const data = load({ locals, params: { date: WED } } as never) as { jdTeacherOptions: { id: number }[] };
+		expect(data.jdTeacherOptions.map((o) => o.id)).toContain(boy.id);
 	});
 });

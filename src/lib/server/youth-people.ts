@@ -65,6 +65,13 @@ export function setLeaders(db: Db, role: YouthLeaderRole, memberIds: number[]): 
 }
 
 /** Bishopric and youth leaders, deduplicated: everyone who can attend a youth event as an adult. */
+/** Adults on one side: JD advisers and presidency, or JM advisers and the bishopric. */
+export function listAdultsFor(db: Db, side: 'jd' | 'jm'): Member[] {
+	const leaders = listLeaders(db).filter((l) => l.role.startsWith(`${side}_`)).map((l) => l.member.id);
+	const ids = side === 'jm' ? [...getBishopricIds(db), ...leaders] : leaders;
+	return [...loadMembers(db, [...new Set(ids)]).values()].sort(byName);
+}
+
 export function listAdults(db: Db): Member[] {
 	const ids = [...new Set([...getBishopricIds(db), ...listLeaders(db).map((l) => l.member.id)])];
 	return [...loadMembers(db, ids).values()].sort(byName);

@@ -23,15 +23,14 @@
 	const kindLabel = $derived(data.kinds.find((k) => k.value === ev.kind)?.label ?? ev.kind);
 	const part = (side: Side) => data.full.parts.find((p) => p.side === side);
 	const canBoth = $derived(data.canJd || data.canJm);
-	const thoughtOptions = $derived([...data.jdThoughtOptions, ...data.jmThoughtOptions].filter((o, i, all) => all.findIndex((x) => x.id === o.id) === i));
 	const sections = $derived.by(() => {
 		if (ev.joint) {
 			const groups = [...data.groupsJd, ...data.groupsJm].filter((g, i, all) => all.findIndex((x) => x.value === g.value) === i);
-			return [{ side: 'both' as Side, title: 'Gemeinsam', canEdit: canBoth, version: data.versions.both, options: [...data.jdOptions, ...data.jmOptions], thoughtOptions, groups, ideas: data.ideasBoth }];
+			return [{ side: 'both' as Side, title: 'Gemeinsam', canEdit: canBoth, version: data.versions.both, options: [...data.jdOptions, ...data.jmOptions], teacherOptions: data.thoughtOptions, groups, ideas: data.ideasBoth }];
 		}
 		return [
-			{ side: 'jd' as Side, title: 'JD', canEdit: data.canJd, version: data.versions.jd, options: data.jdOptions, thoughtOptions: data.jdThoughtOptions, groups: data.groupsJd, ideas: data.ideasJd },
-			{ side: 'jm' as Side, title: 'JM', canEdit: data.canJm, version: data.versions.jm, options: data.jmOptions, thoughtOptions: data.jmThoughtOptions, groups: data.groupsJm, ideas: data.ideasJm }
+			{ side: 'jd' as Side, title: 'JD', canEdit: data.canJd, version: data.versions.jd, options: data.jdOptions, teacherOptions: data.jdTeacherOptions, groups: data.groupsJd, ideas: data.ideasJd },
+			{ side: 'jm' as Side, title: 'JM', canEdit: data.canJm, version: data.versions.jm, options: data.jmOptions, teacherOptions: data.jmTeacherOptions, groups: data.groupsJm, ideas: data.ideasJm }
 		];
 	});
 	const presentLabel = (p: boolean | null) => (p === true ? 'anwesend' : p === false ? 'abwesend' : '–');
@@ -82,7 +81,7 @@
 	</div>
 {/snippet}
 
-{#snippet partSection(s: { side: Side; title: string; canEdit: boolean; options: { id: number; label: string; hint: string }[]; thoughtOptions: { id: number; label: string; hint: string }[]; groups: Option[]; ideas: Idea[] })}
+{#snippet partSection(s: { side: Side; title: string; canEdit: boolean; options: { id: number; label: string; hint: string }[]; teacherOptions: { id: number; label: string; hint: string }[]; groups: Option[]; ideas: Idea[] })}
 	{@const p = part(s.side)}
 	{@const formId = `${s.side}Form`}
 	<div class="section">
@@ -152,7 +151,7 @@
 				<div class="field">
 					<label for="{s.side}_teacher">Lehrer</label>
 					{#if s.canEdit}
-						<MemberSelect id="{s.side}_teacher" name="teacher" form={formId} options={s.thoughtOptions} value={p?.teacherId ?? null} />
+						<MemberSelect id="{s.side}_teacher" name="teacher" form={formId} options={s.teacherOptions} value={p?.teacherId ?? null} />
 					{:else}
 						<p>{p?.teacherName ?? '–'}</p>
 					{/if}
@@ -240,7 +239,7 @@
 					<div class="field">
 						<label for="thought">Geistiger Gedanke</label>
 						{#if data.canCommon}
-							<MemberSelect id="thought" name="thought" form="commonForm" options={thoughtOptions} value={data.full.thoughtId} />
+							<MemberSelect id="thought" name="thought" form="commonForm" options={data.thoughtOptions} value={data.full.thoughtId} />
 						{:else}
 							<p>{data.full.thoughtName ?? '–'}</p>
 						{/if}

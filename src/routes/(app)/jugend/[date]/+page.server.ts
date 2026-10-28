@@ -11,7 +11,7 @@ import {
 	SUNDAY_KINDS, WEDNESDAY_KINDS, YOUTH_AREA_LABELS, YOUTH_KIND_LABELS, youthSectionVersions, type YouthEventFull
 } from '$lib/server/youth';
 import { openIdeasFor, planIdea } from '$lib/server/youth-ideas';
-import { listAdults, listYouth, YOUTH_GROUP_LABELS } from '$lib/server/youth-people';
+import { listAdults, listAdultsFor, listYouth, YOUTH_GROUP_LABELS } from '$lib/server/youth-people';
 
 const DATE = /^\d{4}-\d{2}-\d{2}$/;
 const CONFLICT = 'Jemand anderes hat diesen Termin inzwischen geändert. Bitte die Seite neu laden, deine letzte Änderung geht dabei verloren.';
@@ -85,7 +85,7 @@ export const load: PageServerLoad = ({ locals, params }) => {
 	const name = (m: Member | null) => (m ? displayName(m) : null);
 	const present = new Map(full.adults.map((a) => [a.member.id, a.present]));
 	const adultMembers = unique([...listAdults(locals.db), ...full.adults.map((a) => a.member)]);
-	const thoughtOptions = (side: 'jd' | 'jm') => memberOptions(unique([...youthOf(side), ...adultMembers, full.thought]), new Map(), 'plain', today);
+	const teacherOptions = (side: 'jd' | 'jm') => memberOptions(unique([...youthOf(side), ...listAdultsFor(locals.db, side)]), new Map(), 'plain', today);
 	const groups = (side: 'jd' | 'jm') => YOUTH_LEADER_GROUPS[side].map((g) => ({ value: g, label: YOUTH_GROUP_LABELS[g] ?? g }));
 
 	return {
@@ -118,8 +118,9 @@ export const load: PageServerLoad = ({ locals, params }) => {
 		offNotice: full.meetingKind && full.status === 'off' ? full.offLabel : null,
 		jdOptions: options('jd'),
 		jmOptions: options('jm'),
-		jdThoughtOptions: thoughtOptions('jd'),
-		jmThoughtOptions: thoughtOptions('jm'),
+		jdTeacherOptions: teacherOptions('jd'),
+		jmTeacherOptions: teacherOptions('jm'),
+		thoughtOptions: memberOptions(unique([...youthOf('jd'), ...youthOf('jm'), ...adultMembers, full.thought]), new Map(), 'plain', today),
 		adults: adultMembers.map((m) => ({ id: m.id, name: displayName(m), present: present.get(m.id) ?? null })),
 		groupsJd: groups('jd'),
 		groupsJm: groups('jm'),

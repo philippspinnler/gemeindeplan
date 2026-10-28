@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, it } from 'vitest';
 import { setBishopricMember } from './bishopric';
 import { createDb, type Db } from './db';
 import { createMember } from './members';
-import { listAdults, listLeaders, listYouth, removeYouth, setLeaders, setYouth } from './youth-people';
+import { listAdults, listAdultsFor, listLeaders, listYouth, removeYouth, setLeaders, setYouth } from './youth-people';
 
 let db: Db;
 beforeEach(() => {
@@ -49,5 +49,14 @@ describe('youth people', () => {
 		setLeaders(db, 'jm_berater', [bishop.id]);
 		expect(listLeaders(db).map((l) => [l.member.id, l.role])).toEqual([[lea.id, 'jd_beraterin'], [bishop.id, 'jm_berater']]);
 		expect(listAdults(db).map((m) => m.lastName)).toEqual(['Gasser', 'Widmer']);
+	});
+	it('listAdultsFor keeps JD and JM adults apart, the bishopric goes with JM', () => {
+		const [bishop, jmAdviser, jdAdviser, jdPresident] = ['Beat', 'Marco', 'Nina', 'Lea'].map((firstName) => createMember(db, { firstName, lastName: 'Test' }));
+		setBishopricMember(db, 'bischof', bishop.id);
+		setLeaders(db, 'jm_berater', [jmAdviser.id]);
+		setLeaders(db, 'jd_beraterin', [jdAdviser.id]);
+		setLeaders(db, 'jd_praesidentin', [jdPresident.id]);
+		expect(listAdultsFor(db, 'jm').map((m) => m.id).sort()).toEqual([bishop.id, jmAdviser.id].sort());
+		expect(listAdultsFor(db, 'jd').map((m) => m.id).sort()).toEqual([jdAdviser.id, jdPresident.id].sort());
 	});
 });
