@@ -58,10 +58,14 @@ describe('youth event actions', () => {
 		expect(() => load({ locals, params: { date: '2026-06-31' } } as never)).toThrow(expect.objectContaining({ status: 404 }));
 	});
 
-	it('makes "Gemeinsam mit Basel" joint', async () => {
+	it('on a Wednesday the kind alone decides whether it is joint', async () => {
 		const { db, locals } = setup('jd_leitung');
-		const version = youthSectionVersions(loadYouthEvent(db, WED)!).common;
-		await call('common', locals, { version, kind: 'basel' });
+		const save = (kind: string, joint?: string) => call('common', locals, { version: youthSectionVersions(loadYouthEvent(db, WED)!).common, kind, ...(joint ? { joint } : {}) });
+		await save('gemeinsam_jm');
+		expect(loadYouthEvent(db, WED)!.event).toMatchObject({ kind: 'gemeinsam_jm', joint: true });
+		await save('aktivitaet', '1');
+		expect(loadYouthEvent(db, WED)!.event).toMatchObject({ kind: 'aktivitaet', joint: false });
+		await save('basel');
 		expect(loadYouthEvent(db, WED)!.event).toMatchObject({ kind: 'basel', joint: true });
 	});
 

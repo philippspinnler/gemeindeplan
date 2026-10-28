@@ -54,7 +54,7 @@ function isoDate(s: string): string | null {
 
 const ACTIVITY_KINDS: Record<string, { kind: YouthEventKind; joint: boolean }> = {
 	'aktivitäten pratteln jd ap': { kind: 'aktivitaet', joint: false },
-	'jd/ap pratteln gemeinsam': { kind: 'aktivitaet', joint: true },
+	'jd/ap pratteln gemeinsam': { kind: 'gemeinsam_jd', joint: true },
 	'gemeinsam mit basel': { kind: 'basel', joint: true },
 	fireside: { kind: 'aktivitaet', joint: false },
 	übertragung: { kind: 'aktivitaet', joint: false }
@@ -145,13 +145,15 @@ function importAll(db: Db, activitiesCsv: string, classesCsv: string | null, opt
 		// "Leitung" means the adult leaders run it: no person to resolve.
 		const leader = (side: YouthSide) => (r[`leitung ${side}`].trim().toLowerCase() === 'leitung' ? null : resolve(date, `Leitung ${side.toUpperCase()}`, r[`leitung ${side}`], youth[side], lost));
 		const lead = { jd: leader('jd'), jm: leader('jm') };
+		// The side that leads is responsible for a joint activity.
+		const kind = spec.kind === 'gemeinsam_jd' && lead.jm && !lead.jd ? 'gemeinsam_jm' : spec.kind;
 		// Airtable has one Details column; in the app details belong to the activity (part).
 		const details = r['details'] || null;
 		const part = (side: YouthSide) => ({ text: r[`aktivität ${side}`] || null, details, leaderMemberId: lead[side]?.id ?? null, leaderGroup: null });
 		const jd = part('jd');
 		const jm = part('jm');
 		const both = { text: [jd.text, jm.text].filter(Boolean).join('\n') || null, details, leaderMemberId: jd.leaderMemberId ?? jm.leaderMemberId, leaderGroup: null };
-		store(date, { ...spec, details: '', topic: r['thema'], snack: r['snack'], thoughtMemberId: (th.jd ?? th.jm)?.id ?? null }, spec.joint ? { both } : { jd, jm }, adultEntries(date, r), lost);
+		store(date, { ...spec, kind, details: '', topic: r['thema'], snack: r['snack'], thoughtMemberId: (th.jd ?? th.jm)?.id ?? null }, spec.joint ? { both } : { jd, jm }, adultEntries(date, r), lost);
 	}
 
 	for (const r of classRows) {

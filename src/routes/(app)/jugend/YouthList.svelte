@@ -85,8 +85,12 @@
 							{#if r.status === 'off'}
 								<td colspan={sunday ? 4 : 6}>{r.offLabel ?? ''}</td>
 							{:else}
-								<td data-label="JD">{@render cell(r, r.jd)}</td>
-								<td data-label="JM">{@render cell(r, r.jm)}</td>
+								{#if r.joint}
+									<td colspan="2" data-label="JD / JM">{@render cell(r, r.jd)}</td>
+								{:else}
+									<td data-label="JD">{@render cell(r, r.jd)}</td>
+									<td data-label="JM">{@render cell(r, r.jm)}</td>
+								{/if}
 								{#if !sunday}<td data-label={r.area ? 'Bereich' : null}>{r.area ?? ''}</td><td data-label={r.thought ? 'Geistiger Gedanke' : null}>{r.thought ?? ''}</td>{/if}
 								<td data-label={r.extra ? (sunday ? 'Thema' : 'Snack') : null}>{r.extra ?? ''}</td>
 								<td>{r.hint ?? ''}</td>

@@ -7,7 +7,7 @@ import { displayName } from '$lib/server/members';
 import { can, requireRole } from '$lib/server/permissions';
 import { memberOptions } from '$lib/server/picker';
 import {
-	BASEL_KINDS, ensureYouthEvents, isWednesday, loadYouthEvent, OFF_KINDS, saveYouthAdults, saveYouthCommon, saveYouthPart,
+	ensureYouthEvents, isWednesday, JOINT_KINDS, leadSide, loadYouthEvent, OFF_KINDS, saveYouthAdults, saveYouthCommon, saveYouthPart,
 	SUNDAY_KINDS, WEDNESDAY_KINDS, YOUTH_AREA_LABELS, YOUTH_KIND_LABELS, youthSectionVersions, type YouthEventFull
 } from '$lib/server/youth';
 import { openIdeasFor, planIdea } from '$lib/server/youth-ideas';
@@ -127,6 +127,7 @@ export const load: PageServerLoad = ({ locals, params }) => {
 		ideasJd: openIdeasFor(locals.db, 'jd'),
 		ideasJm: openIdeasFor(locals.db, 'jm'),
 		ideasBoth: openIdeasFor(locals.db, 'both'),
+		leadSide: leadSide(full.event.kind),
 		isSunday: isSunday(date),
 		breakHint: full.break?.label ?? null
 	};
@@ -145,7 +146,7 @@ export const actions: Actions = {
 		if ([topicUrl, topicUrlJm].some((u) => u && !/^https?:\/\//i.test(u))) return fail(400, { error: 'Der Link muss mit http:// oder https:// beginnen.' });
 		saveYouthCommon(locals.db, full.event.id, {
 			kind,
-			joint: BASEL_KINDS.includes(kind) || fd.get('joint') === '1',
+			joint: isWednesday(params.date) ? JOINT_KINDS.includes(kind) : fd.get('joint') === '1',
 			details: optStr(fd, 'details'),
 			topic: optStr(fd, 'topic'),
 			topicUrl,

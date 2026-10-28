@@ -61,6 +61,7 @@ export function youthList(db: Db, url: URL, weekday: YouthWeekday) {
 				offLabel: byEvent ? 'Fällt aus' : e.offLabel,
 				href: e.status === 'off' ? null : `/jugend/${e.event.date}`,
 				isEvent: false,
+				joint: e.event.joint,
 				jd: summary(e, 'jd'),
 				jm: summary(e, 'jm'),
 				extra: weekday === 'sunday' ? topicLine(e.event) : e.event.snack,
@@ -74,7 +75,7 @@ export function youthList(db: Db, url: URL, weekday: YouthWeekday) {
 			if (b.kind === 'ferien' || b.fromDate < range.from || b.fromDate > range.to) continue;
 			rows.push({
 				date: b.fromDate, dateLabel: dayLabel(b.fromDate), kindLabel: YOUTH_BREAK_KIND_LABELS[b.kind], status: 'off', offLabel: eventText(b),
-				href: `/jugend/ausfaelle/${b.id}`, isEvent: true, jd: null, jm: null, extra: null, thought: null, area: null, hint: null
+				href: `/jugend/ausfaelle/${b.id}`, isEvent: true, joint: false, jd: null, jm: null, extra: null, thought: null, area: null, hint: null
 			});
 		}
 		rows.sort((a, b) => a.date.localeCompare(b.date));

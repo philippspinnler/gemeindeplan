@@ -52,7 +52,7 @@ describe('importYouthCsv', () => {
 		expect(a.parts.map((p) => p.details)).toEqual(['Treffpunkt, Kirche', 'Treffpunkt, Kirche']);
 		expect(a.parts.map((p) => [p.side, p.text])).toEqual([['jd', 'Spiele'], ['jm', 'Fussball']]);
 		const j = loadYouthEvent(db, '2026-10-21')!;
-		expect(j.event.joint).toBe(true);
+		expect(j.event).toMatchObject({ kind: 'gemeinsam_jd', joint: true });
 		expect(j.parts.map((p) => [p.side, p.text, p.leader?.firstName])).toEqual([['both', 'Kochen\nund backen', 'Lea']]);
 		expect(j.thought?.firstName).toBe('Mia');
 		const c = loadYouthEvent(db, '2026-10-18')!;

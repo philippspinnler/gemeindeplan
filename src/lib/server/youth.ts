@@ -13,14 +13,19 @@ export const YOUTH_KIND_LABELS: Record<YouthEventKind, string> = {
 	klasse: 'Klasse',
 	erwachsene: 'Klasse mit den Erwachsenen',
 	aktivitaet: 'Aktivität',
+	gemeinsam_jd: 'Gemeinsam – JD leiten',
+	gemeinsam_jm: 'Gemeinsam – JM leiten',
 	basel: 'Mit Basel – Basel leitet',
-	basel_wir: 'Mit Basel – wir leiten'
+	basel_jd: 'Mit Basel – JD leiten',
+	basel_jm: 'Mit Basel – JM leiten'
 };
 export const YOUTH_AREA_LABELS: Record<YouthArea, string> = { geistig: 'Geistig', sozial: 'Sozial', koerperlich: 'Körperlich', intellektuell: 'Intellektuell' };
 export const SUNDAY_KINDS: YouthEventKind[] = ['klasse', 'erwachsene'];
-export const WEDNESDAY_KINDS: YouthEventKind[] = ['aktivitaet', 'basel', 'basel_wir'];
-/** Always joint; with Basel leading nobody from the ward is needed, with us leading it is a normal joint activity. */
-export const BASEL_KINDS: YouthEventKind[] = ['basel', 'basel_wir'];
+export const WEDNESDAY_KINDS: YouthEventKind[] = ['aktivitaet', 'gemeinsam_jd', 'gemeinsam_jm', 'basel', 'basel_jd', 'basel_jm'];
+/** Every Wednesday kind but the plain activity is joint; with Basel leading nobody from the ward is needed. */
+export const JOINT_KINDS: YouthEventKind[] = WEDNESDAY_KINDS.filter((k) => k !== 'aktivitaet');
+/** The side that runs a joint Wednesday and provides its leader. */
+export const leadSide = (kind: YouthEventKind): 'jd' | 'jm' | null => (kind.endsWith('_jd') ? 'jd' : kind.endsWith('_jm') ? 'jm' : null);
 export const OFF_KINDS: YouthEventKind[] = ['erwachsene'];
 
 export interface YouthPartFull { side: YouthPartSide; text: string | null; details: string | null; leader: Member | null; leaderGroup: string | null; area: YouthArea | null; teacher: Member | null }
@@ -96,8 +101,8 @@ function assemble(db: Db, from: string, to: string, rows: YouthEvent[]): YouthEv
 		const adults = adultRows.filter((a) => a.eventId === event.id).flatMap((a) => (people.has(a.memberId) ? [{ member: people.get(a.memberId)!, present: a.present }] : []));
 		const meetingKind = weekday === 'sunday' ? (meetingKinds.get(date) ?? null) : null;
 		const brk = weekday === 'wednesday' ? breakFor(breaks, date) : null;
-		// A Sunday topic or a special Wednesday kind (Fireside, Basel leading, …) is a plan of its own.
-		const planned = parts.some(hasContent) || !!event.thoughtMemberId || (weekday === 'sunday' && !!event.topic) || (event.kind !== defaultKind(date) && !OFF_KINDS.includes(event.kind) && event.kind !== 'basel_wir');
+		// A Sunday topic or Basel leading is a plan of its own.
+		const planned = parts.some(hasContent) || !!event.thoughtMemberId || (weekday === 'sunday' && !!event.topic) || event.kind === 'basel';
 		const isOpen = event.kind === defaultKind(date) && !planned;
 
 		let status: YouthEventFull['status'] = planned ? 'planned' : 'open';

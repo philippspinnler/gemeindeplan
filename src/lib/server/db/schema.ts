@@ -25,7 +25,7 @@ export const YOUTH_GROUPS: Record<YouthSide, readonly string[]> = {
 };
 export const YOUTH_LEADER_ROLES = ['jm_berater', 'jd_beraterin', 'jd_praesidentin', 'jd_ratgeberin1', 'jd_ratgeberin2'] as const;
 export type YouthLeaderRole = (typeof YOUTH_LEADER_ROLES)[number];
-export const YOUTH_EVENT_KINDS = ['klasse', 'erwachsene', 'aktivitaet', 'basel', 'basel_wir'] as const;
+export const YOUTH_EVENT_KINDS = ['klasse', 'erwachsene', 'aktivitaet', 'gemeinsam_jd', 'gemeinsam_jm', 'basel', 'basel_jd', 'basel_jm'] as const;
 export type YouthEventKind = (typeof YOUTH_EVENT_KINDS)[number];
 export const YOUTH_PART_SIDES = ['jd', 'jm', 'both'] as const;
 export type YouthPartSide = (typeof YOUTH_PART_SIDES)[number];

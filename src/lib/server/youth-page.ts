@@ -2,7 +2,7 @@ import { randomBytes } from 'node:crypto';
 import { addDays, MONTHS_LONG, MONTHS_SHORT, parseIso, WEEKDAYS, WEEKDAYS_LONG } from '../dates';
 import type { Db } from './db';
 import type { Member, YouthPartSide } from './db/schema';
-import { BASEL_KINDS, hasJmTopic, listYouthEvents, YOUTH_KIND_LABELS, type YouthEventFull } from './youth';
+import { JOINT_KINDS, hasJmTopic, listYouthEvents, YOUTH_KIND_LABELS, type YouthEventFull } from './youth';
 import { listBreaks, YOUTH_BREAK_KIND_LABELS } from './youth-breaks';
 import { listAdults, listYouth, YOUTH_GROUP_LABELS } from './youth-people';
 
@@ -46,7 +46,7 @@ function labels(date: string) {
 function toItem(e: YouthEventFull, names: Map<number, string>): YouthPageItem {
 	const date = e.event.date;
 	const name = (m: Member | null) => (m ? (names.get(m.id) ?? null) : null);
-	const kindLabel = e.status === 'off' ? 'Kein JD/JM' : e.event.joint && !BASEL_KINDS.includes(e.event.kind) ? 'Gemeinsam' : YOUTH_KIND_LABELS[e.event.kind];
+	const kindLabel = e.status === 'off' ? 'Kein JD/JM' : e.event.joint && !JOINT_KINDS.includes(e.event.kind) ? 'Gemeinsam' : YOUTH_KIND_LABELS[e.event.kind];
 	// Both sides are always listed, so an unplanned side is visible as such; with Basel leading there is nothing left to plan.
 	const sides: YouthPartSide[] = e.event.joint ? ['both'] : ['jd', 'jm'];
 	const split = hasJmTopic(e.event);

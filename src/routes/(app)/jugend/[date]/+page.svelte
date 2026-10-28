@@ -12,7 +12,7 @@
 	type Idea = { id: number; text: string; note: string | null };
 
 	const ev = $derived(data.full.event);
-	/** Follows the select before it is saved; "Mit Basel" is always joint. */
+	/** Follows the select before it is saved. */
 	let kind = $derived(ev.kind);
 	/** JM has its own lesson fields. Reset per date only, so a fresh tick survives saving other fields. */
 	let ownJm = $state(false);
@@ -28,7 +28,7 @@
 	const sections = $derived.by(() => {
 		if (ev.joint) {
 			const groups = [...data.groupsJd, ...data.groupsJm].filter((g, i, all) => all.findIndex((x) => x.value === g.value) === i);
-			return [{ side: 'both' as Side, title: 'Gemeinsam', canEdit: canBoth, version: data.versions.both, options: [...data.jdOptions, ...data.jmOptions], teacherOptions: data.thoughtOptions, groups, ideas: data.ideasBoth }];
+			return [{ side: 'both' as Side, title: 'Gemeinsam', canEdit: canBoth, version: data.versions.both, options: data.leadSide === 'jd' ? data.jdOptions : data.leadSide === 'jm' ? data.jmOptions : [...data.jdOptions, ...data.jmOptions], teacherOptions: data.thoughtOptions, groups, ideas: data.ideasBoth }];
 		}
 		return [
 			{ side: 'jd' as Side, title: 'JD', canEdit: data.canJd, version: data.versions.jd, options: data.jdOptions, teacherOptions: data.jdTeacherOptions, groups: data.groupsJd, ideas: data.ideasJd },
@@ -199,14 +199,16 @@
 					<p>{kindLabel}</p>
 				{/if}
 			</div>
-			<div class="field">
-				<span class="label">JD und JM</span>
-				{#if data.canCommon}
-					<label class="check"><input type="checkbox" name="joint" value="1" form="commonForm" checked={ev.joint || kind.startsWith('basel')} disabled={kind.startsWith('basel')} /> gemeinsam</label>
-				{:else}
-					<p>{ev.joint ? 'gemeinsam' : 'getrennt'}</p>
-				{/if}
-			</div>
+			{#if data.isSunday}
+				<div class="field">
+					<span class="label">JD und JM</span>
+					{#if data.canCommon}
+						<label class="check"><input type="checkbox" name="joint" value="1" form="commonForm" checked={ev.joint} /> gemeinsam</label>
+					{:else}
+						<p>{ev.joint ? 'gemeinsam' : 'getrennt'}</p>
+					{/if}
+				</div>
+			{/if}
 		</div>
 		{#if data.off}
 			<div class="field">
