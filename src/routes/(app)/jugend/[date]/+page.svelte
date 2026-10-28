@@ -16,8 +16,10 @@
 	let kind = $derived(ev.kind);
 	/** JM has its own lesson fields. Reset per date only, so a fresh tick survives saving other fields. */
 	let ownJm = $state(false);
+	// A derived primitive only fires when the date really changes, not on every data reload after a save.
+	const date = $derived(data.full.event.date);
 	$effect.pre(() => {
-		void data.full.event.date;
+		void date;
 		ownJm = untrack(() => !!(ev.topicJm || ev.topicUrlJm));
 	});
 	const kindLabel = $derived(data.kinds.find((k) => k.value === ev.kind)?.label ?? ev.kind);
