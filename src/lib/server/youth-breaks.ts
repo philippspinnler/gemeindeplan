@@ -9,16 +9,11 @@ export function listBreaks(db: Db, from?: string): YouthBreak[] {
 	return (from ? q.where(gte(youthBreaks.toDate, from)) : q).orderBy(asc(youthBreaks.fromDate)).all();
 }
 
-/** Events in the same week (Monday to Sunday) as the Wednesday; holidays only when they include the Wednesday itself. */
-export function breaksFor(breaks: YouthBreak[], wednesday: string): YouthBreak[] {
+/** Holidays cancel the Wednesdays inside them; another event in the same week (Monday to Sunday) cancels that Wednesday unless it is marked not to. */
+export function breakFor(breaks: YouthBreak[], wednesday: string): YouthBreak | null {
 	const monday = addDays(wednesday, -2);
 	const sunday = addDays(wednesday, 4);
-	return breaks.filter((b) => (b.kind === 'ferien' ? b.fromDate <= wednesday && wednesday <= b.toDate : b.fromDate <= sunday && monday <= b.toDate));
-}
-
-/** The holiday or event that cancels the Wednesday activity, if any. */
-export function breakFor(breaks: YouthBreak[], wednesday: string): YouthBreak | null {
-	return breaksFor(breaks, wednesday).find((b) => b.cancels) ?? null;
+	return breaks.find((b) => (b.kind === 'ferien' ? b.fromDate <= wednesday && wednesday <= b.toDate : b.cancels && b.fromDate <= sunday && monday <= b.toDate)) ?? null;
 }
 
 export const YOUTH_BREAK_KIND_LABELS: Record<YouthBreak['kind'], string> = { ferien: 'Ferien', pfahl: 'Pfahl-Aktivität', tempel: 'Tempel', supersamstag: 'Supersamstag', tanzabend: 'Tanzabend' };

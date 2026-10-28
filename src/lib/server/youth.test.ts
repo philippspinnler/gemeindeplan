@@ -7,7 +7,7 @@ import {
 	classHeld, ensureYouthEvents, isFifthSunday, listYouthEvents, loadYouthEvent, saveYouthAdults, saveYouthCommon, saveYouthPart,
 	youthDatesBetween, youthSectionVersions, type YouthEventFull
 } from './youth';
-import { areaSummary, eventOffLabel } from './youth-list';
+import { areaSummary, eventText } from './youth-list';
 
 let db: Db;
 beforeEach(() => {
@@ -155,10 +155,10 @@ describe('youth events', () => {
 	});
 });
 
-describe('eventOffLabel', () => {
-	it('names the real day of a stake or temple date', () => {
+describe('eventText', () => {
+	it('names the event and, when it spans days, its last day', () => {
 		const b = { id: 1, fromDate: '2027-01-09', toDate: '2027-01-09', label: 'Tempelbesuch', kind: 'tempel' as const, cancels: true };
-		expect(eventOffLabel(b)).toBe('Sa 9.1.: Tempelbesuch');
-		expect(eventOffLabel({ ...b, toDate: '2027-01-10', label: null })).toBe('Sa 9.1. – So 10.1.');
+		expect(eventText(b)).toBe('Tempelbesuch');
+		expect(eventText({ ...b, toDate: '2027-01-10', label: null })).toBe('Tempel (bis So 10.1.)');
 	});
 });

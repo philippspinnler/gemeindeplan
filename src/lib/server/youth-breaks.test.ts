@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import { createDb, type Db } from './db';
 import { youthBreaks } from './db/schema';
-import { breakFor, breaksFor, breakVersion, createBreak, deleteBreak, getBreak, listBreaks, updateBreak } from './youth-breaks';
+import { breakFor, breakVersion, createBreak, deleteBreak, getBreak, listBreaks, updateBreak } from './youth-breaks';
 
 let db: Db;
 beforeEach(() => {
@@ -59,7 +59,6 @@ describe('youth breaks', () => {
 	it('a stake date only cancels the Wednesday when it is marked to', () => {
 		const temple = createBreak(db, { fromDate: '2027-01-09', toDate: '2027-01-09', label: 'Tempel', kind: 'tempel', cancels: false });
 		expect(breakFor(listBreaks(db), '2027-01-06')).toBeNull();
-		expect(breaksFor(listBreaks(db), '2027-01-06').map((b) => b.id)).toEqual([temple.id]);
 		updateBreak(db, temple.id, { ...temple, cancels: true });
 		expect(breakFor(listBreaks(db), '2027-01-06')?.id).toBe(temple.id);
 		const holiday = createBreak(db, { fromDate: '2027-02-01', toDate: '2027-02-12', label: null, kind: 'ferien', cancels: false });
