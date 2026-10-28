@@ -8,9 +8,6 @@
 </svelte:head>
 
 <main>
-	<h1>JD / JM {data.ward}</h1>
-	<p class="ward">Sonntagsklasse und Mittwochaktivität</p>
-
 	<div class="cards">
 	{#each data.big as ev (ev.date)}
 		<div class="ev big">
@@ -63,8 +60,6 @@
 <style>
 	:global(body) { background: #f4f3ef; }
 	main { max-width: 440px; margin: 0 auto; padding: 14px; font-family: -apple-system, system-ui, sans-serif; color: #1a1a1a; }
-	h1 { font-size: 20px; margin: 4px 0 2px; }
-	.ward { color: #777; font-size: 12px; margin: 0 0 12px; }
 	.ev { background: #fff; border-radius: 12px; padding: 12px 14px; margin-bottom: 10px; box-shadow: 0 1px 3px rgba(0,0,0,.08); }
 	.ev.big { padding: 16px; }
 	.when { font-size: 12px; text-transform: uppercase; letter-spacing: .04em; color: #1f5f8b; font-weight: 700; }
@@ -87,7 +82,6 @@
 	.muted { color: #888; }
 	@media (min-width: 720px) {
 		main { max-width: 900px; padding: 24px; }
-		h1 { font-size: 24px; }
 		.cards { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 14px; }
 		.cards .ev { margin-bottom: 0; }
 		.ev.big { padding: 20px; }
