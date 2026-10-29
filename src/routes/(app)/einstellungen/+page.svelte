@@ -19,11 +19,26 @@
 
 <div class="section">
 	<h2>Jugend-Zeiten</h2>
-	<form method="POST" action="?/times" use:enhance={keepValues}>
-		<div class="field"><label for="wed-start">Mittwochsaktivität von</label><input id="wed-start" name="youth_wed_start" type="time" value={data.settings.youth_wed_start} onchange={submitOnChange} /></div>
-		<div class="field"><label for="wed-end">Mittwochsaktivität bis</label><input id="wed-end" name="youth_wed_end" type="time" value={data.settings.youth_wed_end} onchange={submitOnChange} /></div>
-		<div class="field"><label for="sun-start">Sonntagsklasse von</label><input id="sun-start" name="youth_sun_start" type="time" value={data.settings.youth_sun_start} onchange={submitOnChange} /></div>
-		<div class="field"><label for="sun-end">Sonntagsklasse bis</label><input id="sun-end" name="youth_sun_end" type="time" value={data.settings.youth_sun_end} onchange={submitOnChange} /></div>
-		<p class="hint">Diese Zeiten gelten für alle Termine im Kalender-Abo der Jugendseite. Erst wenn alle vier gesetzt sind, erscheint dort der Knopf „Im Kalender abonnieren“.</p>
+	<p class="hint">Die üblichen Zeiten der Jugendtermine. Sie gelten für alle Termine im Kalender-Abo; erst wenn beide vollständig sind, erscheint auf der Jugendseite der Knopf „Im Kalender abonnieren“.</p>
+	<form method="POST" action="?/times" use:enhance={keepValues} class="times">
+		{#each [{ key: 'wed', label: 'Mittwochsaktivität' }, { key: 'sun', label: 'Sonntagsklasse' }] as row (row.key)}
+			<fieldset>
+				<legend>{row.label}</legend>
+				<input name="youth_{row.key}_start" type="time" aria-label="{row.label} von" value={data.settings[`youth_${row.key}_start` as 'youth_wed_start']} onchange={submitOnChange} />
+				<span aria-hidden="true">bis</span>
+				<input name="youth_{row.key}_end" type="time" aria-label="{row.label} bis" value={data.settings[`youth_${row.key}_end` as 'youth_wed_end']} onchange={submitOnChange} />
+			</fieldset>
+		{/each}
 	</form>
 </div>
+
+<style>
+	.times { display: grid; gap: 0.6rem; margin-top: 0.9rem; }
+	fieldset { display: grid; grid-template-columns: 11rem 7.5rem max-content 7.5rem; justify-content: start; align-items: center; gap: 0.6rem; border: 0; margin: 0; padding: 0; }
+	legend { float: left; font-weight: 600; font-size: 0.95rem; padding: 0; }
+	fieldset span { color: var(--muted); }
+	@media (max-width: 520px) {
+		fieldset { grid-template-columns: 1fr auto 1fr; }
+		legend { grid-column: 1 / -1; }
+	}
+</style>
