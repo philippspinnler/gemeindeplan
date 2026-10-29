@@ -4,7 +4,8 @@ import { createDb, type Db } from './db';
 import { createMember } from './members';
 import { setSetting } from './settings';
 import { ensureYouthEvents, loadYouthEvent, saveYouthAdults, saveYouthCommon, saveYouthPart } from './youth';
-import { parseCalendarFilter, toIcs, youthCalendarEntries, zurichToUtc, type CalendarFilter } from './youth-calendar';
+import { parseCalendarFilter, toIcs, youthCalendarEntries, youthFeed, zurichToUtc, type CalendarFilter } from './youth-calendar';
+import { newYouthPageToken } from './youth-page';
 import { setLeaders, setYouth } from './youth-people';
 
 let db: Db;
@@ -123,5 +124,20 @@ describe('ical', () => {
 	it('parses the filter from query params', () => {
 		expect(parseCalendarFilter(new URLSearchParams('seite=jm&tag=so&person=7'))).toEqual({ sides: ['jm'], days: ['so'], personId: 7 });
 		expect(parseCalendarFilter(new URLSearchParams(''))).toEqual(all);
+	});
+});
+
+describe('feed', () => {
+	it('rejects a regenerated token', () => {
+		const old = newYouthPageToken();
+		setSetting(db, 'youth_page_token', old);
+		expect(youthFeed(db, old, new URLSearchParams(), today)?.startsWith('BEGIN:VCALENDAR')).toBe(true);
+		const fresh = newYouthPageToken();
+		setSetting(db, 'youth_page_token', fresh);
+		expect(youthFeed(db, old, new URLSearchParams(), today)).toBeNull();
+		expect(youthFeed(db, fresh, new URLSearchParams(), today)).toContain('BEGIN:VEVENT');
+	});
+	it('rejects any token while none is set', () => {
+		expect(youthFeed(db, '', new URLSearchParams(), today)).toBeNull();
 	});
 });

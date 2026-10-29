@@ -1,9 +1,9 @@
 import { addMonths } from '../dates';
 import type { Db } from './db';
 import type { YouthPartSide } from './db/schema';
-import { youthTimes } from './settings';
+import { getSetting, youthTimes } from './settings';
 import { listYouthEvents } from './youth';
-import { publicItem, toItem, youthPageNames } from './youth-page';
+import { publicItem, tokenMatches, toItem, youthPageNames } from './youth-page';
 import { listAdults, listAdultsFor, listYouth } from './youth-people';
 
 export interface CalendarFilter { sides: ('jd' | 'jm')[]; days: ('mi' | 'so')[]; personId: number | null }
@@ -127,4 +127,11 @@ export function toIcs(entries: CalendarEntry[], ward: string, now: Date): string
 	}
 	lines.push('END:VCALENDAR');
 	return lines.map(fold).join('\r\n') + '\r\n';
+}
+
+/** The iCal text behind the youth page token, or null when the token is wrong. */
+export function youthFeed(db: Db, token: string, params: URLSearchParams, today: string, now = new Date()): string | null {
+	const expected = getSetting(db, 'youth_page_token');
+	if (!expected || !tokenMatches(token, expected)) return null;
+	return toIcs(youthCalendarEntries(db, today, parseCalendarFilter(params)), getSetting(db, 'ward_name'), now);
 }
