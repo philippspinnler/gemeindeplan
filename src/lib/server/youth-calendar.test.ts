@@ -4,7 +4,7 @@ import { createDb, type Db } from './db';
 import { createMember } from './members';
 import { setSetting } from './settings';
 import { ensureYouthEvents, loadYouthEvent, saveYouthAdults, saveYouthCommon, saveYouthPart } from './youth';
-import { parseCalendarFilter, toIcs, youthCalendarEntries, youthFeed, zurichToUtc, type CalendarFilter } from './youth-calendar';
+import { calendarSig, parseCalendarFilter, toIcs, youthCalendarEntries, youthFeed, zurichToUtc, type CalendarFilter } from './youth-calendar';
 import { newYouthPageToken } from './youth-page';
 import { setLeaders, setYouth } from './youth-people';
 
@@ -143,6 +143,18 @@ describe('feed', () => {
 		setSetting(db, 'youth_page_token', fresh);
 		expect(youthFeed(db, old, new URLSearchParams(), today)).toBeNull();
 		expect(youthFeed(db, fresh, new URLSearchParams(), today)).toContain('BEGIN:VEVENT');
+	});
+	it('serves a person feed only with that person\'s signature', () => {
+		const token = newYouthPageToken();
+		setSetting(db, 'youth_page_token', token);
+		const lea = createMember(db, { firstName: 'Lea', lastName: 'Muster' });
+		const tim = createMember(db, { firstName: 'Tim', lastName: 'Beispiel' });
+		setYouth(db, lea.id, 'jd', null);
+		setYouth(db, tim.id, 'jm', null);
+		const feed = (q: string) => youthFeed(db, token, new URLSearchParams(q), today)!;
+		expect(feed(`person=${lea.id}&sig=${calendarSig(token, lea.id)}`)).toContain('SUMMARY:JD Aktivität');
+		expect(feed(`person=${lea.id}`)).not.toContain('BEGIN:VEVENT');
+		expect(feed(`person=${lea.id}&sig=${calendarSig(token, tim.id)}`)).not.toContain('BEGIN:VEVENT');
 	});
 	it('rejects any token while none is set', () => {
 		expect(youthFeed(db, '', new URLSearchParams(), today)).toBeNull();

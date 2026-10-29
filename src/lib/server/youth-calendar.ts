@@ -1,3 +1,4 @@
+import { createHmac } from 'node:crypto';
 import { addMonths } from '../dates';
 import type { Db } from './db';
 import type { YouthPartSide } from './db/schema';
@@ -129,9 +130,21 @@ export function toIcs(entries: CalendarEntry[], ward: string, now: Date): string
 	return lines.map(fold).join('\r\n') + '\r\n';
 }
 
-/** The iCal text behind the youth page token, or null when the token is wrong. */
+/** Signs a personal feed link so nobody can read another person's dates by changing the id; dies with the token. */
+export const calendarSig = (token: string, personId: number) => createHmac('sha256', token).update(`calendar:${personId}`).digest('base64url').slice(0, 22);
+
+/** The iCal text behind the youth page token, or null when the token is wrong. A person without a valid signature gets an empty calendar. */
 export function youthFeed(db: Db, token: string, params: URLSearchParams, today: string, now = new Date()): string | null {
 	const expected = getSetting(db, 'youth_page_token');
 	if (!expected || !tokenMatches(token, expected)) return null;
-	return toIcs(youthCalendarEntries(db, today, parseCalendarFilter(params)), getSetting(db, 'ward_name'), now);
+	const filter = parseCalendarFilter(params);
+	const signed = filter.personId === null || tokenMatches(params.get('sig') ?? '', calendarSig(expected, filter.personId));
+	return toIcs(signed ? youthCalendarEntries(db, today, filter) : [], getSetting(db, 'ward_name'), now);
+}
+
+/** "Nur meine Termine" for a logged-in user whose login is linked to a youth or youth leader. */
+export function calendarSelf(db: Db, memberId: number | null): { id: number; name: string; sig: string } | null {
+	const token = getSetting(db, 'youth_page_token');
+	if (!memberId || !token || !personSide(db, memberId)) return null;
+	return { id: memberId, name: youthPageNames(db).get(memberId) ?? '', sig: calendarSig(token, memberId) };
 }

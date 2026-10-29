@@ -205,6 +205,10 @@ export function updateUserRole(db: Db, id: number, role: Role): void {
 	db.update(users).set({ role, updatedAt: iso(new Date()) }).where(eq(users.id, id)).run();
 }
 
+export function setUserMember(db: Db, id: number, memberId: number | null): void {
+	db.update(users).set({ memberId, updatedAt: iso(new Date()) }).where(eq(users.id, id)).run();
+}
+
 export function setUserActive(db: Db, id: number, active: boolean): void {
 	db.update(users).set({ active, updatedAt: iso(new Date()) }).where(eq(users.id, id)).run();
 	if (!active) db.delete(sessions).where(eq(sessions.userId, id)).run();

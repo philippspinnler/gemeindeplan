@@ -12,7 +12,7 @@ Neu kann man auf der Jugendseite einen Kalender abonnieren (iCal-Abo-Link für i
 
 - Abo-Link ohne Login, erreichbar über die Jugendseite.
 - Auswahl ohne Person: **JD, JM oder beide**, **Mittwoch, Sonntag oder beides**.
-- Auswahl „Nur meine“: Man wählt seinen Vornamen aus derselben Namensliste, die die Jugendseite schon nutzt (`shortNames`, Vornamen, bei Gleichnamigen mit Nachnamen-Initial).
+- Auswahl „Nur meine Termine“ (geändert am 2026-10-29 aus Datenschutzgründen: keine öffentliche Namensliste): nur für angemeldete Benutzer, deren Konto der Admin unter Einstellungen → Benutzer mit einem Mitglied verknüpft hat (`users.member_id`). Nicht Angemeldete sehen kein „Für wen?“. Der persönliche Link trägt eine HMAC-Signatur (`sig`, aus dem Jugendseiten-Token); ohne gültige Signatur liefert er einen leeren Kalender.
   - **Jugendliche:** alle Mittwochsaktivitäten ihrer Seite (aus `youth.side`, Auswahl JD/JM entfällt), dazu die Sonntagsklassen, in denen sie unterrichten (`teacherMemberId`).
   - **Erwachsene (Jugendführer):** Mittwoch nur dort, wo sie als anwesend markiert sind (`youthEventAdults.present`), dazu die Sonntagsklassen, in denen sie unterrichten.
   - Die Auswahl Mittwoch/Sonntag gilt auch hier.
@@ -26,12 +26,11 @@ Neu kann man auf der Jugendseite einen Kalender abonnieren (iCal-Abo-Link für i
 
 - Keine Pfahl-, Tempel-, Ferien-, Supersamstag- oder Tanzabend-Einträge (`youthBreaks`) im Abo.
 - Keine Abweichungen von der Standardzeit pro Termin. Wer abweicht, schreibt das in die Details.
-- Kein persönliches Abo über das Login und keine Verknüpfung Benutzer ↔ Mitglied. Der Betreuer nutzt denselben Weg wie alle anderen. Das kann später kommen, falls es fehlt.
 - Keine Termine im Abo, die die Jugendseite nicht zeigen darf.
 
 ## Anti-Ziele (das wäre ein Fehlschlag)
 
-- Das Abo zeigt mehr als die Jugendseite (Ausnahme: die Namensliste, siehe unten): Nachnamen, Erwachsenen-Interna, Ideen, Sonntags-`text`/`details` (die `publicItem` heute bewusst ausblendet).
+- Das Abo zeigt mehr als die Jugendseite: Nachnamen, Erwachsenen-Interna, Ideen, Sonntags-`text`/`details` (die `publicItem` heute bewusst ausblendet).
 - Ein ausgefallener Termin (Ferien, Generalkonferenz, Klasse mit den Erwachsenen) steht weiterhin im Kalender.
 - Der Abo-Link funktioniert ohne gültigen Jugendseiten-Token, oder ein alter Token funktioniert nach dem Neu-Erzeugen weiter.
 - Termine springen bei jeder Aktualisierung (wechselnde UIDs → Duplikate oder verlorene Erinnerungen in der Kalender-App).
@@ -42,7 +41,7 @@ Neu kann man auf der Jugendseite einen Kalender abonnieren (iCal-Abo-Link für i
 - **Auswahl-UI:** Ein Knopf „Im Kalender abonnieren“ auf der Jugendseite öffnet die Auswahl. Daraus entsteht der Link mit `webcal://`-Variante zum direkten Öffnen und einer Kopieren-Möglichkeit für Google.
 - **Datenquelle:** dieselbe Logik wie die Jugendseite (`youthPageItems`/`toItem` in `src/lib/server/youth-page.ts`), nur mit anderem Zeitfenster. Ausgefallene Termine (`status === 'off'`) erscheinen nicht.
 - **Einstellungen:** neue Keys in `SETTING_DEFAULTS` (`src/lib/server/settings.ts`), Bearbeitung auf `/einstellungen` nach dem Muster aus `CLAUDE.md` (Autosave, Versionsprüfung, Live-Kanal).
-- **Namensliste:** Die Auswahl zeigt alle Vornamen aus `shortNames` (alle Jugendlichen, Leiter/innen, Bischofschaft), auch wenn jemand gerade nirgends eingeteilt ist. Das ist bewusst so entschieden, auch wenn die Jugendseite heute nur eingeteilte Namen zeigt.
+- **Keine Namensliste:** Ersetzt durch „Nur meine Termine“ für verknüpfte Logins. Jugendliche haben kein Login und abonnieren JD oder JM; die Regel für Jugendliche bleibt im Code für später.
 - **Erwachsene an getrennten Mittwochen:** „Anwesend“ gilt pro Datum. An einem getrennten Mittwoch bekommen JD-Leiterinnen den JD-Eintrag, der JM-Berater und die Bischofschaft den JM-Eintrag. Bei einer gemeinsamen Aktivität gibt es ohnehin nur einen Eintrag.
 - **Ohne Standardzeiten kein Abo:** Solange die Zeiten nicht gesetzt sind, erscheint der Knopf „Im Kalender abonnieren“ auf der Jugendseite gar nicht. Bei den Zeitfeldern in den Einstellungen steht ein Hinweis, dass das Kalender-Abo auf der Jugendseite erst mit gesetzten Zeiten angeboten wird. Bestehende Abo-Links liefern in dieser Zeit einen leeren Kalender, falls die Zeiten später wieder gelöscht werden.
 - **Termine ohne Plan:** Ein regulärer Mittwoch oder Sonntag, der noch nicht geplant ist (`status === 'open'`), erscheint mit Titel ohne Zusatz (`JD Aktivität`). So ist die Zeit im Kalender schon geblockt.

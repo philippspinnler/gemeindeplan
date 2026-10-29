@@ -1,7 +1,6 @@
 <script lang="ts">
 	import { page } from '$app/state';
-	type Person = { id: number; name: string };
-	let { youth, adults }: { youth: Person[]; adults: Person[] } = $props();
+	let { self }: { self: { id: number; name: string; sig: string } | null } = $props();
 
 	let dialog: HTMLDialogElement;
 	let person = $state('');
@@ -11,8 +10,10 @@
 
 	const url = $derived.by(() => {
 		const q = new URLSearchParams();
-		if (person) q.set('person', person);
-		else if (seite) q.set('seite', seite);
+		if (person && self) {
+			q.set('person', String(self.id));
+			q.set('sig', self.sig);
+		} else if (seite) q.set('seite', seite);
 		if (tag) q.set('tag', tag);
 		const query = q.toString();
 		return `${page.url.host}${page.url.pathname.replace(/\/$/, '')}/kalender.ics${query ? `?${query}` : ''}`;
@@ -28,16 +29,17 @@
 
 <dialog bind:this={dialog} class="news-dialog" onclose={() => (copied = false)}>
 	<h2>Im Kalender abonnieren</h2>
-	<div class="field">
-		<label for="cal-person">Für wen?</label>
-		<select id="cal-person" bind:value={person}>
-			<option value="">Alle</option>
-			<optgroup label="Jugendliche">{#each youth as p (p.id)}<option value={String(p.id)}>{p.name}</option>{/each}</optgroup>
-			<optgroup label="Leitung">{#each adults as p (p.id)}<option value={String(p.id)}>{p.name}</option>{/each}</optgroup>
-		</select>
-	</div>
-	{#if person}
-		<p class="hint">Bei einer Person ergibt sich JD oder JM aus ihrer Seite. Jugendliche erhalten alle Aktivitäten und die Klassen, die sie unterrichten; Leiter die Aktivitäten, bei denen sie dabei sind, und ihre Klassen.</p>
+	{#if self}
+		<div class="field">
+			<label for="cal-person">Für wen?</label>
+			<select id="cal-person" bind:value={person}>
+				<option value="">Alle</option>
+				<option value="self">Nur meine Termine ({self.name})</option>
+			</select>
+		</div>
+	{/if}
+	{#if person && self}
+		<p class="hint">Mittwochs die Aktivitäten, bei denen du als anwesend eingetragen bist, sonntags die Klassen, die du unterrichtest. Den Link nicht weitergeben: er zeigt deine Termine.</p>
 	{:else}
 		<div class="field">
 			<label for="cal-seite">JD / JM</label>

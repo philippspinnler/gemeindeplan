@@ -1,6 +1,7 @@
 import { fail } from '@sveltejs/kit';
 import type { Actions, PageServerLoad } from './$types';
-import { createInvite, deleteInvite, findUserByEmail, listOpenInvites, listUsers, setUserActive, updateUserRole } from '$lib/server/auth';
+import { createInvite, deleteInvite, findUserByEmail, listOpenInvites, listUsers, setUserActive, setUserMember, updateUserRole } from '$lib/server/auth';
+import { getMember, listMembers } from '$lib/server/members';
 import { int, str } from '$lib/server/forms';
 import { inviteText, resetText } from '$lib/server/invite-text';
 import { requireRole } from '$lib/server/permissions';
@@ -9,7 +10,8 @@ import { isRole } from '$lib/server/role-view';
 export const load: PageServerLoad = ({ locals }) => {
 	requireRole(locals.user, 'users.manage');
 	return {
-		users: listUsers(locals.db).map((u) => ({ id: u.id, name: u.name, email: u.email, role: u.role, active: u.active })),
+		users: listUsers(locals.db).map((u) => ({ id: u.id, name: u.name, email: u.email, role: u.role, active: u.active, memberId: u.memberId })),
+		members: listMembers(locals.db, { activeOnly: true, kind: 'gemeinde' }).map((m) => ({ id: m.id, name: `${m.lastName} ${m.firstName}` })),
 		invites: listOpenInvites(locals.db).map((i) => ({ id: i.id, name: i.name, email: i.email, role: i.role, expiresAt: i.expiresAt}))
 	};
 };
@@ -53,6 +55,14 @@ export const actions: Actions = {
 		const active = str(fd, 'active') === '1';
 		if (id === locals.user!.id) return fail(400, { error: 'Das eigene Konto kann nicht deaktiviert werden.' });
 		setUserActive(locals.db, id, active);
+		return { ok: true };
+	},
+	setMember: async ({ request, locals }) => {
+		requireRole(locals.user, 'users.manage');
+		const fd = await request.formData();
+		const memberId = int(fd, 'memberId') || null;
+		if (memberId && !getMember(locals.db, memberId)) return fail(400, { error: 'Unbekanntes Mitglied.' });
+		setUserMember(locals.db, int(fd, 'id'), memberId);
 		return { ok: true };
 	},
 	deleteInvite: async ({ request, locals }) => {

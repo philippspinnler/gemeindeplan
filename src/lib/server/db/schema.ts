@@ -49,6 +49,8 @@ export const users = sqliteTable('users', {
 	active: integer('active', { mode: 'boolean' }).notNull().default(true),
 	/** How many NEWS entries the user has acknowledged; null until the first "Verstanden". */
 	newsSeen: integer('news_seen'),
+	/** The member this login belongs to; offers "Nur meine Termine" in the youth calendar. */
+	memberId: integer('member_id').references(() => members.id, { onDelete: 'set null' }),
 	...timestamps
 });
 
