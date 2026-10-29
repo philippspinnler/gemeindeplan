@@ -31,6 +31,11 @@
 	// A member page belongs to the section its back link points to (Anfragen or Einstellungen).
 	const section = $derived(page.url.pathname.startsWith('/mitglieder/') ? String(page.data.backHref ?? '') : page.url.pathname);
 	const isActive = (href: string) => (href === '/' ? section === '/' : section.startsWith(href));
+	let newsDialog = $state<HTMLDialogElement>();
+	$effect(() => {
+		if (data.news.length && !newsDialog?.open) newsDialog?.showModal();
+	});
+	const dismissNews = () => fetch('/neuigkeiten', { method: 'POST' });
 	const role = $derived(data.user?.role);
 	const accountRole = $derived(data.accountRole);
 </script>
@@ -72,6 +77,16 @@
 			<button class="btn btn-small" type="submit">Zurück zu Admin</button>
 		</form>
 	</div>
+{/if}
+{#if data.news.length}
+	<dialog class="news-dialog" bind:this={newsDialog} onclose={dismissNews}>
+		<h2>Neu seit deinem letzten Besuch</h2>
+		{#each data.news as g (g.title)}
+			<h3>{g.title}</h3>
+			{#each g.texts as text (text)}<p>{text}</p>{/each}
+		{/each}
+		<form method="dialog"><button class="btn btn-primary" type="submit">Verstanden</button></form>
+	</dialog>
 {/if}
 <main class="container">
 	{#if othersHere.length}

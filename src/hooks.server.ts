@@ -38,7 +38,7 @@ export const handle: Handle = async ({ event, resolve }) => {
 	}
 	const response = await resolve(event);
 	// Every successful POST changes data (form actions): all open browsers reload.
-	if (event.request.method === 'POST' && response.status < 400 && path !== '/presence') live.changed(path);
+	if (event.request.method === 'POST' && response.status < 400 && path !== '/presence' && path !== '/neuigkeiten') live.changed(path);
 	return response;
 };
 

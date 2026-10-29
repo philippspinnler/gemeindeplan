@@ -47,6 +47,7 @@ export const users = sqliteTable('users', {
 	role: text('role', { enum: ROLES }).notNull(),
 	passwordHash: text('password_hash').notNull(),
 	active: integer('active', { mode: 'boolean' }).notNull().default(true),
+	newsSeenAt: text('news_seen_at'),
 	...timestamps
 });
 
