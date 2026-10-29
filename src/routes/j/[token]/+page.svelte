@@ -1,5 +1,6 @@
 <script lang="ts">
 	import YouthItem from '$lib/components/YouthItem.svelte';
+	import CalendarSubscribe from './CalendarSubscribe.svelte';
 	let { data } = $props();
 </script>
 
@@ -21,6 +22,7 @@
 			{#each data.small as ev (ev.date + ev.weekday)}<YouthItem {ev} compact />{/each}
 		</section>
 	{/if}
+	{#if data.calendar}<CalendarSubscribe {...data.calendar} />{/if}
 </main>
 
 <style>
