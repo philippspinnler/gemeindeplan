@@ -6,6 +6,7 @@ import { listIdeas, createIdea } from '$lib/server/youth-ideas';
 import { ensureYouthEvents, loadYouthEvent, saveYouthCommon, saveYouthPart, youthSectionVersions } from '$lib/server/youth';
 import { createMember } from '$lib/server/members';
 import { setYouth } from '$lib/server/youth-people';
+import { youthPageItems } from '$lib/server/youth-page';
 import { createMeeting, saveGeneral } from '$lib/server/meetings';
 import { actions, load } from './+page.server';
 
@@ -67,6 +68,14 @@ describe('youth event actions', () => {
 		expect(loadYouthEvent(db, WED)!.event).toMatchObject({ kind: 'aktivitaet', joint: false });
 		await save('basel');
 		expect(loadYouthEvent(db, WED)!.event).toMatchObject({ kind: 'basel', joint: true });
+	});
+
+	it('"kein Snack nötig" drops a typed snack; a cancelled seminar shows on the youth page', async () => {
+		const { db, locals } = setup('jd_leitung');
+		const version = youthSectionVersions(loadYouthEvent(db, WED)!).common;
+		await call('common', locals, { version, kind: 'aktivitaet', snack: 'Kuchen', noSnack: '1', noSeminar: '1' });
+		expect(loadYouthEvent(db, WED)!.event).toMatchObject({ snack: null, noSnack: true, noSeminar: true });
+		expect(youthPageItems(db, WED).big[0]).toMatchObject({ snack: 'keiner', noSeminar: true });
 	});
 
 	it('plans only open ideas of the saved side', async () => {

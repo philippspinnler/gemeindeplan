@@ -3,7 +3,7 @@ import type { Db } from './db';
 import type { YouthBreak } from './db/schema';
 import { overviewRange } from './overview';
 import { ensureYouthEvents, isFifthSunday, listYouthEvents, topicLine, YOUTH_AREA_LABELS, YOUTH_KIND_LABELS, type YouthEventFull } from './youth';
-import { listBreaks, YOUTH_BREAK_KIND_LABELS } from './youth-breaks';
+import { listBreaks, mergeRuns, YOUTH_BREAK_KIND_LABELS } from './youth-breaks';
 import { youthPageItems } from './youth-page';
 import { YOUTH_GROUP_LABELS } from './youth-people';
 
@@ -64,18 +64,19 @@ export function youthList(db: Db, url: URL, weekday: YouthWeekday) {
 				joint: e.event.joint,
 				jd: summary(e, 'jd'),
 				jm: summary(e, 'jm'),
-				extra: weekday === 'sunday' ? topicLine(e.event) : e.event.snack,
+				extra: weekday === 'sunday' ? topicLine(e.event) : (e.event.noSnack ? 'kein Snack' : e.event.snack),
 				thought: e.thought?.firstName ?? null,
+				adults: e.adults.filter((a) => a.present).map((a) => a.member.firstName).join(', ') || null,
 				area: areaSummary(e),
 				hint: fifth ? '5. Sonntag – Klasse mit Erwachsenen?' : null
 			};
 		});
 	if (weekday === 'wednesday') {
-		for (const b of listBreaks(db, range.from)) {
+		for (const b of mergeRuns(listBreaks(db, range.from))) {
 			if (b.kind === 'ferien' || b.fromDate < range.from || b.fromDate > range.to) continue;
 			rows.push({
 				date: b.fromDate, dateLabel: dayLabel(b.fromDate), kindLabel: YOUTH_BREAK_KIND_LABELS[b.kind], status: 'off', offLabel: eventText(b),
-				href: `/jugend/ausfaelle/${b.id}`, isEvent: true, joint: false, jd: null, jm: null, extra: null, thought: null, area: null, hint: null
+				href: `/jugend/ausfaelle/${b.id}`, isEvent: true, joint: false, jd: null, jm: null, extra: null, thought: null, adults: null, area: null, hint: null
 			});
 		}
 		rows.sort((a, b) => a.date.localeCompare(b.date));

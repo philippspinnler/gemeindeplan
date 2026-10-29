@@ -152,7 +152,9 @@ export const actions: Actions = {
 			topicUrl,
 			topicJm: optStr(fd, 'topicJm'),
 			topicUrlJm,
-			snack: optStr(fd, 'snack'),
+			snack: fd.get('noSnack') === '1' ? null : optStr(fd, 'snack'),
+			noSnack: fd.get('noSnack') === '1',
+			noSeminar: isWednesday(params.date) && fd.get('noSeminar') === '1',
 			thoughtMemberId: optInt(fd, 'thought')
 		});
 		return { saved: 'common' };

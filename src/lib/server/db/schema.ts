@@ -210,6 +210,10 @@ export const youthEvents = sqliteTable('youth_events', {
 	topicJm: text('topic_jm'),
 	topicUrlJm: text('topic_url_jm'),
 	snack: text('snack'),
+	/** Wednesday: deliberately no snack, as opposed to one not yet organised. */
+	noSnack: integer('no_snack', { mode: 'boolean' }).notNull().default(false),
+	/** Wednesday: a longer activity replaces seminary that evening. */
+	noSeminar: integer('no_seminar', { mode: 'boolean' }).notNull().default(false),
 	/** Wednesday: one spiritual thought for JD and JM together. */
 	thoughtMemberId: integer('thought_member_id').references(() => members.id),
 	...timestamps

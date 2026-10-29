@@ -3,8 +3,8 @@ import { createDb, type Db } from './db';
 import { youthBreaks } from './db/schema';
 import { createMeeting, saveGeneral } from './meetings';
 import { createMember } from './members';
-import { ensureYouthEvents, listYouthEvents, loadYouthEvent, saveYouthCommon, saveYouthPart } from './youth';
-import { compactText, newYouthPageToken, shortNames, youthPageItems } from './youth-page';
+import { ensureYouthEvents, listYouthEvents, loadYouthEvent, saveYouthAdults, saveYouthCommon, saveYouthPart } from './youth';
+import { newYouthPageToken, shortNames, youthPageItems } from './youth-page';
 import { setLeaders, setYouth } from './youth-people';
 
 let db: Db;
@@ -23,7 +23,6 @@ describe('youth page items', () => {
 		saveYouthCommon(db, id, { kind: 'klasse', joint: false, details: null, topic: 'Tochter Gottes', topicUrl: 'https://x.test/a', topicJm: 'Sohn Gottes', topicUrlJm: 'https://x.test/b', snack: null });
 		expect(sunday().topic).toBeNull();
 		expect(sunday().parts.map((p) => [p.side, p.topic, p.topicUrl])).toEqual([['jd', 'Tochter Gottes', 'https://x.test/a'], ['jm', 'Sohn Gottes', 'https://x.test/b']]);
-		expect(compactText(sunday())).toContain('Tochter Gottes / Sohn Gottes');
 	});
 	it('shows two cards from today inclusive, then a month of dates after the last card', () => {
 		let r = youthPageItems(db, '2026-10-20');
@@ -33,7 +32,7 @@ describe('youth page items', () => {
 		expect(dates(r.big)).toEqual(['2026-10-25', '2026-10-28']);
 		expect(youthPageItems(db, '2026-10-25').big[0].date).toBe('2026-10-25');
 	});
-	it('inserts stake and temple breaks as compact rows, not holidays', () => {
+	it('lists stake and temple dates, not holidays; those before or between the cards go above them', () => {
 		db.insert(youthBreaks).values([
 			{ fromDate: '2026-10-30', toDate: '2026-10-30', label: 'Mini-MTC', kind: 'pfahl' },
 			{ fromDate: '2026-10-31', toDate: '2026-11-07', label: 'Herbstferien', kind: 'ferien' },
@@ -41,14 +40,19 @@ describe('youth page items', () => {
 		]).run();
 		const r = youthPageItems(db, '2026-10-20');
 		expect(dates(r.big)).toEqual(['2026-10-21', '2026-10-25']);
-		expect(r.small.map((i) => [i.date, i.weekday]).slice(0, 5)).toEqual([['2026-10-23', 'other'], ['2026-10-28', 'wednesday'], ['2026-10-30', 'other'], ['2026-11-01', 'sunday'], ['2026-11-04', 'wednesday']]);
-		expect(r.small[2]).toMatchObject({ kindLabel: 'Pfahl-Aktivität', offLabel: 'Mini-MTC' });
-		expect(compactText(r.small[2])).toBe('Pfahl-Aktivität – Mini-MTC');
+		expect(r.notices).toMatchObject([{ date: '2026-10-23', kindLabel: 'Tempel', offLabel: 'Tempeltaufen' }]);
+		expect(r.small.map((i) => [i.date, i.weekday]).slice(0, 4)).toEqual([['2026-10-28', 'wednesday'], ['2026-10-30', 'other'], ['2026-11-01', 'sunday'], ['2026-11-04', 'wednesday']]);
+		expect(r.small[1]).toMatchObject({ kindLabel: 'Pfahl-Aktivität', offLabel: 'Mini-MTC', untilLabel: null });
+	});
+	it('shows consecutive days of one stake date once, as a range', () => {
+		db.insert(youthBreaks).values(['2026-10-30', '2026-10-31', '2026-11-01'].map((d) => ({ fromDate: d, toDate: d, label: 'Mini-MTC', kind: 'pfahl' as const }))).run();
+		const r = youthPageItems(db, '2026-10-20');
+		expect(r.small.filter((i) => i.weekday === 'other')).toMatchObject([{ date: '2026-10-30', untilLabel: 'So 1. Nov.' }]);
 	});
 	it('caps a running break at today', () => {
 		db.insert(youthBreaks).values({ fromDate: '2026-10-10', toDate: '2026-10-22', label: 'Tempelwoche', kind: 'tempel' }).run();
 		const r = youthPageItems(db, '2026-10-20');
-		expect(r.small[0]).toMatchObject({ date: '2026-10-20', weekday: 'other' });
+		expect(r.notices[0]).toMatchObject({ date: '2026-10-20', weekday: 'other' });
 	});
 	it('skips a break row already shown as an off Wednesday', () => {
 		db.insert(youthBreaks).values({ fromDate: '2026-10-28', toDate: '2026-10-28', label: 'Mini-MTC', kind: 'pfahl' }).run();
@@ -69,15 +73,13 @@ describe('youth page items', () => {
 		const { big } = youthPageItems(db, '2026-10-20');
 		expect(big[0]).toMatchObject({ status: 'open', kindLabel: 'Aktivität' });
 		expect(big[1]).toMatchObject({ status: 'off', kindLabel: 'Kein JD/JM', offLabel: 'Generalkonferenz' });
-		expect(compactText(big[0])).toBe('Aktivität · noch nicht geplant');
-		expect(compactText(big[1])).toBe('Kein JD/JM – Generalkonferenz');
 	});
 	it('shows a special Wednesday kind without parts as planned', () => {
 		ensureYouthEvents(db, '2026-10-21', 0);
 		const id = loadYouthEvent(db, '2026-10-21')!.event.id;
 		saveYouthCommon(db, id, { kind: 'basel', joint: true, details: null, topic: null, topicUrl: null, snack: null });
 		const { big } = youthPageItems(db, '2026-10-20');
-		expect(compactText(big[0])).toBe('Mit Basel – Basel leitet');
+		expect(big[0].kindLabel).toBe('Mit Basel – Basel leitet');
 		expect(big[0].parts).toMatchObject([{ side: 'both', planned: true, text: null }]);
 	});
 
@@ -95,11 +97,20 @@ describe('youth page items', () => {
 			{ side: 'jm', label: 'Junge Männer', planned: false, text: null, details: null, leaderName: null, teacherName: null, topic: null, topicUrl: null }
 		]);
 		expect(item.thoughtName).toBe('Lea');
-		expect(compactText(item)).toBe('Aktivität · Film · Geistiger Gedanke: Lea');
 		// A leader may give the thought: first name only, like the youth.
 		setLeaders(db, 'jd_beraterin', [adult.id]);
 		saveYouthCommon(db, e.event.id, { kind: 'aktivitaet', joint: false, details: null, topic: null, topicUrl: null, snack: null, thoughtMemberId: adult.id });
 		expect(youthPageItems(db, '2026-10-20').big[0].thoughtName).toBe('Urs');
+	});
+	it('lists the adults marked present, by first name', () => {
+		const [urs, ida] = [['Urs', 'Bischof'], ['Ida', 'Muster']].map(([firstName, lastName]) => createMember(db, { firstName, lastName }));
+		setLeaders(db, 'jd_beraterin', [urs.id, ida.id]);
+		ensureYouthEvents(db, '2026-10-20', 1);
+		const e = listYouthEvents(db, '2026-10-21', '2026-10-21')[0];
+		saveYouthPart(db, e.event.id, 'jd', { text: 'Film', leaderMemberId: null, leaderGroup: null });
+		saveYouthAdults(db, e.event.id, [{ memberId: urs.id, present: true }, { memberId: ida.id, present: false }]);
+		const item = youthPageItems(db, '2026-10-20').big[0];
+		expect(item.adults).toBe('Urs');
 	});
 	it('newYouthPageToken is url-safe and unique', () => {
 		const t = newYouthPageToken();

@@ -6,9 +6,9 @@ import { byName, memberQuery } from './members';
 import { UserError } from './forms';
 
 export const YOUTH_GROUP_LABELS: Record<string, string> = {
-	diakone: 'Diakone',
-	lehrer: 'Lehrer',
-	priester: 'Priester',
+	diakone: 'Diakonenkollegium',
+	lehrer: 'Lehrerkollegium',
+	priester: 'Priesterkollegium',
 	hoffnung: 'JD der Hoffnung',
 	glauben: 'JD des Glaubens',
 	licht: 'JD des Lichts'

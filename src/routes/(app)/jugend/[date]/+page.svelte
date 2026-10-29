@@ -14,6 +14,7 @@
 	const ev = $derived(data.full.event);
 	/** Follows the select before it is saved. */
 	let kind = $derived(ev.kind);
+	let noSnack = $derived(ev.noSnack);
 	/** JM has its own lesson fields. Reset per date only, so a fresh tick survives saving other fields. */
 	let ownJm = $state(false);
 	// A derived primitive only fires when the date really changes, not on every data reload after a save.
@@ -208,6 +209,15 @@
 						<p>{ev.joint ? 'gemeinsam' : 'getrennt'}</p>
 					{/if}
 				</div>
+			{:else}
+				<div class="field">
+					<span class="label">Seminar</span>
+					{#if data.canCommon}
+						<label class="check"><input type="checkbox" name="noSeminar" value="1" form="commonForm" checked={ev.noSeminar} /> Seminar fällt aus</label>
+					{:else}
+						<p>{ev.noSeminar ? 'fällt aus' : 'findet statt'}</p>
+					{/if}
+				</div>
 			{/if}
 		</div>
 		{#if data.off}
@@ -254,9 +264,10 @@
 				<div class="field">
 					<label for="snack">Snack</label>
 					{#if data.canCommon}
-						<input id="snack" name="snack" type="text" form="commonForm" value={ev.snack ?? ''} />
+						{#if !noSnack}<input id="snack" name="snack" type="text" form="commonForm" value={ev.snack ?? ''} />{/if}
+						<label class="check"><input type="checkbox" name="noSnack" value="1" form="commonForm" checked={noSnack} onchange={(e) => (noSnack = e.currentTarget.checked)} /> kein Snack nötig</label>
 					{:else}
-						<p>{ev.snack ?? '–'}</p>
+						<p>{ev.noSnack ? 'kein Snack' : (ev.snack ?? '–')}</p>
 					{/if}
 				</div>
 			</div>

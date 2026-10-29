@@ -43,7 +43,7 @@ export interface YouthEventFull {
 	/** The holiday or event that cancels this date, if that is why it is off. */
 	offBreak: YouthBreak | null;
 }
-export interface YouthCommonInput { kind: YouthEventKind; joint: boolean; details: string | null; topic: string | null; topicUrl: string | null; topicJm?: string | null; topicUrlJm?: string | null; snack: string | null; thoughtMemberId?: number | null }
+export interface YouthCommonInput { kind: YouthEventKind; joint: boolean; details: string | null; topic: string | null; topicUrl: string | null; topicJm?: string | null; topicUrlJm?: string | null; snack: string | null; noSnack?: boolean; noSeminar?: boolean; thoughtMemberId?: number | null }
 export interface YouthPartInput { text: string | null; details?: string | null; leaderMemberId: number | null; leaderGroup: string | null; area?: YouthArea | null; teacherMemberId?: number | null }
 
 const nowIso = () => new Date().toISOString();
@@ -92,7 +92,7 @@ function assemble(db: Db, from: string, to: string, rows: YouthEvent[]): YouthEv
 	const byDate = new Map(rows.map((r) => [r.date, r]));
 
 	return youthDatesBetween(from, to).map((date) => {
-		const event: YouthEvent = byDate.get(date) ?? { id: 0, date, kind: defaultKind(date), joint: false, details: null, topic: null, topicUrl: null, topicJm: null, topicUrlJm: null, snack: null, thoughtMemberId: null, createdAt: '', updatedAt: '' };
+		const event: YouthEvent = byDate.get(date) ?? { id: 0, date, kind: defaultKind(date), joint: false, details: null, topic: null, topicUrl: null, topicJm: null, topicUrlJm: null, snack: null, noSnack: false, noSeminar: false, thoughtMemberId: null, createdAt: '', updatedAt: '' };
 		const weekday = isSunday(date) ? 'sunday' : 'wednesday';
 		const parts: YouthPartFull[] = partRows
 			.filter((p) => p.eventId === event.id)
@@ -146,7 +146,7 @@ export function saveYouthCommon(db: Db, eventId: number, input: YouthCommonInput
 	db.transaction((tx) => {
 		const ev = getEvent(tx, eventId);
 		tx.update(youthEvents)
-			.set({ kind: input.kind, joint: input.joint, details: input.details, topic: input.topic, topicUrl: input.topicUrl, topicJm: input.topicJm ?? null, topicUrlJm: input.topicUrlJm ?? null, snack: input.snack, thoughtMemberId: input.thoughtMemberId, updatedAt: nowIso() })
+			.set({ kind: input.kind, joint: input.joint, details: input.details, topic: input.topic, topicUrl: input.topicUrl, topicJm: input.topicJm ?? null, topicUrlJm: input.topicUrlJm ?? null, snack: input.snack, noSnack: input.noSnack ?? false, noSeminar: input.noSeminar ?? false, thoughtMemberId: input.thoughtMemberId, updatedAt: nowIso() })
 			.where(eq(youthEvents.id, eventId))
 			.run();
 		if (ev.joint === input.joint) return;
@@ -209,7 +209,7 @@ export function youthSectionVersions(full: YouthEventFull): Record<'common' | 'j
 		return versionHash(p ? [p.text, p.details, p.leader?.id ?? null, p.leaderGroup, p.area, p.teacher?.id ?? null] : null);
 	};
 	return {
-		common: versionHash([e.kind, e.joint, e.details, e.topic, e.topicUrl, e.topicJm, e.topicUrlJm, e.snack, full.thought?.id ?? null]),
+		common: versionHash([e.kind, e.joint, e.details, e.topic, e.topicUrl, e.topicJm, e.topicUrlJm, e.snack, e.noSnack, e.noSeminar, full.thought?.id ?? null]),
 		jd: part('jd'),
 		jm: part('jm'),
 		both: part('both'),

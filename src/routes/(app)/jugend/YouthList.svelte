@@ -2,6 +2,7 @@
 	import { goto } from '$app/navigation';
 	import { page } from '$app/state';
 	import { monthLabel } from '$lib/dates';
+	import YouthItem from '$lib/components/YouthItem.svelte';
 	import type { youthList } from '$lib/server/youth-list';
 	let { data }: { data: ReturnType<typeof youthList> } = $props();
 	const sunday = $derived(data.weekday === 'sunday');
@@ -20,40 +21,7 @@
 
 {#if data.next.length}
 	<div class="next-grid">
-		{#each data.next as ev (ev.date)}
-			<div class="card big-card" class:has-open={ev.status === 'open'}>
-				<div class="section-title">
-					<div><span class="kind-tag">{ev.weekdayLabel} · {ev.kindLabel}</span><h2 class="next-date">{ev.dateLabel}</h2></div>
-					<a class="btn btn-primary btn-small" href="/jugend/{ev.date}">Bearbeiten</a>
-				</div>
-				{#if ev.status === 'off'}
-					<p>{ev.offLabel}</p>
-				{:else if ev.status === 'open'}
-					<p class="muted">noch nicht geplant</p>
-				{:else}
-					{#if ev.weekday === 'sunday' && (ev.topic || ev.topicUrl)}
-						<p class="next-topic">{#if ev.topicUrl}<a href={ev.topicUrl} rel="noopener noreferrer">{ev.topic ?? 'Unterlage'}</a>{:else}{ev.topic}{/if}</p>
-					{/if}
-					<div class="next-parts" class:single={ev.joint}>
-						{#each ev.parts as p (p.side)}
-							<div>
-								{#if p.label}<div class="kind-tag">{p.label}</div>{/if}
-								{#if p.topic || p.topicUrl}<p class="next-topic">{#if p.topicUrl}<a href={p.topicUrl} rel="noopener noreferrer">{p.topic ?? 'Unterlage'}</a>{:else}{p.topic}{/if}</p>{/if}
-								{#if !p.planned}<p class="muted">noch nicht geplant</p>{/if}
-								{#if p.text && ev.weekday !== 'sunday'}<p class="next-what">{p.text}</p>{/if}
-								{#if p.details}<p class="hint">{p.details}</p>{/if}
-								<p class="hint">
-									{#if p.leaderName}Leitung: {p.leaderName}<br />{/if}
-									{#if p.teacherName}Lehrer: {p.teacherName}{/if}
-								</p>
-							</div>
-						{/each}
-					</div>
-					{#if ev.thoughtName}<p class="hint">Geistiger Gedanke: {ev.thoughtName}</p>{/if}
-					{#if ev.snack}<p class="hint">Snack: {ev.snack}</p>{/if}
-				{/if}
-			</div>
-		{/each}
+		{#each data.next as ev (ev.date)}<YouthItem {ev} href="/jugend/{ev.date}" />{/each}
 	</div>
 {/if}
 
@@ -74,7 +42,7 @@
 			<table class="table overview stack">
 				<colgroup><col class="c-day" /><col class="c-kind" /><col class="c-person" /><col class="c-person" />{#if !sunday}<col class="c-short" /><col class="c-short" />{/if}<col /><col /></colgroup>
 				<thead>
-					<tr><th class="col-day">Datum</th><th>Art</th><th>JD</th><th>JM</th>{#if !sunday}<th>Bereich</th><th>Geistiger Gedanke</th>{/if}<th>{sunday ? 'Thema' : 'Snack'}</th><th>Hinweis</th></tr>
+					<tr><th class="col-day">Datum</th><th>Art</th><th>JD</th><th>JM</th>{#if !sunday}<th>Bereich</th><th>Geistiger Gedanke</th>{/if}<th>{sunday ? 'Thema' : 'Snack'}</th><th>{sunday ? 'Hinweis' : 'Erwachsene'}</th></tr>
 				</thead>
 				<tbody>
 					{#each g.items as r}
@@ -93,7 +61,7 @@
 								{/if}
 								{#if !sunday}<td data-label={r.area ? 'Bereich' : null}>{r.area ?? ''}</td><td data-label={r.thought ? 'Geistiger Gedanke' : null}>{r.thought ?? ''}</td>{/if}
 								<td data-label={r.extra ? (sunday ? 'Thema' : 'Snack') : null}>{r.extra ?? ''}</td>
-								<td>{r.hint ?? ''}</td>
+								{#if sunday}<td>{r.hint ?? ''}</td>{:else}<td data-label={r.adults ? 'Erwachsene' : null}>{r.adults ?? ''}</td>{/if}
 							{/if}
 						</tr>
 					{/each}
@@ -105,11 +73,5 @@
 
 <style>
 	.next-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem; }
-	.next-grid .card { margin-bottom: 0; }
-	.next-date { font-size: 1.25rem; }
-	.next-topic { font-weight: 600; margin: 0 0 0.5rem; }
-	.next-parts { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; }
-	.next-parts.single { grid-template-columns: 1fr; }
-	.next-what { font-weight: 600; margin: 0.2rem 0; }
-	@media (max-width: 640px) { .next-grid, .next-parts { grid-template-columns: 1fr; } }
+	@media (max-width: 640px) { .next-grid { grid-template-columns: 1fr; } }
 </style>

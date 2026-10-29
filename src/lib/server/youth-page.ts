@@ -3,7 +3,7 @@ import { addDays, MONTHS_LONG, MONTHS_SHORT, parseIso, WEEKDAYS, WEEKDAYS_LONG }
 import type { Db } from './db';
 import type { Member, YouthPartSide } from './db/schema';
 import { JOINT_KINDS, hasJmTopic, listYouthEvents, YOUTH_KIND_LABELS, type YouthEventFull } from './youth';
-import { listBreaks, YOUTH_BREAK_KIND_LABELS } from './youth-breaks';
+import { listBreaks, mergeRuns, YOUTH_BREAK_KIND_LABELS } from './youth-breaks';
 import { listAdults, listYouth, YOUTH_GROUP_LABELS } from './youth-people';
 
 export interface YouthPageItem {
@@ -12,6 +12,8 @@ export interface YouthPageItem {
 	weekdayLabel: string;
 	dateLabel: string;
 	shortDate: string;
+	/** Last day of a stake or temple date spanning several days. */
+	untilLabel: string | null;
 	kindLabel: string;
 	status: 'off' | 'open' | 'planned';
 	offLabel: string | null;
@@ -19,6 +21,9 @@ export interface YouthPageItem {
 	topicUrl: string | null;
 	snack: string | null;
 	thoughtName: string | null;
+	noSeminar: boolean;
+	/** First names of the adults marked present. */
+	adults: string | null;
 	joint: boolean;
 	/** Set when JD and JM have different lessons; the shared topic above is then empty. */
 	parts: { side: YouthPartSide; label: 'Junge Damen' | 'Junge Männer' | null; planned: boolean; text: string | null; details: string | null; leaderName: string | null; teacherName: string | null; topic: string | null; topicUrl: string | null }[];
@@ -53,20 +58,24 @@ function toItem(e: YouthEventFull, names: Map<number, string>): YouthPageItem {
 	const sideTopic = (side: YouthPartSide) =>
 		!split ? { topic: null, topicUrl: null } : side === 'jm' ? { topic: e.event.topicJm, topicUrl: e.event.topicUrlJm } : { topic: e.event.topic, topicUrl: e.event.topicUrl };
 	return {
-		date, weekday: e.weekday, ...labels(date), kindLabel, status: e.status, offLabel: e.offLabel,
-		topic: split ? null : e.event.topic, topicUrl: split ? null : e.event.topicUrl, snack: e.event.snack, thoughtName: name(e.thought), joint: e.event.joint,
+		date, weekday: e.weekday, ...labels(date), untilLabel: null, kindLabel, status: e.status, offLabel: e.offLabel,
+		topic: split ? null : e.event.topic, topicUrl: split ? null : e.event.topicUrl, snack: e.event.noSnack ? 'keiner' : e.event.snack, noSeminar: e.event.noSeminar && e.status !== 'off', thoughtName: name(e.thought), adults: e.adults.filter((a) => a.present).map((a) => name(a.member)).filter(Boolean).join(', ') || null, joint: e.event.joint,
 		parts: sides.map((side) => {
 			const p = e.parts.find((x) => x.side === side);
 			const leaderName = p ? (name(p.leader) ?? (p.leaderGroup ? (YOUTH_GROUP_LABELS[p.leaderGroup] ?? p.leaderGroup) : null)) : null;
 			const teacherName = name(p?.teacher ?? null);
 			const text = p?.text ?? null;
-			return { side, label: SIDE_LABELS[side], planned: e.event.kind === 'basel' || Boolean(text || leaderName || teacherName), text, details: p?.details ?? null, leaderName, teacherName, ...sideTopic(side) };
+			const topic = sideTopic(side);
+			return { side, label: SIDE_LABELS[side], planned: e.event.kind === 'basel' || Boolean(text || leaderName || teacherName || topic.topic || topic.topicUrl), text, details: p?.details ?? null, leaderName, teacherName, ...topic };
 		})
 	};
 }
 
-/** The next `big` dates as cards, then everything up to `days` after the last card as the "Danach" list. */
-export function youthPageItems(db: Db, today: string, opts: { big: number; days: number; weekday?: 'sunday' | 'wednesday' } = { big: 2, days: 31 }): { big: YouthPageItem[]; small: YouthPageItem[] } {
+/**
+ * The next `big` dates as cards, then everything up to `days` after the last card as the "Danach" list.
+ * Stake and temple dates running before or between the cards become `notices` above them.
+ */
+export function youthPageItems(db: Db, today: string, opts: { big: number; days: number; weekday?: 'sunday' | 'wednesday' } = { big: 2, days: 31 }): { notices: YouthPageItem[]; big: YouthPageItem[]; small: YouthPageItem[] } {
 	// Leaders may give the thought, so their first names are allowed here too (still no last names).
 	const names = shortNames([...listYouth(db).map((y) => y.member), ...listAdults(db)]);
 	const upcoming = listYouthEvents(db, today, addDays(today, 7 * opts.big + opts.days)).filter((e) => !opts.weekday || e.weekday === opts.weekday);
@@ -74,32 +83,17 @@ export function youthPageItems(db: Db, today: string, opts: { big: number; days:
 	const last = addDays(big[big.length - 1]?.date ?? today, opts.days);
 	const small = upcoming.slice(opts.big).filter((e) => e.event.date <= last).map((e) => toItem(e, names));
 	const events = [...big, ...small];
-	for (const b of listBreaks(db, today)) {
+	const notices: YouthPageItem[] = [];
+	const lastBig = big[big.length - 1]?.date ?? today;
+	for (const b of mergeRuns(listBreaks(db, today))) {
 		const date = b.fromDate < today ? today : b.fromDate;
 		const offLabel = b.label ?? YOUTH_BREAK_KIND_LABELS[b.kind];
 		if (b.kind === 'ferien' || date > last || events.some((e) => e.date === date && e.status === 'off' && e.offLabel === offLabel)) continue;
-		small.push({
-			date, weekday: 'other', ...labels(date), kindLabel: YOUTH_BREAK_KIND_LABELS[b.kind], status: 'off',
-			offLabel, topic: null, topicUrl: null, snack: null, thoughtName: null, joint: false, parts: []
+		(date <= lastBig ? notices : small).push({
+			date, weekday: 'other', ...labels(date), untilLabel: b.toDate > date ? labels(b.toDate).shortDate : null, kindLabel: YOUTH_BREAK_KIND_LABELS[b.kind], status: 'off',
+			offLabel, topic: null, topicUrl: null, snack: null, noSeminar: false, thoughtName: null, adults: null, joint: false, parts: []
 		});
 	}
 	small.sort((a, b) => a.date.localeCompare(b.date));
-	return { big, small };
-}
-
-/** Compact one-line description of an item for the "Danach" list. */
-export function compactText(i: YouthPageItem): string {
-	if (i.status === 'off') return i.offLabel && i.offLabel !== i.kindLabel ? `${i.kindLabel} – ${i.offLabel}` : i.kindLabel;
-	if (i.status === 'open') return `${i.kindLabel} · noch nicht geplant`;
-	const join = (xs: (string | null)[]) => (xs.some(Boolean) ? [...new Set(xs.map((x) => x ?? '–'))].join(' / ') : null);
-	const planned = i.parts.filter((p) => p.planned);
-	const parts = [
-		i.kindLabel,
-		i.weekday === 'sunday' ? (i.topic ?? join(i.parts.map((p) => p.topic))) : join(planned.map((p) => p.text)),
-		i.weekday === 'sunday' ? null : join(planned.map((p) => p.leaderName)) && `Leitung: ${join(planned.map((p) => p.leaderName))}`,
-		i.weekday === 'sunday'
-			? join(planned.map((p) => p.teacherName)) && `Lehrer: ${join(planned.map((p) => p.teacherName))}`
-			: i.thoughtName && `Geistiger Gedanke: ${i.thoughtName}`
-	];
-	return parts.filter(Boolean).join(' · ');
+	return { notices, big, small };
 }

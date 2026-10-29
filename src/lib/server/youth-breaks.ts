@@ -9,6 +9,18 @@ export function listBreaks(db: Db, from?: string): YouthBreak[] {
 	return (from ? q.where(gte(youthBreaks.toDate, from)) : q).orderBy(asc(youthBreaks.fromDate)).all();
 }
 
+/** Consecutive days entered one by one (same kind and text) read as one date range. */
+export function mergeRuns(breaks: YouthBreak[]): YouthBreak[] {
+	const out: YouthBreak[] = [];
+	for (const b of breaks) {
+		const prev = out[out.length - 1];
+		if (prev && prev.kind === b.kind && prev.label === b.label && b.fromDate <= addDays(prev.toDate, 1)) {
+			if (b.toDate > prev.toDate) out[out.length - 1] = { ...prev, toDate: b.toDate };
+		} else out.push(b);
+	}
+	return out;
+}
+
 /** Holidays cancel the Wednesdays inside them; another event in the same week (Monday to Sunday) cancels that Wednesday unless it is marked not to. */
 export function breakFor(breaks: YouthBreak[], wednesday: string): YouthBreak | null {
 	const monday = addDays(wednesday, -2);

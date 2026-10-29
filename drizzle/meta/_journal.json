@@ -127,6 +127,20 @@
       "when": 1793197995672,
       "tag": "0017_youth_joint_lead_side",
       "breakpoints": true
+    },
+    {
+      "idx": 18,
+      "version": "6",
+      "when": 1793262993897,
+      "tag": "0018_youth_no_snack",
+      "breakpoints": true
+    },
+    {
+      "idx": 19,
+      "version": "6",
+      "when": 1793263289593,
+      "tag": "0019_youth_no_seminar",
+      "breakpoints": true
     }
   ]
 }

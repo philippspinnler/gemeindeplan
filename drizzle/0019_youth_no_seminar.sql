@@ -1,0 +1,1 @@
+ALTER TABLE `youth_events` ADD `no_seminar` integer DEFAULT false NOT NULL;
