@@ -15,7 +15,7 @@
 </script>
 
 <h2>Benutzer</h2>
-<p class="hint">Wer sich anmelden kann und mit welcher Rolle. «Mitglied» verknüpft ein Konto mit der Person in der Mitgliederliste; damit kann sie auf der Jugendseite nur ihre eigenen Termine abonnieren. Wechselt eine Berufung: neue Person einladen und das alte Konto deaktivieren. Hat jemand das Passwort vergessen: «Passwort zurücksetzen» erzeugt einen neuen Link.</p>
+<p class="hint">Wer sich anmelden kann und mit welcher Rolle. Jedes Konto gehört zu einem Mitglied: daher kommt der Name, und die Person kann auf der Jugendseite nur ihre eigenen Termine abonnieren. Wechselt eine Berufung: neue Person einladen und das alte Konto deaktivieren. Hat jemand das Passwort vergessen: «Passwort zurücksetzen» erzeugt einen neuen Link.</p>
 {#if form?.error}<div class="error">{form.error}</div>{/if}
 
 <div class="section">
@@ -74,11 +74,19 @@
 	<h2>Konten</h2>
 	<div class="table-wrap">
 		<table class="table stack">
-			<thead><tr><th>Name</th><th>E-Mail</th><th>Rolle</th><th>Mitglied</th><th>Status</th><th></th></tr></thead>
+			<thead><tr><th>Name</th><th>E-Mail</th><th>Rolle</th><th>Status</th><th></th></tr></thead>
 			<tbody>
 				{#each data.users as u}
 					<tr>
-						<td class="td-main">{u.name}</td>
+						<td class="td-main">
+							<form method="POST" action="?/setMember" use:enhance={() => ({ update }) => update({ reset: false })}>
+								<input type="hidden" name="id" value={u.id} />
+								<select name="memberId" aria-label="Mitglied von {u.name}" onchange={(e) => (e.currentTarget as HTMLSelectElement).form?.requestSubmit()}>
+									<option value="">{u.name} – nicht verknüpft</option>
+									{#each data.members as m (m.id)}<option value={m.id} selected={m.id === u.memberId}>{m.name}</option>{/each}
+								</select>
+							</form>
+						</td>
 						<td data-label="E-Mail">{u.email}</td>
 						<td data-label="Rolle">
 							{#if u.id === data.user?.id}
@@ -91,15 +99,6 @@
 									</select>
 								</form>
 							{/if}
-						</td>
-						<td data-label="Mitglied">
-							<form method="POST" action="?/setMember" use:enhance={() => ({ update }) => update({ reset: false })}>
-								<input type="hidden" name="id" value={u.id} />
-								<select name="memberId" aria-label="Mitglied von {u.name}" onchange={(e) => (e.currentTarget as HTMLSelectElement).form?.requestSubmit()}>
-									<option value="">–</option>
-									{#each data.members as m (m.id)}<option value={m.id} selected={m.id === u.memberId}>{m.name}</option>{/each}
-								</select>
-							</form>
 						</td>
 						<td data-label="Status">{u.active ? 'aktiv' : 'deaktiviert'}</td>
 						<td>
