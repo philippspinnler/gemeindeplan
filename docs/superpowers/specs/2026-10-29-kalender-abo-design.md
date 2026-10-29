@@ -44,6 +44,7 @@ Neu kann man auf der Jugendseite einen Kalender abonnieren (iCal-Abo-Link für i
 - **Einstellungen:** neue Keys in `SETTING_DEFAULTS` (`src/lib/server/settings.ts`), Bearbeitung auf `/einstellungen` nach dem Muster aus `CLAUDE.md` (Autosave, Versionsprüfung, Live-Kanal).
 - **Namensliste:** Die Auswahl zeigt alle Vornamen aus `shortNames` (alle Jugendlichen, Leiter/innen, Bischofschaft), auch wenn jemand gerade nirgends eingeteilt ist. Das ist bewusst so entschieden, auch wenn die Jugendseite heute nur eingeteilte Namen zeigt.
 - **Erwachsene an getrennten Mittwochen:** „Anwesend“ gilt pro Datum. An einem getrennten Mittwoch bekommen JD-Leiterinnen den JD-Eintrag, der JM-Berater und die Bischofschaft den JM-Eintrag. Bei einer gemeinsamen Aktivität gibt es ohnehin nur einen Eintrag.
+- **Ohne Standardzeiten kein Abo:** Solange die Zeiten nicht gesetzt sind, erscheint der Knopf „Im Kalender abonnieren“ auf der Jugendseite gar nicht. Bei den Zeitfeldern in den Einstellungen steht ein Hinweis, dass das Kalender-Abo auf der Jugendseite erst mit gesetzten Zeiten angeboten wird. Bestehende Abo-Links liefern in dieser Zeit einen leeren Kalender, falls die Zeiten später wieder gelöscht werden.
 - **Termine ohne Plan:** Ein regulärer Mittwoch oder Sonntag, der noch nicht geplant ist (`status === 'open'`), erscheint mit Titel ohne Zusatz (`JD Aktivität`). So ist die Zeit im Kalender schon geblockt.
 
 ## Meine Entscheidungen (bitte prüfen)
@@ -53,7 +54,6 @@ Neu kann man auf der Jugendseite einen Kalender abonnieren (iCal-Abo-Link für i
 - **Basel-Aktivitäten** (`basel*`): normale Mittwochsaktivitäten, erscheinen also.
 - **Pfahlanlass, der die Aktivität nicht absagt** (`cancels = false`): Die Mittwochsaktivität erscheint normal, der Anlass selbst nicht.
 - **„Nur meine“ bei gemeinsamer Aktivität:** Jugendliche beider Seiten sehen sie.
-- **Standardzeiten nicht gesetzt:** Termine werden als ganztägige Einträge ausgegeben, bis Zeiten eingetragen sind.
 - **Zeitzone:** Europe/Zurich.
 - **Gemeinsame Sonntagsklasse:** Titel `JD/JM Klasse: {Thema}`.
 - **Veraltete Person im Link** (Mitglied gelöscht): Der Feed liefert einen leeren Kalender und keinen Fehler, weil Kalender-Apps bei Fehlern das Abo teils stillschweigend löschen.
