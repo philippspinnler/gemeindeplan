@@ -1,4 +1,4 @@
-import { randomBytes } from 'node:crypto';
+import { randomBytes, timingSafeEqual } from 'node:crypto';
 import { addDays, MONTHS_LONG, MONTHS_SHORT, parseIso, WEEKDAYS, WEEKDAYS_LONG } from '../dates';
 import type { Db } from './db';
 import type { Member, YouthPartSide } from './db/schema';
@@ -33,6 +33,15 @@ const SIDE_LABELS = { jd: 'Junge Damen', jm: 'Junge Männer', both: null } as co
 
 export const newYouthPageToken = () => randomBytes(18).toString('base64url');
 
+export const tokenMatches = (given: string, expected: string) =>
+	given.length === expected.length && timingSafeEqual(Buffer.from(given), Buffer.from(expected));
+
+/** Only what the template renders leaves the server; Wednesday details (meeting point, what to bring) are meant for the youth. */
+export const publicItem = (i: YouthPageItem): YouthPageItem => {
+	const sunday = i.weekday === 'sunday';
+	return { ...i, parts: i.parts.map((p) => ({ ...p, details: sunday ? null : p.details, text: sunday ? null : p.text })) };
+};
+
 export function shortNames(youth: Member[]): Map<number, string> {
 	const count = new Map<string, number>();
 	for (const m of youth) count.set(m.firstName, (count.get(m.firstName) ?? 0) + 1);
@@ -48,7 +57,7 @@ function labels(date: string) {
 	};
 }
 
-function toItem(e: YouthEventFull, names: Map<number, string>): YouthPageItem {
+export function toItem(e: YouthEventFull, names: Map<number, string>): YouthPageItem {
 	const date = e.event.date;
 	const name = (m: Member | null) => (m ? (names.get(m.id) ?? null) : null);
 	const kindLabel = e.status === 'off' ? 'Kein JD/JM' : e.event.joint && !JOINT_KINDS.includes(e.event.kind) ? 'Gemeinsam' : YOUTH_KIND_LABELS[e.event.kind];
@@ -71,13 +80,15 @@ function toItem(e: YouthEventFull, names: Map<number, string>): YouthPageItem {
 	};
 }
 
+// Leaders may give the thought, so their first names are allowed here too (still no last names).
+export const youthPageNames = (db: Db) => shortNames([...listYouth(db).map((y) => y.member), ...listAdults(db)]);
+
 /**
  * The next `big` dates as cards, then everything up to `days` after the last card as the "Danach" list.
  * Stake and temple dates running before or between the cards become `notices` above them.
  */
 export function youthPageItems(db: Db, today: string, opts: { big: number; days: number; weekday?: 'sunday' | 'wednesday' } = { big: 2, days: 31 }): { notices: YouthPageItem[]; big: YouthPageItem[]; small: YouthPageItem[] } {
-	// Leaders may give the thought, so their first names are allowed here too (still no last names).
-	const names = shortNames([...listYouth(db).map((y) => y.member), ...listAdults(db)]);
+	const names = youthPageNames(db);
 	const upcoming = listYouthEvents(db, today, addDays(today, 7 * opts.big + opts.days)).filter((e) => !opts.weekday || e.weekday === opts.weekday);
 	const big = upcoming.slice(0, opts.big).map((e) => toItem(e, names));
 	const last = addDays(big[big.length - 1]?.date ?? today, opts.days);
