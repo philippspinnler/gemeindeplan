@@ -34,10 +34,10 @@ export function setSetting(db: Db, key: SettingKey, value: string): void {
 		.run();
 }
 
-/** Default times (HH:MM) of the Wednesday activity and the Sunday class; null until all four are set. */
+/** Default times (HH:MM) of the Wednesday activity and the Sunday class; null until all four are set and each ends after it starts. */
 export function youthTimes(db: Db): { wed: [string, string]; sun: [string, string] } | null {
 	const s = getAllSettings(db);
 	const wed: [string, string] = [s.youth_wed_start, s.youth_wed_end];
 	const sun: [string, string] = [s.youth_sun_start, s.youth_sun_end];
-	return [...wed, ...sun].every(Boolean) ? { wed, sun } : null;
+	return [wed, sun].every(([start, end]) => start && end && start < end) ? { wed, sun } : null;
 }

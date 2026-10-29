@@ -121,6 +121,13 @@ describe('ical', () => {
 		expect(ics.startsWith('BEGIN:VCALENDAR\r\n')).toBe(true);
 	});
 
+	it('writes URL only for http(s) links', () => {
+		const entry = { uid: 'a', date: '2026-10-21', start: '19:00', end: '21:00', title: 'X', description: '' };
+		const now = new Date('2026-10-19T12:00:00Z');
+		expect(toIcs([{ ...entry, url: 'Kapitel 3' }], 'W', now)).not.toContain('URL:');
+		expect(toIcs([{ ...entry, url: 'https://x.test/a' }], 'W', now)).toContain('URL:https://x.test/a');
+	});
+
 	it('parses the filter from query params', () => {
 		expect(parseCalendarFilter(new URLSearchParams('seite=jm&tag=so&person=7'))).toEqual({ sides: ['jm'], days: ['so'], personId: 7 });
 		expect(parseCalendarFilter(new URLSearchParams(''))).toEqual(all);

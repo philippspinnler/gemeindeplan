@@ -122,7 +122,7 @@ export function toIcs(entries: CalendarEntry[], ward: string, now: Date): string
 			`SUMMARY:${escapeText(e.title)}`
 		);
 		if (e.description) lines.push(`DESCRIPTION:${escapeText(e.description)}`);
-		if (e.url) lines.push(`URL:${e.url}`);
+		if (e.url && /^https?:\/\/\S+$/.test(e.url)) lines.push(`URL:${e.url}`);
 		lines.push('END:VEVENT');
 	}
 	lines.push('END:VCALENDAR');

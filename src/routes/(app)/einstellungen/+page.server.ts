@@ -26,6 +26,7 @@ export const actions: Actions = {
 		const keys = ['youth_wed_start', 'youth_wed_end', 'youth_sun_start', 'youth_sun_end'] as const;
 		const values = keys.map((k) => str(fd, k));
 		if (values.some((v) => v && !/^\d{2}:\d{2}$/.test(v))) return fail(400, { error: 'Ungültige Zeit.' });
+		if ((values[0] && values[1] && values[0] >= values[1]) || (values[2] && values[3] && values[2] >= values[3])) return fail(400, { error: 'Das Ende muss nach dem Beginn liegen.' });
 		keys.forEach((k, i) => setSetting(locals.db, k, values[i]));
 		return { saved: true };
 	}
