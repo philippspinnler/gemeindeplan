@@ -47,7 +47,8 @@ export const users = sqliteTable('users', {
 	role: text('role', { enum: ROLES }).notNull(),
 	passwordHash: text('password_hash').notNull(),
 	active: integer('active', { mode: 'boolean' }).notNull().default(true),
-	newsSeenAt: text('news_seen_at'),
+	/** How many NEWS entries the user has acknowledged; null until the first "Verstanden". */
+	newsSeen: integer('news_seen'),
 	...timestamps
 });
 

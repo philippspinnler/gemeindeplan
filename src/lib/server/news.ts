@@ -3,10 +3,11 @@ import type { Db } from './db';
 import { users, type Role } from './db/schema';
 import { can, type Action } from './permissions';
 
-/** A "what's new" entry, shown once to every user allowed to do `area`. */
+/** A "what's new" entry, shown once to every user allowed to do `area`. `date` only decides what a brand-new account skips. */
 export type NewsEntry = { date: string; area: Action; title: string; text: string };
 export type NewsGroup = { title: string; texts: string[] };
 
+/** Append only, oldest first: users store how many entries they have seen, so removing or reordering one shifts everybody. */
 export const NEWS: NewsEntry[] = [
 	{
 		date: '2026-10-29',
@@ -30,13 +31,10 @@ export const NEWS: NewsEntry[] = [
 	}
 ];
 
-/**
- * Entries newer than the user's last "Verstanden" (or their account creation, so new users start clean).
- * ponytail: day granularity – an entry dated today is missed by whoever dismissed earlier today; date it tomorrow then.
- */
-export function unseenNews(role: Role, seenAt: string, news: NewsEntry[] = NEWS): NewsEntry[] {
-	const seenDay = seenAt.slice(0, 10);
-	return news.filter((n) => n.date > seenDay && can(role, n.area)).sort((a, b) => b.date.localeCompare(a.date));
+/** Entries after the last "Verstanden", newest first; before the first one, those dated after the account was created. */
+export function unseenNews(role: Role, seen: number | null, createdAt: string, news: NewsEntry[] = NEWS): NewsEntry[] {
+	const fresh = seen === null ? news.filter((n) => n.date > createdAt.slice(0, 10)) : news.slice(seen);
+	return fresh.filter((n) => can(role, n.area)).reverse();
 }
 
 /** One section per title, in the order of each title's newest entry. */
@@ -47,10 +45,12 @@ export function groupNews(news: NewsEntry[]): NewsGroup[] {
 }
 
 export function newsForUser(db: Db, userId: number, role: Role): NewsGroup[] {
-	const u = db.select({ seenAt: users.newsSeenAt, createdAt: users.createdAt }).from(users).where(eq(users.id, userId)).get();
-	return u ? groupNews(unseenNews(role, u.seenAt ?? u.createdAt)) : [];
+	const u = db.select({ seen: users.newsSeen, createdAt: users.createdAt }).from(users).where(eq(users.id, userId)).get();
+	return u ? groupNews(unseenNews(role, u.seen, u.createdAt)) : [];
 }
 
-export function markNewsSeen(db: Db, userId: number, now: Date = new Date()): void {
-	db.update(users).set({ newsSeenAt: now.toISOString() }).where(eq(users.id, userId)).run();
+/** `count` is NEWS.length as the dialog was rendered, so an entry deployed while it was open still shows next time. */
+export function markNewsSeen(db: Db, userId: number, count: number): void {
+	if (!Number.isInteger(count) || count < 0 || count > NEWS.length) return;
+	db.update(users).set({ newsSeen: count }).where(eq(users.id, userId)).run();
 }

@@ -35,7 +35,7 @@
 	$effect(() => {
 		if (data.news.length && !newsDialog?.open) newsDialog?.showModal();
 	});
-	const dismissNews = () => fetch('/neuigkeiten', { method: 'POST' });
+	const dismissNews = () => fetch('/neuigkeiten', { method: 'POST', body: JSON.stringify({ count: data.newsCount }) });
 	const role = $derived(data.user?.role);
 	const accountRole = $derived(data.accountRole);
 </script>

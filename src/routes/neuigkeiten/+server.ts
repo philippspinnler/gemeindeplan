@@ -6,6 +6,7 @@ import { markNewsSeen } from '$lib/server/news';
 export const POST: RequestHandler = async ({ locals, request, url }) => {
 	if (!locals.user) error(401, 'Bitte anmelden');
 	if (request.headers.get('origin') !== url.origin) error(403, 'Ungültiger Ursprung');
-	markNewsSeen(locals.db, locals.user.id);
+	const body = (await request.json().catch(() => null)) as { count?: unknown } | null;
+	markNewsSeen(locals.db, locals.user.id, Number(body?.count));
 	return json({ ok: true });
 };

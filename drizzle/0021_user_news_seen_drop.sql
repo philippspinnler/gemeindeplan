@@ -1,0 +1,1 @@
+ALTER TABLE `users` DROP COLUMN `news_seen_at`;
