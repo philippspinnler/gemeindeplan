@@ -82,6 +82,7 @@
 	.facts { margin-top: 0.85rem; }
 	/* Leitung and the facts below share one label column. */
 	.aligned { display: grid; grid-template-columns: max-content 1fr; column-gap: 0.75rem; }
+	.note + .aligned { margin-top: 0.6rem; }
 	.aligned > .facts, .aligned .pairs { grid-column: 1 / -1; display: grid; grid-template-columns: subgrid; }
 	.nowrap { white-space: nowrap; }
 	.seminar { display: inline-block; font-size: 0.85rem; font-weight: 600; color: #8a4b12; background: #f2e3d5; border-radius: 6px; padding: 0.1rem 0.5rem; margin-bottom: 0.4rem; }
