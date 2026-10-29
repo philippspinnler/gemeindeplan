@@ -14,3 +14,14 @@
 		<div class="actions"><a class="btn" href="/admin/export">Datenbank herunterladen (Backup)</a></div>
 	</form>
 </div>
+
+<div class="section">
+	<h2>Jugend-Zeiten</h2>
+	<form method="POST" action="?/times" use:enhance>
+		<div class="field"><label for="wed-start">Mittwochsaktivität von</label><input id="wed-start" name="youth_wed_start" type="time" value={data.settings.youth_wed_start} onchange={submitOnChange} /></div>
+		<div class="field"><label for="wed-end">Mittwochsaktivität bis</label><input id="wed-end" name="youth_wed_end" type="time" value={data.settings.youth_wed_end} onchange={submitOnChange} /></div>
+		<div class="field"><label for="sun-start">Sonntagsklasse von</label><input id="sun-start" name="youth_sun_start" type="time" value={data.settings.youth_sun_start} onchange={submitOnChange} /></div>
+		<div class="field"><label for="sun-end">Sonntagsklasse bis</label><input id="sun-end" name="youth_sun_end" type="time" value={data.settings.youth_sun_end} onchange={submitOnChange} /></div>
+		<p class="hint">Diese Zeiten gelten für alle Termine im Kalender-Abo der Jugendseite. Erst wenn alle vier gesetzt sind, erscheint dort der Knopf „Im Kalender abonnieren“.</p>
+	</form>
+</div>

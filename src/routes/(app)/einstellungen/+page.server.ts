@@ -19,5 +19,14 @@ export const actions: Actions = {
 		if (!ward) return fail(400, { error: 'Der Gemeindename darf nicht leer sein.' });
 		setSetting(locals.db, 'ward_name', ward);
 		return { saved: true };
+	},
+	times: async ({ request, locals }) => {
+		requireRole(locals.user, 'settings.edit');
+		const fd = await request.formData();
+		const keys = ['youth_wed_start', 'youth_wed_end', 'youth_sun_start', 'youth_sun_end'] as const;
+		const values = keys.map((k) => str(fd, k));
+		if (values.some((v) => v && !/^\d{2}:\d{2}$/.test(v))) return fail(400, { error: 'Ungültige Zeit.' });
+		keys.forEach((k, i) => setSetting(locals.db, k, values[i]));
+		return { saved: true };
 	}
 };

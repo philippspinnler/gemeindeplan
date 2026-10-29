@@ -6,7 +6,11 @@ export const SETTING_DEFAULTS = {
 	ward_name: 'Gemeinde',
 	youth_page_token: '',
 	bishopric: '[]',
-	music_callings: '{}'
+	music_callings: '{}',
+	youth_wed_start: '',
+	youth_wed_end: '',
+	youth_sun_start: '',
+	youth_sun_end: ''
 } as const;
 
 export type SettingKey = keyof typeof SETTING_DEFAULTS;
@@ -28,4 +32,12 @@ export function setSetting(db: Db, key: SettingKey, value: string): void {
 		.values({ key, value })
 		.onConflictDoUpdate({ target: settings.key, set: { value } })
 		.run();
+}
+
+/** Default times (HH:MM) of the Wednesday activity and the Sunday class; null until all four are set. */
+export function youthTimes(db: Db): { wed: [string, string]; sun: [string, string] } | null {
+	const s = getAllSettings(db);
+	const wed: [string, string] = [s.youth_wed_start, s.youth_wed_end];
+	const sun: [string, string] = [s.youth_sun_start, s.youth_sun_end];
+	return [...wed, ...sun].every(Boolean) ? { wed, sun } : null;
 }
