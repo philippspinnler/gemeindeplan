@@ -83,7 +83,7 @@
 		<h2>Neu seit deinem letzten Besuch</h2>
 		{#each data.news as g (g.title)}
 			<h3>{g.title}</h3>
-			{#each g.texts as text (text)}<p>{text}</p>{/each}
+			<ul>{#each g.texts as text (text)}<li>{text}</li>{/each}</ul>
 		{/each}
 		<form method="dialog"><button class="btn btn-primary" type="submit">Verstanden</button></form>
 	</dialog>
