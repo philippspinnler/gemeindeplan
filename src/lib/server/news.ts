@@ -21,7 +21,13 @@ export const NEWS: NewsEntry[] = [
 		title: 'Jugend',
 		text: 'Die nächsten Termine sehen jetzt gleich aus wie auf der öffentlichen Jugendseite; ein grüner oder roter Rand zeigt auf einen Blick, ob ein Termin schon geplant ist.'
 	},
-	{ date: '2026-10-29', area: 'youth.view', title: 'Jugend', text: 'Pfahl- und Tempeltermine über mehrere Tage erscheinen als ein Eintrag mit Zeitraum statt als einzelne Tage.' }
+	{ date: '2026-10-29', area: 'youth.view', title: 'Jugend', text: 'Pfahl- und Tempeltermine über mehrere Tage erscheinen als ein Eintrag mit Zeitraum statt als einzelne Tage.' },
+	{
+		date: '2026-10-29',
+		area: 'youth.view',
+		title: 'Jugend',
+		text: 'Die Details einer Mittwochsaktivität (z.B. Treffpunkt, was mitbringen) erscheinen jetzt auch auf der öffentlichen Jugendseite.'
+	}
 ];
 
 /**
