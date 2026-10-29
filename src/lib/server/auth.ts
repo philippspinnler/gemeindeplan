@@ -3,7 +3,8 @@ import { and, desc, eq, gt, gte, isNull, lt, ne } from 'drizzle-orm';
 import { createHash, randomBytes } from 'node:crypto';
 import { collator } from '../table-sort';
 import type { Db } from './db';
-import { invites, loginAttempts, sessions, users, type Invite, type Role, type User } from './db/schema';
+import { invites, loginAttempts, members, sessions, users, type Invite, type Role, type User } from './db/schema';
+import { UserError } from './forms';
 
 const SESSION_DAYS = 30;
 const SESSION_RENEW_BELOW_DAYS = 15;
@@ -145,17 +146,19 @@ export function deleteSession(db: Db, rawSessionId: string): void {
 
 export function createInvite(
 	db: Db,
-	input: { email: string; name: string; role: Role; createdBy: number },
+	input: { email: string; role: Role; createdBy: number } & ({ name: string; memberId?: never } | { memberId: number }),
 	now: Date = new Date()
 ): Invite {
 	const raw = token();
+	const name = 'name' in input ? input.name : memberName(db, input.memberId);
 	const inv = db
 		.insert(invites)
 		.values({
 			token: tokenKey(raw),
 			email: normEmail(input.email),
-			name: input.name.trim(),
+			name: name.trim(),
 			role: input.role,
+			memberId: input.memberId ?? null,
 			createdBy: input.createdBy,
 			expiresAt: iso(new Date(now.getTime() + INVITE_DAYS * DAY_MS))
 		})
@@ -177,7 +180,11 @@ export async function acceptInvite(db: Db, tok: string, password: string, now: D
 	const result = db.update(invites).set({ usedAt: iso(now) }).where(and(eq(invites.id, inv.id), isNull(invites.usedAt))).run();
 	if (result.changes === 0) return null;
 	const existing = findUserByEmail(db, inv.email);
-	if (!existing) return createUser(db, { email: inv.email, name: inv.name, role: inv.role, password });
+	if (!existing) {
+		const user = await createUser(db, { email: inv.email, name: inv.name, role: inv.role, password });
+		if (inv.memberId) setUserMember(db, user.id, inv.memberId);
+		return { ...user, memberId: inv.memberId };
+	}
 	const passwordHash = await hashPassword(password);
 	db.update(users).set({ passwordHash, updatedAt: iso(now) }).where(eq(users.id, existing.id)).run();
 	db.delete(sessions).where(eq(sessions.userId, existing.id)).run();
@@ -205,8 +212,15 @@ export function updateUserRole(db: Db, id: number, role: Role): void {
 	db.update(users).set({ role, updatedAt: iso(new Date()) }).where(eq(users.id, id)).run();
 }
 
+const memberName = (db: Db, id: number) => {
+	const m = db.select({ firstName: members.firstName, lastName: members.lastName }).from(members).where(eq(members.id, id)).get();
+	if (!m) throw new UserError('Unbekanntes Mitglied.');
+	return `${m.firstName} ${m.lastName}`;
+};
+
+/** Links a login to its member; the account then carries the member's name. */
 export function setUserMember(db: Db, id: number, memberId: number | null): void {
-	db.update(users).set({ memberId, updatedAt: iso(new Date()) }).where(eq(users.id, id)).run();
+	db.update(users).set({ memberId, ...(memberId ? { name: memberName(db, memberId) } : {}), updatedAt: iso(new Date()) }).where(eq(users.id, id)).run();
 }
 
 export function setUserActive(db: Db, id: number, active: boolean): void {

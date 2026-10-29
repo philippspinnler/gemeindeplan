@@ -67,6 +67,7 @@ export const invites = sqliteTable('invites', {
 	email: text('email').notNull(),
 	name: text('name').notNull(),
 	role: text('role', { enum: ROLES }).notNull(),
+	memberId: integer('member_id').references(() => members.id, { onDelete: 'set null' }),
 	createdBy: integer('created_by').notNull().references(() => users.id),
 	expiresAt: text('expires_at').notNull(),
 	usedAt: text('used_at'),

@@ -21,7 +21,13 @@
 <div class="section">
 	<h2>Neue Person einladen</h2>
 	<form method="POST" action="?/invite" use:enhance class="grid-3">
-		<div class="field"><label for="inv-name">Name</label><input id="inv-name" name="name" type="text" required /></div>
+		<div class="field">
+			<label for="inv-member">Mitglied</label>
+			<select id="inv-member" name="memberId" required>
+				<option value="">Bitte wählen</option>
+				{#each data.members as m (m.id)}<option value={m.id}>{m.name}</option>{/each}
+			</select>
+		</div>
 		<div class="field"><label for="inv-email">E-Mail</label><input id="inv-email" name="email" type="email" required /></div>
 		<div class="field">
 			<label for="inv-role">Rolle</label>

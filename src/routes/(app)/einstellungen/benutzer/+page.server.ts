@@ -20,14 +20,14 @@ export const actions: Actions = {
 	invite: async ({ request, locals, url }) => {
 		requireRole(locals.user, 'users.manage');
 		const fd = await request.formData();
-		const name = str(fd, 'name');
+		const memberId = int(fd, 'memberId');
 		const email = str(fd, 'email');
 		const role = str(fd, 'role');
-		if (!name || !email.includes('@') || !isRole(role)) return fail(400, { error: 'Bitte Name, gültige E-Mail und Rolle angeben.' });
+		if (!getMember(locals.db, memberId) || !email.includes('@') || !isRole(role)) return fail(400, { error: 'Bitte Mitglied, gültige E-Mail und Rolle angeben.' });
 		if (findUserByEmail(locals.db, email)) return fail(400, { error: 'Für diese E-Mail gibt es schon ein Konto.' });
-		const inv = createInvite(locals.db, { name, email, role, createdBy: locals.user!.id });
+		const inv = createInvite(locals.db, { memberId, email, role, createdBy: locals.user!.id });
 		const link = `${url.origin}/einladung/${inv.token}`;
-		return { invited: { link, text: inviteText(name, link, role) } };
+		return { invited: { link, text: inviteText(inv.name, link, role) } };
 	},
 	resetPassword: async ({ request, locals, url }) => {
 		requireRole(locals.user, 'users.manage');

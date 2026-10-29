@@ -3,8 +3,9 @@ import { createDb, type Db } from './db';
 import { invites, loginAttempts, sessions } from './db/schema';
 import {
 	acceptInvite, changePassword, createInvite, createSession, createUser, deleteSession, findUserByEmail, getValidInvite,
-	hashPassword, listOpenInvites, loginWithPassword, userCount, validateSession, verifyPassword
+	hashPassword, listOpenInvites, loginWithPassword, setUserMember, userCount, validateSession, verifyPassword
 } from './auth';
+import { createMember } from './members';
 
 let db: Db;
 beforeEach(() => {
@@ -119,6 +120,21 @@ describe('invites', () => {
 		expect(user?.role).toBe('musik');
 		expect(getValidInvite(db, inv.token, t0)).toBeNull();
 		expect(listOpenInvites(db, t0)).toHaveLength(0);
+	});
+	it('an invite for a member links the new account and takes its name', async () => {
+		const admin = await createUser(db, { email: 'a@b.ch', name: 'A', role: 'admin', password: 'geheim123' });
+		const eva = createMember(db, { firstName: 'Eva', lastName: 'Probe' });
+		const inv = createInvite(db, { email: 'e@b.ch', memberId: eva.id, role: 'jd_leitung', createdBy: admin.id });
+		const user = await acceptInvite(db, inv.token, 'passwort1');
+		expect([user?.name, user?.memberId]).toEqual(['Eva Probe', eva.id]);
+	});
+	it('linking an existing account to a member takes its name', async () => {
+		const u = await createUser(db, { email: 'a@b.ch', name: 'A', role: 'admin', password: 'geheim123' });
+		const max = createMember(db, { firstName: 'Max', lastName: 'Test' });
+		setUserMember(db, u.id, max.id);
+		expect(findUserByEmail(db, 'a@b.ch')).toMatchObject({ name: 'Max Test', memberId: max.id });
+		setUserMember(db, u.id, null);
+		expect(findUserByEmail(db, 'a@b.ch')).toMatchObject({ name: 'Max Test', memberId: null });
 	});
 	it('rejects expired invites', async () => {
 		const admin = await createUser(db, { email: 'a@b.ch', name: 'A', role: 'admin', password: 'geheim123' });

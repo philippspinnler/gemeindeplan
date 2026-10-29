@@ -169,6 +169,13 @@
       "when": 1793281625123,
       "tag": "0023_user_member",
       "breakpoints": true
+    },
+    {
+      "idx": 24,
+      "version": "6",
+      "when": 1793281982908,
+      "tag": "0024_invite_member",
+      "breakpoints": true
     }
   ]
 }
