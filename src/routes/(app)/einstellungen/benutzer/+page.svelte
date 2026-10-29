@@ -49,7 +49,7 @@
 				<tbody>
 					{#each data.invites as inv}
 						<tr>
-							<td class="td-main">{inv.name}</td><td data-label="E-Mail">{inv.email}</td><td data-label="Rolle">{inv.role}</td><td data-label="Gültig bis">{formatDateShort(inv.expiresAt.slice(0, 10))}</td>
+							<td class="td-main">{inv.name}</td><td data-label="E-Mail">{inv.email}</td><td data-label="Rolle">{ROLE_LABELS[inv.role]}</td><td data-label="Gültig bis">{formatDateShort(inv.expiresAt.slice(0, 10))}</td>
 							<td>
 								<form method="POST" action="?/deleteInvite" use:enhance>
 									<input type="hidden" name="id" value={inv.id} />
