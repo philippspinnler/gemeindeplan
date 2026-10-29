@@ -1,7 +1,7 @@
 <script lang="ts">
 	import type { YouthPageItem } from '$lib/server/youth-page';
-	/** A youth date as a card, or with `compact` as a row of the "Danach" list. */
-	let { ev, compact = false, href = null }: { ev: YouthPageItem; compact?: boolean; href?: string | null } = $props();
+	/** A youth date as a card, or with `compact` as a row of the "Danach" list; `stacked` puts the date above the text at every width. */
+	let { ev, compact = false, stacked = false, href = null }: { ev: YouthPageItem; compact?: boolean; stacked?: boolean; href?: string | null } = $props();
 	const sunday = $derived(ev.weekday === 'sunday');
 	const special = $derived(ev.kindLabel !== 'Klasse' && ev.kindLabel !== 'Aktivität');
 	const who = (p: YouthPageItem['parts'][number]) => ([['Leitung', p.leaderName], ['Lehrer', p.teacherName]] as const).filter((r) => r[1]);
@@ -51,7 +51,7 @@
 {/snippet}
 
 {#if compact}
-	<div class="row" class:event={ev.weekday === 'other'} class:off={ev.status === 'off' && ev.weekday !== 'other'}>
+	<div class="row" class:stacked class:event={ev.weekday === 'other'} class:off={ev.status === 'off' && ev.weekday !== 'other'}>
 		<div class="when"><strong>{#if ev.untilLabel}<span class="nowrap">{ev.shortDate} –</span> <span class="nowrap">{ev.untilLabel}</span>{:else}{ev.shortDate}{/if}</strong><span>{ev.kindLabel}</span></div>
 		<div>{@render body()}</div>
 	</div>
@@ -105,6 +105,8 @@
 	.row.event { background: #e8f1f8; border-left: 3px solid var(--primary); border-top-color: transparent; }
 	.row.event .when span { color: var(--primary); font-weight: 600; }
 	.row.off .when strong, .row.off .title { color: var(--muted); font-weight: 400; }
+	.row.stacked { grid-template-columns: 1fr; gap: 0.3rem; }
+	.row.stacked .when { flex-direction: row; gap: 0.5rem; align-items: baseline; }
 	@media (max-width: 480px) {
 		.row { grid-template-columns: 1fr; gap: 0.3rem; }
 		.row .when { flex-direction: row; gap: 0.5rem; align-items: baseline; }

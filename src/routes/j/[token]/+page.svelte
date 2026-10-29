@@ -10,7 +10,7 @@
 
 <main>
 	{#if data.notices.length}
-		<div class="list notices">{#each data.notices as ev (ev.date)}<YouthItem {ev} compact />{/each}</div>
+		<div class="list notices">{#each data.notices as ev (ev.date)}<YouthItem {ev} compact stacked />{/each}</div>
 	{/if}
 	<div class="cards">
 		{#each data.big as ev (ev.date)}<YouthItem {ev} />{/each}
