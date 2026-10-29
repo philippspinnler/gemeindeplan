@@ -26,7 +26,10 @@
 			{@const p = ev.parts[0]}
 			{#if p?.text}<p class="title">{p.text}</p>{/if}
 			{#if p?.details}<p class="note">{p.details}</p>{/if}
-			{#if p}{@render pairs(who(p))}{/if}
+			<div class="aligned">
+				{#if p}{@render pairs(who(p))}{/if}
+				{#if facts.length}<div class="facts">{@render pairs(facts)}</div>{/if}
+			</div>
 		{:else}
 			<dl class="sides">
 				{#each ev.parts as p (p.side)}
@@ -42,14 +45,14 @@
 					</dd>
 				{/each}
 			</dl>
+			{#if facts.length}<div class="facts">{@render pairs(facts)}</div>{/if}
 		{/if}
-		{#if facts.length}<div class="facts">{@render pairs(facts)}</div>{/if}
 	{/if}
 {/snippet}
 
 {#if compact}
 	<div class="row" class:event={ev.weekday === 'other'} class:off={ev.status === 'off' && ev.weekday !== 'other'}>
-		<div class="when"><strong>{ev.shortDate}{#if ev.untilLabel}{' – '}{ev.untilLabel}{/if}</strong><span>{ev.kindLabel}</span></div>
+		<div class="when"><strong>{#if ev.untilLabel}<span class="nowrap">{ev.shortDate} –</span> <span class="nowrap">{ev.untilLabel}</span>{:else}{ev.shortDate}{/if}</strong><span>{ev.kindLabel}</span></div>
 		<div>{@render body()}</div>
 	</div>
 {:else}
@@ -77,6 +80,10 @@
 	.pairs dt { color: var(--muted); }
 	.pairs dd { margin: 0; }
 	.facts { margin-top: 0.85rem; }
+	/* Leitung and the facts below share one label column. */
+	.aligned { display: grid; grid-template-columns: max-content 1fr; column-gap: 0.75rem; }
+	.aligned > .facts, .aligned .pairs { grid-column: 1 / -1; display: grid; grid-template-columns: subgrid; }
+	.nowrap { white-space: nowrap; }
 	.seminar { display: inline-block; font-size: 0.85rem; font-weight: 600; color: #8a4b12; background: #f2e3d5; border-radius: 6px; padding: 0.1rem 0.5rem; margin-bottom: 0.4rem; }
 
 	.card { background: var(--surface); border-radius: var(--radius); padding: 1.1rem 1.25rem 1.25rem; box-shadow: 0 1px 2px rgb(0 0 0 / 0.06); height: 100%; }
