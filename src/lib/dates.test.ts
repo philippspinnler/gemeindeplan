@@ -1,5 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
+	changeDay,
+	formatChangeTime,
 	addDays, addMonths, formatDateDe, formatDateLong, formatDateShort, isSunday, nextSundayIso,
 	sundaysBetween, todayIso, weeksBetween
 } from './dates';
@@ -33,5 +35,14 @@ describe('dates', () => {
 	});
 	it('todayIso uses local calendar dates', () => {
 		expect(todayIso(new Date(2026, 8, 7, 23, 30))).toBe('2026-09-07');
+	});
+});
+
+describe('change times', () => {
+	const now = new Date('2026-10-30T13:00:00Z');
+	it('names today and yesterday in Swiss time', () => {
+		expect(formatChangeTime('2026-10-30T12:42:00Z', now)).toBe('heute 13:42');
+		expect(formatChangeTime('2026-10-29T22:30:00Z', now)).toBe('gestern 23:30');
+		expect(changeDay('2026-10-27T19:14:00Z', now)).toBe('Dienstag, 27. Oktober 2026');
 	});
 });

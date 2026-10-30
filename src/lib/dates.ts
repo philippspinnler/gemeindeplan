@@ -67,6 +67,22 @@ export function formatDateLong(iso: string): string {
 	return `${WEEKDAYS_LONG[d.getUTCDay()]}, ${d.getUTCDate()}. ${MONTHS_LONG[d.getUTCMonth()]} ${d.getUTCFullYear()}`;
 }
 
-const CHANGE_TIME = new Intl.DateTimeFormat('de-CH', { timeZone: 'Europe/Zurich', weekday: 'long', day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' });
-/** A change timestamp (UTC ISO) as Swiss local time, e.g. "Dienstag, 30. Oktober um 20:14". */
-export const formatChangeTime = (iso: string) => CHANGE_TIME.format(new Date(iso));
+const ZURICH_DAY = new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Zurich' });
+const ZURICH_CLOCK = new Intl.DateTimeFormat('de-CH', { timeZone: 'Europe/Zurich', hour: '2-digit', minute: '2-digit' });
+
+/** Swiss calendar day of a UTC timestamp as "Heute", "Gestern" or the long date. */
+export function changeDay(iso: string, now: Date = new Date()): string {
+	const day = ZURICH_DAY.format(new Date(iso));
+	const today = ZURICH_DAY.format(now);
+	if (day === today) return 'Heute';
+	if (day === addDays(today, -1)) return 'Gestern';
+	return formatDateLong(day);
+}
+
+export const changeClock = (iso: string) => ZURICH_CLOCK.format(new Date(iso));
+
+/** "heute 14:42", "gestern 09:10" or "Dienstag, 28. Oktober 2026, 20:14". */
+export function formatChangeTime(iso: string, now: Date = new Date()): string {
+	const day = changeDay(iso, now);
+	return day === 'Heute' || day === 'Gestern' ? `${day.toLowerCase()} ${changeClock(iso)}` : `${day}, ${changeClock(iso)}`;
+}

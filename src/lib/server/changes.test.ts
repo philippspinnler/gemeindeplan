@@ -154,6 +154,13 @@ describe('listing', () => {
 		expect(changePeople(db, 'admin')).toEqual([{ id: u1, name: 'Eva' }, { id: u2, name: 'Tim' }]);
 	});
 
+	it('orders by time, also when a merged entry was updated later', () => {
+		setTheme(u1, 'A', t0);
+		setPrayer(u1, max, minutes(1));
+		setTheme(u1, 'B', minutes(2));
+		expect(listChanges(db, 'admin').map((c) => c.section)).toEqual(['sonntag.programm', 'sonntag.gebete']);
+	});
+
 	it('lists the newest entry first with a readable user name and target link', () => {
 		setPrayer(u1, max, t0);
 		setTheme(u2, 'Glaube', minutes(1));

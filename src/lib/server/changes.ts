@@ -87,7 +87,7 @@ export function listChanges(db: Db, role: Role, filter: { key?: string; sections
 		.from(changes)
 		.leftJoin(users, eq(users.id, changes.userId))
 		.where(and(...where))
-		.orderBy(desc(changes.id))
+		.orderBy(desc(changes.at), desc(changes.id))
 		.limit(limit)
 		.all()
 		.map(({ c, userName }) => {
