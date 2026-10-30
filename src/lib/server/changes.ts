@@ -1,4 +1,4 @@
-import { and, desc, eq, inArray, lt, type SQL } from 'drizzle-orm';
+import { and, asc, desc, eq, inArray, lt, type SQL } from 'drizzle-orm';
 import type { Db } from './db';
 import { changes, users, type Role } from './db/schema';
 import { SECTIONS, type ChangeRef, type SectionDef, type SectionId } from './change-sections';
@@ -63,10 +63,21 @@ export const AREAS = ['Sonntag', 'Jugend', 'Mitglieder', 'Notizen', 'Lieder', 'E
 /** Areas with at least one section the role may edit; empty = no change log for this role. */
 export const changeAreas = (role: Role) => AREAS.filter((a) => Object.values(SECTIONS).some((d) => d.area === a && can(role, d.permission)));
 
+const visibleSections = (role: Role) => (Object.keys(SECTIONS) as SectionId[]).filter((id) => can(role, SECTIONS[id].permission));
+
+/** People who changed something the role can see, for the person filter. */
+export function changePeople(db: Db, role: Role): { id: number; name: string }[] {
+	return db
+		.selectDistinct({ id: users.id, name: users.name })
+		.from(changes)
+		.innerJoin(users, eq(users.id, changes.userId))
+		.where(inArray(changes.section, visibleSections(role)))
+		.orderBy(asc(users.name))
+		.all();
+}
+
 export function listChanges(db: Db, role: Role, filter: { key?: string; sections?: SectionId[]; area?: string; userId?: number } = {}, limit = 200): ChangeView[] {
-	const visible = (Object.keys(SECTIONS) as SectionId[]).filter(
-		(id) => can(role, SECTIONS[id].permission) && (!filter.sections || filter.sections.includes(id)) && (!filter.area || SECTIONS[id].area === filter.area)
-	);
+	const visible = visibleSections(role).filter((id) => (!filter.sections || filter.sections.includes(id)) && (!filter.area || SECTIONS[id].area === filter.area));
 	if (!visible.length) return [];
 	const where: SQL[] = [inArray(changes.section, visible)];
 	if (filter.key !== undefined) where.push(eq(changes.key, filter.key));

@@ -3,7 +3,7 @@ import { join } from 'node:path';
 import { beforeEach, describe, expect, it } from 'vitest';
 import type { ChangeRef } from './change-sections';
 import { formatAbsences, getBishopric, setBishopricMember } from './bishopric';
-import { listChanges, recordChanges, recordImport, resetChange } from './changes';
+import { changePeople, listChanges, recordChanges, recordImport, resetChange } from './changes';
 import { createDb, type Db } from './db';
 import { changes, users, type Role } from './db/schema';
 import { UserError } from './forms';
@@ -145,6 +145,13 @@ describe('listing', () => {
 		recordChanges(db, u1, [{ section: 'sonntag.leitung', key: date }], () => saveConductor(db, meetingId, anna), t0);
 		expect(listChanges(db, 'dirigent').map((c) => c.section)).toEqual(['sonntag.leitung']);
 		expect(listChanges(db, 'gebete').map((c) => c.section)).toEqual(['sonntag.gebete']);
+	});
+
+	it('offers as people only those with entries the role can see', () => {
+		setPrayer(u1, max, t0);
+		recordChanges(db, u2, [{ section: 'sonntag.leitung', key: date }], () => saveConductor(db, meetingId, anna), t0);
+		expect(changePeople(db, 'gebete')).toEqual([{ id: u1, name: 'Eva' }]);
+		expect(changePeople(db, 'admin')).toEqual([{ id: u1, name: 'Eva' }, { id: u2, name: 'Tim' }]);
 	});
 
 	it('lists the newest entry first with a readable user name and target link', () => {

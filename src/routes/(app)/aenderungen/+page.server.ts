@@ -1,7 +1,6 @@
 import { error, fail } from '@sveltejs/kit';
 import type { Actions, PageServerLoad } from './$types';
-import { listUsers } from '$lib/server/auth';
-import { changeAreas, listChanges, resetChange } from '$lib/server/changes';
+import { changeAreas, changePeople, listChanges, resetChange } from '$lib/server/changes';
 import { failMessage, int } from '$lib/server/forms';
 
 export const load: PageServerLoad = ({ locals, url }) => {
@@ -15,7 +14,7 @@ export const load: PageServerLoad = ({ locals, url }) => {
 		areas,
 		area: area ?? '',
 		person: person ?? null,
-		people: listUsers(locals.db).map((u) => ({ id: u.id, name: u.name }))
+		people: changePeople(locals.db, role)
 	};
 };
 
