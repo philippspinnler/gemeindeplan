@@ -25,7 +25,7 @@
 
 <style>
 	.history { position: relative; }
-	.count { position: absolute; top: -0.4rem; right: -0.4rem; min-width: 1.25rem; height: 1.25rem; padding: 0 0.3rem; box-sizing: border-box; border-radius: 999px; background: var(--primary); color: #fff; font-size: 0.7rem; font-weight: 700; line-height: 1.25rem; text-align: center; font-variant-numeric: tabular-nums; }
+	.count { position: absolute; top: -0.4rem; right: -0.4rem; min-width: 1.25rem; height: 1.25rem; padding: 0 0.3rem; box-sizing: border-box; border-radius: 999px; background: var(--bg); border: 1px solid var(--line); color: var(--muted); font-size: 0.7rem; font-weight: 600; line-height: calc(1.25rem - 2px); text-align: center; font-variant-numeric: tabular-nums; }
 	.history-dialog { max-width: 44rem; max-height: min(80vh, 48rem); overflow: auto; }
 	.head { display: flex; align-items: center; justify-content: space-between; gap: 1rem; margin-bottom: 0.5rem; }
 	.head h2 { margin: 0; }
