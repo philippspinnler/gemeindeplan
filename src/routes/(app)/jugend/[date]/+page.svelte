@@ -175,8 +175,8 @@
 			<span class="kind-tag">{kindLabel}</span>
 			<h2>{data.dateLabel}</h2>
 		</div>
+		<div class="actions"><ChangeHistory changes={data.history} /></div>
 	</div>
-	<ChangeHistory changes={data.history} />
 	{#if formError}<div class="error">{formError}</div>{/if}
 	{#if data.offNotice}<p class="hint">{data.isSunday ? 'Keine Klasse' : 'Kein JD/JM'}: {data.offNotice}</p>{/if}
 	{#if data.breakHint}<p class="hint">Liegt in: {data.breakHint}</p>{/if}

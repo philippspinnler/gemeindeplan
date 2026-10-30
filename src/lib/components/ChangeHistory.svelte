@@ -2,28 +2,31 @@
 	import type { ComponentProps } from 'svelte';
 	import { formatChangeTime } from '$lib/dates';
 	import ChangeList from './ChangeList.svelte';
+	import Icon from './Icon.svelte';
 
 	let { changes }: { changes: ComponentProps<typeof ChangeList>['changes'] } = $props();
+	let dialog = $state<HTMLDialogElement>();
+	const title = $derived(changes.length ? `Verlauf: zuletzt geändert ${formatChangeTime(changes[0].at)} von ${changes[0].userName ?? 'Import'}` : '');
 </script>
 
 {#if changes.length}
-	<details class="history no-print">
-		<summary>
-			Zuletzt geändert {formatChangeTime(changes[0].at)} von {changes[0].userName ?? 'Import'}
-			<span class="toggle">Verlauf ({changes.length})</span>
-		</summary>
-		<div class="panel"><ChangeList {changes} /></div>
-	</details>
+	<button class="btn btn-icon history no-print" type="button" onclick={() => dialog?.showModal()} aria-label={title} {title}>
+		<Icon name="history" />
+		<b class="count" aria-hidden="true">{changes.length}</b>
+	</button>
+	<dialog bind:this={dialog} class="news-dialog history-dialog" closedby="any">
+		<div class="head">
+			<h2>Verlauf</h2>
+			<button class="btn btn-small" type="button" onclick={() => dialog?.close()}>Schliessen</button>
+		</div>
+		<ChangeList {changes} />
+	</dialog>
 {/if}
 
 <style>
-	.history { margin: -0.5rem 0 1rem; }
-	summary { cursor: pointer; color: var(--muted); font-size: 0.9rem; list-style: none; display: flex; flex-wrap: wrap; gap: 0 0.6rem; align-items: baseline; border-radius: var(--radius); }
-	summary::-webkit-details-marker { display: none; }
-	summary:focus { outline: none; }
-	summary:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
-	.toggle { color: var(--primary); }
-	.toggle::after { content: ' ▾'; }
-	.history[open] .toggle::after { content: ' ▴'; }
-	.panel { margin-top: 0.5rem; padding-left: 1rem; border-left: 3px solid var(--line); }
+	.history { position: relative; }
+	.count { position: absolute; top: -0.4rem; right: -0.4rem; min-width: 1.25rem; height: 1.25rem; padding: 0 0.3rem; box-sizing: border-box; border-radius: 999px; background: var(--primary); color: #fff; font-size: 0.7rem; font-weight: 700; line-height: 1.25rem; text-align: center; font-variant-numeric: tabular-nums; }
+	.history-dialog { max-width: 44rem; max-height: min(80vh, 48rem); overflow: auto; }
+	.head { display: flex; align-items: center; justify-content: space-between; gap: 1rem; margin-bottom: 0.5rem; }
+	.head h2 { margin: 0; }
 </style>

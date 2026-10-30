@@ -163,14 +163,14 @@
 				<span class="kind-tag">{data.kinds.find((k) => k.value === data.meeting.kind)?.label}</span>
 				<h1>{data.dateLabel}</h1>
 			</div>
-			{#if data.canPrint}
-				<div class="actions">
+			<div class="actions">
+				{#if data.canPrint}
 					<a class="btn btn-icon" href="/sonntag/{data.date}/druck?vollbild=1" data-sveltekit-reload aria-label="Tablet-Ansicht" title="Tablet-Ansicht"><Icon name="tablet" /><span>Tablet-Ansicht</span></a>
 					<a class="btn btn-icon" href="/sonntag/{data.date}/druck" data-sveltekit-reload aria-label="Drucken" title="Drucken"><Icon name="print" /><span>Drucken</span></a>
-				</div>
-			{/if}
+				{/if}
+				<ChangeHistory changes={data.history} />
+			</div>
 		</div>
-		<ChangeHistory changes={data.history} />
 		{#if formError}<div class="error">{formError}</div>{/if}
 
 		{#if tabs.length > 1}
