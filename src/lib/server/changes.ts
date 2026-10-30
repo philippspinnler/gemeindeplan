@@ -58,6 +58,11 @@ export function recordImport(db: Db, summary: string, now = new Date()): void {
 	db.insert(changes).values({ at: now.toISOString(), userId: null, section: 'import', key: '', before: null, after: JSON.stringify({ summary }) }).run();
 }
 
+export const AREAS = ['Sonntag', 'Jugend', 'Mitglieder', 'Notizen', 'Lieder', 'Einstellungen'] as const;
+
+/** Areas with at least one section the role may edit; empty = no change log for this role. */
+export const changeAreas = (role: Role) => AREAS.filter((a) => Object.values(SECTIONS).some((d) => d.area === a && can(role, d.permission)));
+
 export function listChanges(db: Db, role: Role, filter: { key?: string; sections?: SectionId[]; area?: string; userId?: number } = {}, limit = 200): ChangeView[] {
 	const visible = (Object.keys(SECTIONS) as SectionId[]).filter(
 		(id) => can(role, SECTIONS[id].permission) && (!filter.sections || filter.sections.includes(id)) && (!filter.area || SECTIONS[id].area === filter.area)

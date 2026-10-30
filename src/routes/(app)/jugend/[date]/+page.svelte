@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { untrack } from 'svelte';
 	import { enhance } from '$app/forms';
+	import ChangeHistory from '$lib/components/ChangeHistory.svelte';
 	import MemberSelect from '$lib/components/MemberSelect.svelte';
 	import { createAutosave } from '$lib/autosave.svelte';
 	let { data, form } = $props();
@@ -175,6 +176,7 @@
 			<h2>{data.dateLabel}</h2>
 		</div>
 	</div>
+	<ChangeHistory changes={data.history} />
 	{#if formError}<div class="error">{formError}</div>{/if}
 	{#if data.offNotice}<p class="hint">{data.isSunday ? 'Keine Klasse' : 'Kein JD/JM'}: {data.offNotice}</p>{/if}
 	{#if data.breakHint}<p class="hint">Liegt in: {data.breakHint}</p>{/if}

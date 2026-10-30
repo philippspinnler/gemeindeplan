@@ -5,7 +5,7 @@ import { YOUTH_AREAS, YOUTH_GROUPS, type Member, type Role, type YouthPartSide }
 import { optInt, optStr, str } from '$lib/server/forms';
 import { displayName } from '$lib/server/members';
 import { can, requireRole } from '$lib/server/permissions';
-import { recordChanges } from '$lib/server/changes';
+import { listChanges, recordChanges } from '$lib/server/changes';
 import { memberOptions } from '$lib/server/picker';
 import {
 	ensureYouthEvents, isWednesday, JOINT_KINDS, leadSide, loadYouthEvent, OFF_KINDS, saveYouthAdults, saveYouthCommon, saveYouthPart,
@@ -114,6 +114,7 @@ export const load: PageServerLoad = ({ locals, params }) => {
 			}))
 		},
 		versions: youthSectionVersions(full),
+		history: listChanges(locals.db, role, { key: date, sections: ['jugend.gemeinsam', 'jugend.jd', 'jugend.jm', 'jugend.beide', 'jugend.erwachsene'] }, 50),
 		canCommon: can(role, 'youth.common'),
 		canJd: can(role, 'youth.jd'),
 		canJm: can(role, 'youth.jm'),

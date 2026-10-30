@@ -66,3 +66,7 @@ export function formatDateLong(iso: string): string {
 	const d = parseIso(iso);
 	return `${WEEKDAYS_LONG[d.getUTCDay()]}, ${d.getUTCDate()}. ${MONTHS_LONG[d.getUTCMonth()]} ${d.getUTCFullYear()}`;
 }
+
+const CHANGE_TIME = new Intl.DateTimeFormat('de-CH', { timeZone: 'Europe/Zurich', weekday: 'long', day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' });
+/** A change timestamp (UTC ISO) as Swiss local time, e.g. "Dienstag, 30. Oktober um 20:14". */
+export const formatChangeTime = (iso: string) => CHANGE_TIME.format(new Date(iso));

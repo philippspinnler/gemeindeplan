@@ -4,6 +4,7 @@
 	import { replaceState } from '$app/navigation';
 	import { page } from '$app/state';
 	import Icon from '$lib/components/Icon.svelte';
+	import ChangeHistory from '$lib/components/ChangeHistory.svelte';
 	import MemberSelect from '$lib/components/MemberSelect.svelte';
 	import { createAutosave } from '$lib/autosave.svelte';
 	let { data, form } = $props();
@@ -169,6 +170,7 @@
 				</div>
 			{/if}
 		</div>
+		<ChangeHistory changes={data.history} />
 		{#if formError}<div class="error">{formError}</div>{/if}
 
 		{#if tabs.length > 1}

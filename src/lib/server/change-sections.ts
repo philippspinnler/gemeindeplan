@@ -68,7 +68,7 @@ interface ProgramSnap {
 type PrayerSnap = { position: number; memberId: number | null }[];
 interface MusicSnap { hymns: Record<HymnSlot, { number: number | null; freeText: string | null }>; organistMemberId: number | null; musicNote: string | null }
 
-const sunday = (date: string) => ({ label: `Sonntag, ${formatDateLong(date)}`, href: `/sonntag/${date}` });
+const sunday = (date: string) => ({ label: formatDateLong(date), href: `/sonntag/${date}` });
 const meetingId = (db: Db, date: string) => {
 	const full = loadMeetingFullByDate(db, date);
 	if (!full) throw new Error(`No Sunday ${date}`);

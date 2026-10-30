@@ -56,6 +56,7 @@
 			<!-- svelte-ignore a11y_click_events_have_key_events, a11y_no_static_element_interactions -->
 			<div id="user-menu" class="user-menu" popover onclick={(e) => (e.currentTarget as HTMLElement).hidePopover()}>
 				<a href="/konto">Konto und Passwort</a>
+				{#if data.canChanges}<a href="/aenderungen">Änderungen</a>{/if}
 				{#if accountRole === 'admin'}
 					<form method="POST" action="/ansicht">
 						<div class="user-menu-title">Ansicht als</div>

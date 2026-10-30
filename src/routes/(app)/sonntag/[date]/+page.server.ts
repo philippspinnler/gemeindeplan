@@ -11,7 +11,7 @@ import {
 	saveAnnouncements, saveCallings, saveConductor, saveGeneral, saveMusic, savePrayers, saveTalks, sectionVersions, type Section, type TalkInput
 } from '$lib/server/meetings';
 import { can, requireRole } from '$lib/server/permissions';
-import { recordChanges } from '$lib/server/changes';
+import { listChanges, recordChanges } from '$lib/server/changes';
 import { chairFor, formatAbsences, getBishopric, parseAbsences } from '$lib/server/bishopric';
 import { memberOptions } from '$lib/server/picker';
 import { getMusicCallings } from '$lib/server/music-callings';
@@ -120,6 +120,7 @@ export const load: PageServerLoad = ({ locals, params }) => {
 		},
 		hasProgram: hasProgram(full.meeting.kind),
 		versions: sectionVersions(full),
+		history: listChanges(locals.db, role, { key: date, sections: ['sonntag.programm', 'sonntag.gebete', 'sonntag.musik', 'sonntag.leitung'] }, 50),
 		open,
 		fastLike,
 		kinds: MEETING_KINDS.map((k) => ({ value: k, label: KIND_LABELS[k] })),
