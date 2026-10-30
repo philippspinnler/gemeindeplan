@@ -4,6 +4,7 @@ import { todayIso } from '$lib/dates';
 import { optStr, str } from '$lib/server/forms';
 import { createMember, displayName, listMembers } from '$lib/server/members';
 import { can, requireRole } from '$lib/server/permissions';
+import { recordChanges } from '$lib/server/changes';
 import { memberActivity, weeksAgoLabel, type MemberActivity } from '$lib/server/stats';
 
 export const load: PageServerLoad = ({ locals, url }) => {
@@ -40,7 +41,11 @@ export const actions: Actions = {
 		const firstName = str(fd, 'firstName');
 		const lastName = str(fd, 'lastName');
 		if (!firstName) return fail(400, { error: 'Bitte mindestens einen Vornamen angeben.' });
-		const m = createMember(locals.db, { firstName, lastName, kind: 'gemeinde', affiliation: optStr(fd, 'affiliation') });
+		const m = recordChanges(locals.db, locals.user!.id, [], (created) => {
+			const m = createMember(locals.db, { firstName, lastName, kind: 'gemeinde', affiliation: optStr(fd, 'affiliation') });
+			created({ section: 'mitglied', key: String(m.id) });
+			return m;
+		});
 		redirect(303, `/mitglieder/${m.id}`);
 	}
 };

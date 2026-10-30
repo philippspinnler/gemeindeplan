@@ -6,6 +6,7 @@ import { YOUTH_LEADER_ROLES } from '$lib/server/db/schema';
 import { optInt, str, strList } from '$lib/server/forms';
 import { fullName, getMember, listMembers } from '$lib/server/members';
 import { requireRole } from '$lib/server/permissions';
+import { recordChanges } from '$lib/server/changes';
 import { memberOptions } from '$lib/server/picker';
 import { getMusicCallings, MUSIC_ROLE_LABELS, MUSIC_ROLES, setMusicCalling, type MusicRole } from '$lib/server/music-callings';
 import { listLeaders, setLeaders, YOUTH_LEADER_ROLE_LABELS } from '$lib/server/youth-people';
@@ -44,7 +45,7 @@ export const actions: Actions = {
 		if (!isBishopricRole(role)) return fail(400, { error: 'Ungültige Rolle.' });
 		const id = optInt(fd, 'memberId');
 		if (id && getMember(locals.db, id)?.kind !== 'gemeinde') return fail(400, { error: 'Bitte ein Gemeindemitglied auswählen.' });
-		setBishopricMember(locals.db, role, id);
+		recordChanges(locals.db, locals.user!.id, [{ section: 'berufungen', key: '' }], () => setBishopricMember(locals.db, role, id));
 		return { saved: true };
 	},
 	leaders: async ({ request, locals }) => {
@@ -54,7 +55,7 @@ export const actions: Actions = {
 		if (!isLeaderRole(role)) return fail(400, { error: 'Ungültige Berufung.' });
 		const ids = strList(fd, 'memberId').map(Number).filter((n) => Number.isInteger(n) && n > 0);
 		if (ids.some((id) => getMember(locals.db, id)?.kind !== 'gemeinde')) return fail(400, { error: 'Bitte ein Gemeindemitglied auswählen.' });
-		setLeaders(locals.db, role, ids);
+		recordChanges(locals.db, locals.user!.id, [{ section: 'berufungen', key: '' }], () => setLeaders(locals.db, role, ids));
 		return { saved: true };
 	},
 	music: async ({ request, locals }) => {
@@ -64,7 +65,7 @@ export const actions: Actions = {
 		if (!isMusicRole(role)) return fail(400, { error: 'Ungültige Berufung.' });
 		const ids = strList(fd, 'memberId').map(Number).filter((n) => Number.isInteger(n) && n > 0);
 		if (ids.some((id) => getMember(locals.db, id)?.kind !== 'gemeinde')) return fail(400, { error: 'Bitte ein Gemeindemitglied auswählen.' });
-		setMusicCalling(locals.db, role, ids);
+		recordChanges(locals.db, locals.user!.id, [{ section: 'berufungen', key: '' }], () => setMusicCalling(locals.db, role, ids));
 		return { saved: true };
 	}
 };

@@ -6,6 +6,7 @@ import { str } from '$lib/server/forms';
 import { getHymnByNumber, updateHymn } from '$lib/server/hymns';
 import { SLOT_LABELS } from '$lib/server/meetings';
 import { can, requireRole } from '$lib/server/permissions';
+import { recordChanges } from '$lib/server/changes';
 import { hymnHistory } from '$lib/server/stats';
 
 export const load: PageServerLoad = ({ locals, params }) => {
@@ -31,7 +32,7 @@ export const actions: Actions = {
 		const durationText = str(fd, 'duration');
 		if (!title) return fail(400, { error: 'Der Titel darf nicht leer sein.' });
 		if (durationText && parseDuration(durationText) === null) return fail(400, { error: 'Dauer bitte als m:ss angeben, z.B. 3:45.' });
-		updateHymn(locals.db, hymn.id, { title, durationSeconds: parseDuration(durationText) });
+		recordChanges(locals.db, locals.user!.id, [{ section: 'lied', key: String(hymn.number) }], () => updateHymn(locals.db, hymn.id, { title, durationSeconds: parseDuration(durationText) }));
 		return { saved: true };
 	}
 };

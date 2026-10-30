@@ -5,6 +5,7 @@ import { optInt, optStr, str } from '$lib/server/forms';
 import { displayName, getMember, updateMember } from '$lib/server/members';
 import { listStakeCallings } from '$lib/server/stake-callings';
 import { can, requireRole } from '$lib/server/permissions';
+import { recordChanges } from '$lib/server/changes';
 import { memberHistory } from '$lib/server/stats';
 
 export const load: PageServerLoad = ({ locals, params }) => {
@@ -44,7 +45,9 @@ export const actions: Actions = {
 		const firstName = str(fd, 'firstName');
 		if (!firstName) return fail(400, { error: 'Der Vorname darf nicht leer sein.' });
 		const kind = str(fd, 'kind') === 'pfahl' ? 'pfahl' : 'gemeinde';
-		updateMember(locals.db, Number(params.id), {
+		const key = String(current.id);
+		const refs = [{ section: 'mitglied', key }, { section: 'notiz.ansprache', key }, { section: 'notiz.gebet', key }] as const;
+		recordChanges(locals.db, locals.user!.id, [...refs], () => updateMember(locals.db, current.id, {
 			firstName,
 			lastName: str(fd, 'lastName'),
 			kind,
@@ -55,7 +58,7 @@ export const actions: Actions = {
 			notePrayer: optStr(fd, 'notePrayer'),
 			noTalk: kind === 'gemeinde' && fd.get('noTalk') === '1',
 			noPrayer: kind === 'gemeinde' && fd.get('noPrayer') === '1'
-		});
+		}));
 		return { saved: true };
 	}
 };

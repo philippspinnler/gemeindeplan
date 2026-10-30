@@ -2,7 +2,10 @@ import { fail } from '@sveltejs/kit';
 import type { Actions, PageServerLoad } from './$types';
 import { str } from '$lib/server/forms';
 import { requireRole } from '$lib/server/permissions';
+import { recordChanges } from '$lib/server/changes';
 import { getAllSettings, setSetting } from '$lib/server/settings';
+
+const SETTINGS = { section: 'einstellungen', key: '' } as const;
 
 export const load: PageServerLoad = ({ locals }) => {
 	requireRole(locals.user, 'settings.edit');
@@ -17,7 +20,7 @@ export const actions: Actions = {
 		const fd = await request.formData();
 		const ward = str(fd, 'ward_name');
 		if (!ward) return fail(400, { error: 'Der Gemeindename darf nicht leer sein.' });
-		setSetting(locals.db, 'ward_name', ward);
+		recordChanges(locals.db, locals.user!.id, [SETTINGS], () => setSetting(locals.db, 'ward_name', ward));
 		return { saved: true };
 	},
 	times: async ({ request, locals }) => {
@@ -27,7 +30,7 @@ export const actions: Actions = {
 		const values = keys.map((k) => str(fd, k));
 		if (values.some((v) => v && !/^\d{2}:\d{2}$/.test(v))) return fail(400, { error: 'Ungültige Zeit.' });
 		if ((values[0] && values[1] && values[0] >= values[1]) || (values[2] && values[3] && values[2] >= values[3])) return fail(400, { error: 'Das Ende muss nach dem Beginn liegen.' });
-		keys.forEach((k, i) => setSetting(locals.db, k, values[i]));
+		recordChanges(locals.db, locals.user!.id, [SETTINGS], () => keys.forEach((k, i) => setSetting(locals.db, k, values[i])));
 		return { saved: true };
 	}
 };

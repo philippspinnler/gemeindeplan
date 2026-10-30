@@ -5,6 +5,7 @@ import { YOUTH_GROUPS, YOUTH_SIDES, type YouthSide } from '$lib/server/db/schema
 import { failMessage, int, str } from '$lib/server/forms';
 import { fullName, listMembers } from '$lib/server/members';
 import { requireRole } from '$lib/server/permissions';
+import { recordChanges } from '$lib/server/changes';
 import { memberOptions } from '$lib/server/picker';
 import { getSetting, setSetting } from '$lib/server/settings';
 import { newYouthPageToken } from '$lib/server/youth-page';
@@ -28,7 +29,7 @@ export const load: PageServerLoad = ({ locals }) => {
 export const actions: Actions = {
 	youthToken: ({ locals }) => {
 		requireRole(locals.user, 'settings.edit');
-		setSetting(locals.db, 'youth_page_token', newYouthPageToken());
+		recordChanges(locals.db, locals.user!.id, [{ section: 'jugendseite', key: '' }], () => setSetting(locals.db, 'youth_page_token', newYouthPageToken()));
 		return { saved: true };
 	},
 	set: async ({ request, locals }) => {
@@ -37,7 +38,9 @@ export const actions: Actions = {
 		const side = str(fd, 'side');
 		if (!(YOUTH_SIDES as readonly string[]).includes(side)) return fail(400, { error: 'Ungültige Seite.' });
 		try {
-			setYouth(locals.db, int(fd, 'memberId'), side as YouthSide, (YOUTH_GROUPS[side as YouthSide] as readonly string[]).includes(str(fd, 'group')) ? str(fd, 'group') : null);
+			const memberId = int(fd, 'memberId');
+			const group = (YOUTH_GROUPS[side as YouthSide] as readonly string[]).includes(str(fd, 'group')) ? str(fd, 'group') : null;
+			recordChanges(locals.db, locals.user!.id, [{ section: 'jugendliche', key: String(memberId) }], () => setYouth(locals.db, memberId, side as YouthSide, group));
 		} catch (e) {
 			return fail(400, { error: failMessage(e) });
 		}
@@ -45,7 +48,8 @@ export const actions: Actions = {
 	},
 	remove: async ({ request, locals }) => {
 		requireRole(locals.user, 'settings.edit');
-		removeYouth(locals.db, int(await request.formData(), 'memberId'));
+		const memberId = int(await request.formData(), 'memberId');
+		recordChanges(locals.db, locals.user!.id, [{ section: 'jugendliche', key: String(memberId) }], () => removeYouth(locals.db, memberId));
 		return { saved: true };
 	}
 };

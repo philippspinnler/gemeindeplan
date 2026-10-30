@@ -7,6 +7,7 @@ import { getMember, updateMember } from '$lib/server/members';
 import { assignOpenSlot, openSundays } from '$lib/server/meetings';
 import { live } from '$lib/server/live';
 import { can, requireRole } from '$lib/server/permissions';
+import { recordChanges } from '$lib/server/changes';
 
 const KINDS = {
 	ansprachen: { title: 'Ansprachen', column: 'Letzte Ansprache', hint: 'Mitglieder, die keine Ansprache halten möchten, und Pfahlbeamte sind ausgeblendet.', action: 'ask.talks' as const, noteAction: 'notes.talk' as const, noteField: 'noteTalk' as const, askKind: 'talk' as const, editAction: 'meeting.program' as const },
@@ -40,7 +41,8 @@ export const actions: Actions = {
 		const fd = await request.formData();
 		const id = Number(fd.get('id'));
 		if (!getMember(locals.db, id)) return fail(404, { error: 'Mitglied nicht gefunden' });
-		updateMember(locals.db, id, { [k.noteField]: optStr(fd, 'note') });
+		const section = k.noteField === 'noteTalk' ? 'notiz.ansprache' : 'notiz.gebet';
+		recordChanges(locals.db, locals.user!.id, [{ section, key: String(id) }], () => updateMember(locals.db, id, { [k.noteField]: optStr(fd, 'note') }));
 		return { saved: true };
 	},
 	ask: async ({ request, locals, params }) => {
@@ -50,7 +52,9 @@ export const actions: Actions = {
 		const id = Number(fd.get('id'));
 		const date = String(fd.get('date') ?? '');
 		if (!getMember(locals.db, id)) return fail(404, { error: 'Mitglied nicht gefunden' });
-		if (!assignOpenSlot(locals.db, date, k.askKind, id, optInt(fd, 'minutes'))) return fail(409, { error: 'Dieser Sonntag ist inzwischen voll. Bitte einen anderen wählen.' });
+		const section = k.askKind === 'talk' ? 'sonntag.programm' : 'sonntag.gebete';
+		const assigned = recordChanges(locals.db, locals.user!.id, [{ section, key: date }], () => assignOpenSlot(locals.db, date, k.askKind, id, optInt(fd, 'minutes')));
+		if (!assigned) return fail(409, { error: 'Dieser Sonntag ist inzwischen voll. Bitte einen anderen wählen.' });
 		live.changed(`/sonntag/${date}`);
 		return { saved: true };
 	}

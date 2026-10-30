@@ -5,6 +5,7 @@ import { YOUTH_AREAS, YOUTH_GROUPS, type Member, type Role, type YouthPartSide }
 import { optInt, optStr, str } from '$lib/server/forms';
 import { displayName } from '$lib/server/members';
 import { can, requireRole } from '$lib/server/permissions';
+import { recordChanges } from '$lib/server/changes';
 import { memberOptions } from '$lib/server/picker';
 import {
 	ensureYouthEvents, isWednesday, JOINT_KINDS, leadSide, loadYouthEvent, OFF_KINDS, saveYouthAdults, saveYouthCommon, saveYouthPart,
@@ -42,6 +43,8 @@ function eventFor(locals: App.Locals, date: string, section: keyof ReturnType<ty
 	return full;
 }
 
+const SIDE_SECTION = { jd: 'jugend.jd', jm: 'jugend.jm', both: 'jugend.beide' } as const;
+
 function partAction(side: YouthPartSide): Action {
 	return async ({ request, locals, params }) => {
 		requireSide(locals.user, side);
@@ -54,17 +57,20 @@ function partAction(side: YouthPartSide): Action {
 		if (leaderGroup !== null && !groupsFor(side).includes(leaderGroup)) return fail(400, { error: 'Ungültige Gruppe.' });
 		const area = YOUTH_AREAS.find((a) => a === str(fd, 'area')) ?? null;
 		if (!area && str(fd, 'area')) return fail(400, { error: 'Ungültiger Bereich.' });
-		saveYouthPart(locals.db, full.event.id, side, {
-			text: optStr(fd, 'text'),
-			details: optStr(fd, 'details'),
-			leaderMemberId: optInt(fd, 'leader'),
-			leaderGroup,
-			area,
-			teacherMemberId: optInt(fd, 'teacher')
-		});
 		// An idea taken over into the text is planned together with it; foreign or closed ideas are ignored.
 		const idea = openIdeasFor(locals.db, side).find((i) => i.id === optInt(fd, 'ideaId'));
-		if (idea) planIdea(locals.db, idea.id, full.event.id);
+		const refs = [{ section: SIDE_SECTION[side], key: params.date }, ...(idea ? [{ section: 'idee' as const, key: String(idea.id) }] : [])];
+		recordChanges(locals.db, locals.user!.id, refs, () => {
+			saveYouthPart(locals.db, full.event.id, side, {
+				text: optStr(fd, 'text'),
+				details: optStr(fd, 'details'),
+				leaderMemberId: optInt(fd, 'leader'),
+				leaderGroup,
+				area,
+				teacherMemberId: optInt(fd, 'teacher')
+			});
+			if (idea) planIdea(locals.db, idea.id, full.event.id);
+		});
 		return { saved: side };
 	};
 }
@@ -144,19 +150,21 @@ export const actions: Actions = {
 		const topicUrl = optStr(fd, 'topicUrl');
 		const topicUrlJm = optStr(fd, 'topicUrlJm');
 		if ([topicUrl, topicUrlJm].some((u) => u && !/^https?:\/\//i.test(u))) return fail(400, { error: 'Der Link muss mit http:// oder https:// beginnen.' });
-		saveYouthCommon(locals.db, full.event.id, {
-			kind,
-			joint: isWednesday(params.date) ? JOINT_KINDS.includes(kind) : fd.get('joint') === '1',
-			details: optStr(fd, 'details'),
-			topic: optStr(fd, 'topic'),
-			topicUrl,
-			topicJm: optStr(fd, 'topicJm'),
-			topicUrlJm,
-			snack: fd.get('noSnack') === '1' ? null : optStr(fd, 'snack'),
-			noSnack: fd.get('noSnack') === '1',
-			noSeminar: isWednesday(params.date) && fd.get('noSeminar') === '1',
-			thoughtMemberId: optInt(fd, 'thought')
-		});
+		recordChanges(locals.db, locals.user!.id, [{ section: 'jugend.gemeinsam', key: params.date }], () =>
+			saveYouthCommon(locals.db, full.event.id, {
+				kind,
+				joint: isWednesday(params.date) ? JOINT_KINDS.includes(kind) : fd.get('joint') === '1',
+				details: optStr(fd, 'details'),
+				topic: optStr(fd, 'topic'),
+				topicUrl,
+				topicJm: optStr(fd, 'topicJm'),
+				topicUrlJm,
+				snack: fd.get('noSnack') === '1' ? null : optStr(fd, 'snack'),
+				noSnack: fd.get('noSnack') === '1',
+				noSeminar: isWednesday(params.date) && fd.get('noSeminar') === '1',
+				thoughtMemberId: optInt(fd, 'thought')
+			})
+		);
 		return { saved: 'common' };
 	},
 	jd: partAction('jd'),
@@ -174,7 +182,7 @@ export const actions: Actions = {
 				const v = str(fd, `adult_${id}`);
 				return { memberId: id, present: v === '1' ? true : v === '0' ? false : null };
 			});
-		saveYouthAdults(locals.db, full.event.id, entries);
+		recordChanges(locals.db, locals.user!.id, [{ section: 'jugend.erwachsene', key: params.date }], () => saveYouthAdults(locals.db, full.event.id, entries));
 		return { saved: 'adults' };
 	}
 };

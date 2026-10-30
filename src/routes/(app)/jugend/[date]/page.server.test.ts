@@ -8,6 +8,7 @@ import { createMember } from '$lib/server/members';
 import { setYouth } from '$lib/server/youth-people';
 import { youthPageItems } from '$lib/server/youth-page';
 import { createMeeting, saveGeneral } from '$lib/server/meetings';
+import { users } from '$lib/server/db/schema';
 import { actions, load } from './+page.server';
 
 const WED = '2026-10-21';
@@ -15,7 +16,8 @@ const WED = '2026-10-21';
 function setup(role: Role) {
 	const db = createDb(':memory:');
 	ensureYouthEvents(db, WED, 0);
-	return { db, locals: { db, user: { id: 1, email: 'test@example.org', name: 'Tina Test', role } } };
+	const user = db.insert(users).values({ email: 'test@example.org', name: 'Tina Test', role, passwordHash: 'x' }).returning().get();
+	return { db, locals: { db, user } };
 }
 
 function call(action: keyof typeof actions, locals: unknown, fields: Record<string, string>) {

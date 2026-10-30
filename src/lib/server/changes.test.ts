@@ -1,3 +1,5 @@
+import { readdirSync, readFileSync } from 'node:fs';
+import { join } from 'node:path';
 import { beforeEach, describe, expect, it } from 'vitest';
 import type { ChangeRef } from './change-sections';
 import { getBishopric, setBishopricMember } from './bishopric';
@@ -11,7 +13,7 @@ import { setSetting } from './settings';
 import { createStakeCalling, deleteStakeCalling, listStakeCallings } from './stake-callings';
 import { listLeaders, setLeaders } from './youth-people';
 import { createMeeting, loadMeetingFullByDate, saveConductor, saveGeneral, savePrayers } from './meetings';
-import { requestScope } from './recording';
+import { GUARDED, requestScope } from './recording';
 import { ensureYouthEvents, loadYouthEvent, saveYouthCommon, saveYouthPart } from './youth';
 import { createBreak, deleteBreak, getBreak, updateBreak } from './youth-breaks';
 import { createIdea, dismissIdea } from './youth-ideas';
@@ -306,5 +308,16 @@ describe('master data', () => {
 		const [entry] = listChanges(db, 'admin');
 		expect(entry).toMatchObject({ userName: null, lines: ['Mitglieder aus Tabelle: 12 neu'], resettable: false });
 		expect(listChanges(db, 'bischofschaft')).toEqual([]);
+	});
+});
+
+describe('routes', () => {
+	it('every route that imports a guarded write function also imports recordChanges', () => {
+		const files = readdirSync('src/routes', { recursive: true, encoding: 'utf8' }).filter((f) => f.endsWith('.server.ts')).map((f) => join('src/routes', f));
+		const missing = files.filter((f) => {
+			const imports = [...readFileSync(f, 'utf8').matchAll(/import\s*\{([^}]*)\}/g)].flatMap((m) => m[1].split(',').map((x) => x.trim()));
+			return imports.some((x) => GUARDED.includes(x)) && !imports.includes('recordChanges');
+		});
+		expect(missing).toEqual([]);
 	});
 });

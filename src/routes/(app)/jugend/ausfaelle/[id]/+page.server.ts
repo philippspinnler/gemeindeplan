@@ -2,6 +2,7 @@ import { error, fail, redirect } from '@sveltejs/kit';
 import type { Actions, PageServerLoad } from './$types';
 import { failMessage, str } from '$lib/server/forms';
 import { requireRole } from '$lib/server/permissions';
+import { recordChanges } from '$lib/server/changes';
 import { YOUTH_BREAK_KIND_LABELS, breakInput, breakVersion, deleteBreak, getBreak, updateBreak } from '$lib/server/youth-breaks';
 
 function breakOr404(locals: App.Locals, id: string) {
@@ -24,14 +25,15 @@ export const actions: Actions = {
 		const input = breakInput(fd);
 		if (!input) return fail(400, { error: 'Bitte Datum und Art angeben.' });
 		try {
-			updateBreak(locals.db, current.id, input);
+			recordChanges(locals.db, locals.user!.id, [{ section: 'ausfall', key: String(current.id) }], () => updateBreak(locals.db, current.id, input));
 		} catch (e) {
 			return fail(400, { error: failMessage(e) });
 		}
 		return { saved: true };
 	},
 	delete: async ({ locals, params }) => {
-		deleteBreak(locals.db, breakOr404(locals, params.id).id);
+		const id = breakOr404(locals, params.id).id;
+		recordChanges(locals.db, locals.user!.id, [{ section: 'ausfall', key: String(id) }], () => deleteBreak(locals.db, id));
 		redirect(303, '/jugend/ausfaelle');
 	}
 };

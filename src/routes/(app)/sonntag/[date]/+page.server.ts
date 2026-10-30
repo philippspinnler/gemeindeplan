@@ -11,6 +11,7 @@ import {
 	saveAnnouncements, saveCallings, saveConductor, saveGeneral, saveMusic, savePrayers, saveTalks, sectionVersions, type Section, type TalkInput
 } from '$lib/server/meetings';
 import { can, requireRole } from '$lib/server/permissions';
+import { recordChanges } from '$lib/server/changes';
 import { chairFor, formatAbsences, getBishopric, parseAbsences } from '$lib/server/bishopric';
 import { memberOptions } from '$lib/server/picker';
 import { getMusicCallings } from '$lib/server/music-callings';
@@ -188,43 +189,46 @@ export const actions: Actions = {
 		const kind = str(fd, 'kind');
 		if (!isKind(kind)) return fail(400, { error: 'Ungültiger Typ.' });
 
-		saveGeneral(locals.db, id, {
-			kind,
-			theme: optStr(fd, 'theme'),
-			specialNote: optStr(fd, 'specialNote'),
-			presidingMemberId: optInt(fd, 'presiding'),
-			absences: formatAbsences(fd.getAll('absent').map((v) => Number(v))),
-			guestMemberId: optInt(fd, 'guest'),
-			chairMemberId: optInt(fd, 'chair'),
-			stakeChanges: fd.get('stakeChanges') === '1'
-		});
-		savePrayers(
-			locals.db,
-			id,
-			[1, 2].map((position) => ({ position, memberId: optInt(fd, `prayer${position}_member`) }))
-		);
-		const talks: TalkInput[] = [];
-		for (const position of [1, 2, 3, 4]) {
-			if (!fd.has(`talk${position}_duration`)) continue;
-			const t: TalkInput = {
-				position,
-				memberId: optInt(fd, `talk${position}_member`),
-				durationMinutes: optInt(fd, `talk${position}_duration`),
-				confirmed: fd.get(`talk${position}_confirmed`) === '1'
+		const refs = [{ section: 'sonntag.programm', key: params.date }, { section: 'sonntag.gebete', key: params.date }] as const;
+		recordChanges(locals.db, locals.user!.id, [...refs], () => {
+			saveGeneral(locals.db, id, {
+				kind,
+				theme: optStr(fd, 'theme'),
+				specialNote: optStr(fd, 'specialNote'),
+				presidingMemberId: optInt(fd, 'presiding'),
+				absences: formatAbsences(fd.getAll('absent').map((v) => Number(v))),
+				guestMemberId: optInt(fd, 'guest'),
+				chairMemberId: optInt(fd, 'chair'),
+				stakeChanges: fd.get('stakeChanges') === '1'
+			});
+			savePrayers(
+				locals.db,
+				id,
+				[1, 2].map((position) => ({ position, memberId: optInt(fd, `prayer${position}_member`) }))
+			);
+			const talks: TalkInput[] = [];
+			for (const position of [1, 2, 3, 4]) {
+				if (!fd.has(`talk${position}_duration`)) continue;
+				const t: TalkInput = {
+					position,
+					memberId: optInt(fd, `talk${position}_member`),
+					durationMinutes: optInt(fd, `talk${position}_duration`),
+					confirmed: fd.get(`talk${position}_confirmed`) === '1'
+				};
+				if (t.memberId === null && t.durationMinutes === null && !t.confirmed) continue;
+				talks.push(t);
+			}
+			saveTalks(locals.db, id, talks);
+			saveAnnouncements(locals.db, id, strList(fd, 'announcement'));
+			const membersById = new Map(listMembers(locals.db).map((m) => [String(m.id), spokenName(m)]));
+			const personFrom = (v: string) => (v.startsWith('name:') ? v.slice(5).trim() : (membersById.get(v) ?? ''));
+			const pairs = (kind: 'entlassung' | 'berufung', prefix: string) => {
+				const persons = fd.getAll(`${prefix}_person`).map((v) => personFrom(String(v).trim()));
+				const callings = fd.getAll(`${prefix}_calling`).map((v) => String(v).trim());
+				return persons.map((personName, i) => ({ kind, personName, calling: callings[i] ?? '' })).filter((c) => c.personName || c.calling);
 			};
-			if (t.memberId === null && t.durationMinutes === null && !t.confirmed) continue;
-			talks.push(t);
-		}
-		saveTalks(locals.db, id, talks);
-		saveAnnouncements(locals.db, id, strList(fd, 'announcement'));
-		const membersById = new Map(listMembers(locals.db).map((m) => [String(m.id), spokenName(m)]));
-		const personFrom = (v: string) => (v.startsWith('name:') ? v.slice(5).trim() : (membersById.get(v) ?? ''));
-		const pairs = (kind: 'entlassung' | 'berufung', prefix: string) => {
-			const persons = fd.getAll(`${prefix}_person`).map((v) => personFrom(String(v).trim()));
-			const callings = fd.getAll(`${prefix}_calling`).map((v) => String(v).trim());
-			return persons.map((personName, i) => ({ kind, personName, calling: callings[i] ?? '' })).filter((c) => c.personName || c.calling);
-		};
-		saveCallings(locals.db, id, [...pairs('entlassung', 'release'), ...pairs('berufung', 'sustain')]);
+			saveCallings(locals.db, id, [...pairs('entlassung', 'release'), ...pairs('berufung', 'sustain')]);
+		});
 
 		return { saved: 'program' };
 	},
@@ -233,10 +237,12 @@ export const actions: Actions = {
 		const fd = await request.formData();
 		const id = meetingIdFor(locals, params.date, 'prayers', fd);
 		if (typeof id !== 'number') return id;
-		savePrayers(
-			locals.db,
-			id,
-			[1, 2].map((position) => ({ position, memberId: optInt(fd, `prayer${position}_member`) }))
+		recordChanges(locals.db, locals.user!.id, [{ section: 'sonntag.gebete', key: params.date }], () =>
+			savePrayers(
+				locals.db,
+				id,
+				[1, 2].map((position) => ({ position, memberId: optInt(fd, `prayer${position}_member`) }))
+			)
 		);
 		return { saved: 'prayers' };
 	},
@@ -252,12 +258,15 @@ export const actions: Actions = {
 			if (text && hymnNumber === null) return fail(400, { error: `${SLOT_LABELS[slot]}: bitte ein Lied aus der Liste wählen oder die Nummer eingeben.` });
 			hymns[slot] = { hymnNumber, freeText: slot === 'zwischen' ? optStr(fd, 'zwischen_text') : null };
 		}
-		const result = saveMusic(locals.db, id, {
-			hymns,
-			organistMemberId: optInt(fd, 'organist'),
-			conductorMemberId: optInt(fd, 'conductor'),
-			musicNote: optStr(fd, 'musicNote')
-		});
+		const music = [{ section: 'sonntag.musik', key: params.date }, { section: 'sonntag.leitung', key: params.date }] as const;
+		const result = recordChanges(locals.db, locals.user!.id, [...music], () =>
+			saveMusic(locals.db, id, {
+				hymns,
+				organistMemberId: optInt(fd, 'organist'),
+				conductorMemberId: optInt(fd, 'conductor'),
+				musicNote: optStr(fd, 'musicNote')
+			})
+		);
 		if (result.unknownNumbers.length) {
 			return fail(400, { error: `Lied Nr. ${result.unknownNumbers.join(', ')} gibt es noch nicht. Bitte zuerst unter "Lieder" anlegen. Die übrigen Angaben wurden gespeichert.` });
 		}
@@ -268,7 +277,7 @@ export const actions: Actions = {
 		const fd = await request.formData();
 		const id = meetingIdFor(locals, params.date, 'conductor', fd);
 		if (typeof id !== 'number') return id;
-		saveConductor(locals.db, id, optInt(fd, 'conductor'));
+		recordChanges(locals.db, locals.user!.id, [{ section: 'sonntag.leitung', key: params.date }], () => saveConductor(locals.db, id, optInt(fd, 'conductor')));
 		return { saved: 'conductor' };
 	}
 

@@ -4,10 +4,13 @@ import { userCount, validateSession } from '$lib/server/auth';
 import { SESSION_COOKIE, clearSessionCookie, setSessionCookie } from '$lib/server/cookies';
 import { ROLE_VIEW_COOKIE, effectiveRole } from '$lib/server/role-view';
 import { live } from '$lib/server/live';
+import { requestScope } from '$lib/server/recording';
 
 const PUBLIC = new Set(['/login', '/setup', '/health']);
 
-export const handle: Handle = async ({ event, resolve }) => {
+export const handle: Handle = (input) => requestScope(() => handleRequest(input));
+
+const handleRequest: Handle = async ({ event, resolve }) => {
 	const db = getDb();
 	event.locals.db = db;
 	event.locals.user = null;

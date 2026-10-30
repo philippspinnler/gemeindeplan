@@ -4,6 +4,7 @@ import type { Actions, PageServerLoad } from './$types';
 import { YOUTH_PART_SIDES, youthEvents } from '$lib/server/db/schema';
 import { int, optStr, str } from '$lib/server/forms';
 import { requireRole } from '$lib/server/permissions';
+import { recordChanges } from '$lib/server/changes';
 import { createIdea, dismissIdea, listIdeas } from '$lib/server/youth-ideas';
 
 export const load: PageServerLoad = ({ locals }) => {
@@ -24,10 +25,13 @@ export const actions: Actions = {
 		const text = str(fd, 'text');
 		const side = YOUTH_PART_SIDES.find((s) => s === str(fd, 'side'));
 		if (!text || !side) return fail(400, { error: 'Bitte einen Text und eine Seite angeben.' });
-		createIdea(locals.db, { text, side, note: optStr(fd, 'note'), createdBy: locals.user!.id });
+		recordChanges(locals.db, locals.user!.id, [], (created) =>
+			created({ section: 'idee', key: String(createIdea(locals.db, { text, side, note: optStr(fd, 'note'), createdBy: locals.user!.id }).id) })
+		);
 	},
 	dismiss: async ({ request, locals }) => {
 		requireRole(locals.user, 'youth.common');
-		dismissIdea(locals.db, int(await request.formData(), 'id'));
+		const id = int(await request.formData(), 'id');
+		recordChanges(locals.db, locals.user!.id, [{ section: 'idee', key: String(id) }], () => dismissIdea(locals.db, id));
 	}
 };
