@@ -2,7 +2,7 @@ import { readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { beforeEach, describe, expect, it } from 'vitest';
 import type { ChangeRef } from './change-sections';
-import { getBishopric, setBishopricMember } from './bishopric';
+import { formatAbsences, getBishopric, setBishopricMember } from './bishopric';
 import { listChanges, recordChanges, recordImport, resetChange } from './changes';
 import { createDb, type Db } from './db';
 import { changes, users, type Role } from './db/schema';
@@ -99,6 +99,13 @@ describe('recording', () => {
 		expect(rows()).toEqual([]);
 	});
 
+	it('does not merge across a change the log did not see', () => {
+		setTheme(u1, 'A', t0);
+		general('B');
+		setTheme(u1, 'C', minutes(1));
+		expect(rows()).toHaveLength(2);
+	});
+
 	it('prunes entries older than 90 days', () => {
 		setTheme(u1, 'A', new Date(t0.getTime() - 91 * 86_400_000));
 		setTheme(u1, 'B', t0);
@@ -111,6 +118,11 @@ describe('listing', () => {
 	it('describes changes with names', () => {
 		setPrayer(u1, max, t0);
 		expect(listChanges(db, 'admin')[0].lines).toEqual(['Schlussgebet: – → Max Test']);
+	});
+
+	it('names a single absent bishopric member', () => {
+		recordChanges(db, u1, [programm], () => saveGeneral(db, meetingId, { kind: 'normal', theme: null, specialNote: null, presidingMemberId: null, absences: formatAbsences([max]) }), t0);
+		expect(listChanges(db, 'admin')[0].lines).toEqual(['Abwesend: – → Max Test']);
 	});
 
 	it("shows entries only to roles with the section's permission", () => {

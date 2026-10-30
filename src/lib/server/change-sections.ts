@@ -6,7 +6,7 @@ import {
 	HYMN_SLOTS, YOUTH_LEADER_ROLES, hymns, members, stakeCallings, youth, youthBreaks, youthLeaders, youthEventAdults, youthEventParts, youthEvents, youthIdeas,
 	type CallingKind, type HymnSlot, type MeetingKind, type MemberKind, type YouthArea, type YouthSide, type YouthBreak, type YouthEventKind, type YouthPartSide
 } from './db/schema';
-import { BISHOPRIC_ROLE_LABELS, BISHOPRIC_ROLES, getBishopric, setBishopric, type BishopricEntry } from './bishopric';
+import { BISHOPRIC_ROLE_LABELS, BISHOPRIC_ROLES, getBishopric, parseAbsences, setBishopric, type BishopricEntry } from './bishopric';
 import { spokenName, updateMember } from './members';
 import { getMusicCallings, MUSIC_ROLE_LABELS, MUSIC_ROLES, type MusicRole } from './music-callings';
 import { getAllSettings, getSetting, setSetting } from './settings';
@@ -109,7 +109,7 @@ const programm: SectionDef = {
 			['Präsidierend', (s, n) => n(s.presidingMemberId)],
 			['Gast', (s, n) => n(s.guestMemberId)],
 			['Leitung', (s, n) => n(s.chairMemberId)],
-			['Abwesend', (s, n) => (s.absences ?? '').split(',').filter(Boolean).map((id) => n(Number(id))).join(', ')],
+			['Abwesend', (s, n) => parseAbsences(s.absences).map(n).join(', ')],
 			['Pfahl verkündet', (s) => yes(s.stakeChanges)],
 			...[1, 2, 3, 4].map((p): Line<ProgramSnap> => [`Ansprache ${p}`, (s, n) => {
 				const t = s.talks.find((x) => x.position === p);
@@ -119,7 +119,7 @@ const programm: SectionDef = {
 			['Ankündigungen', (s) => s.announcements.join(' / ')],
 			['Entlassungen', callingsOf('entlassung')],
 			['Berufungen', callingsOf('berufung')]
-		], before, after, (s) => [s.presidingMemberId, s.guestMemberId, s.chairMemberId, ...s.talks.map((t) => t.memberId), ...(s.absences ?? '').split(',').filter(Boolean).map(Number)]),
+		], before, after, (s) => [s.presidingMemberId, s.guestMemberId, s.chairMemberId, ...s.talks.map((t) => t.memberId), ...parseAbsences(s.absences)]),
 	target: (_db, date) => sunday(date)
 };
 

@@ -31,7 +31,7 @@ const latestFor = (db: Db, r: ChangeRef) =>
 function store(db: Db, userId: number | null, r: ChangeRef, before: string | null, after: string | null, now: Date) {
 	if (before === after) return;
 	const last = latestFor(db, r);
-	if (last && userId !== null && last.userId === userId && now.getTime() - Date.parse(last.at) < MERGE_MS) {
+	if (last && userId !== null && last.userId === userId && last.after === before && now.getTime() - Date.parse(last.at) < MERGE_MS) {
 		if (last.before === after) db.delete(changes).where(eq(changes.id, last.id)).run();
 		else db.update(changes).set({ after, at: now.toISOString() }).where(eq(changes.id, last.id)).run();
 		return;
