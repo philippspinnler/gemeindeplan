@@ -1,10 +1,15 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import type { ChangeRef } from './change-sections';
-import { listChanges, recordChanges, resetChange } from './changes';
+import { getBishopric, setBishopricMember } from './bishopric';
+import { listChanges, recordChanges, recordImport, resetChange } from './changes';
 import { createDb, type Db } from './db';
 import { changes, users, type Role } from './db/schema';
 import { UserError } from './forms';
-import { createMember } from './members';
+import { createMember, updateMember } from './members';
+import { getMusicCallings, setMusicCalling } from './music-callings';
+import { setSetting } from './settings';
+import { createStakeCalling, deleteStakeCalling, listStakeCallings } from './stake-callings';
+import { listLeaders, setLeaders } from './youth-people';
 import { createMeeting, loadMeetingFullByDate, saveConductor, saveGeneral, savePrayers } from './meetings';
 import { requestScope } from './recording';
 import { ensureYouthEvents, loadYouthEvent, saveYouthCommon, saveYouthPart } from './youth';
@@ -249,5 +254,57 @@ describe('youth sections', () => {
 		}, t0);
 		recordChanges(db, u1, [{ section: 'idee', key: String(id) }], () => dismissIdea(db, id), minutes(10));
 		expect(listChanges(db, 'admin', { sections: ['idee'] }).map((c) => c.resettable)).toEqual([true, false]);
+	});
+});
+
+describe('master data', () => {
+	const ref = (section: ChangeRef['section'], key: string | number = ''): ChangeRef => ({ section, key: String(key) });
+
+	it('member notes are their own sections', () => {
+		recordChanges(db, u1, [ref('mitglied', anna), ref('notiz.ansprache', anna)], () => updateMember(db, anna, { noteTalk: 'Im Dezember' }), t0);
+		expect(rows().map((r) => r.section)).toEqual(['notiz.ansprache']);
+		expect(listChanges(db, 'bischofschaft').map((c) => c.section)).toEqual(['notiz.ansprache']);
+		expect(listChanges(db, 'jm_berater')).toEqual([]);
+		recordChanges(db, u1, [ref('mitglied', anna), ref('notiz.ansprache', anna)], () => updateMember(db, anna, { firstName: 'Annina' }), minutes(10));
+		expect(listChanges(db, 'admin').map((c) => c.section)).toContain('mitglied');
+		expect(listChanges(db, 'bischofschaft').map((c) => c.section)).not.toContain('mitglied');
+	});
+
+	it('the youth page token is logged without its value', () => {
+		setSetting(db, 'youth_page_token', 'alt-geheim');
+		recordChanges(db, u1, [ref('jugendseite')], () => setSetting(db, 'youth_page_token', 'neu-geheim'), t0);
+		const [entry] = listChanges(db, 'admin');
+		expect(entry.lines).toEqual(['Link neu erzeugt']);
+		expect(entry.resettable).toBe(false);
+		expect(JSON.stringify(rows())).not.toMatch(/geheim/);
+	});
+
+	it('a deleted stake calling comes back with the same id', () => {
+		const calling = createStakeCalling(db, 'Hoher Rat');
+		recordChanges(db, u1, [ref('pfahlbeamte', calling.id)], () => deleteStakeCalling(db, calling.id), t0);
+		const [entry] = listChanges(db, 'admin');
+		resetChange(db, { id: u2, role: 'admin' }, entry.id, false, minutes(1));
+		expect(listStakeCallings(db).find((c) => c.id === calling.id)).toEqual(calling);
+	});
+
+	it('callings reset restores bishopric, music callings and leaders together', () => {
+		recordChanges(db, u1, [ref('berufungen')], () => {
+			setBishopricMember(db, 'bischof', max);
+			setMusicCalling(db, 'organist', [anna]);
+			setLeaders(db, 'jm_berater', [max]);
+		}, t0);
+		const [entry] = listChanges(db, 'admin');
+		expect(entry.lines).toEqual(['Bischof: – → Max Test', 'Orgel / Klavier: – → Anna Muster', 'JM-Berater: – → Max Test']);
+		resetChange(db, { id: u2, role: 'admin' }, entry.id, false, minutes(1));
+		expect(getBishopric(db)).toEqual([]);
+		expect(getMusicCallings(db).organist).toEqual([]);
+		expect(listLeaders(db)).toEqual([]);
+	});
+
+	it('an import entry has no user and cannot be reset', () => {
+		recordImport(db, 'Mitglieder aus Tabelle: 12 neu', t0);
+		const [entry] = listChanges(db, 'admin');
+		expect(entry).toMatchObject({ userName: null, lines: ['Mitglieder aus Tabelle: 12 neu'], resettable: false });
+		expect(listChanges(db, 'bischofschaft')).toEqual([]);
 	});
 });

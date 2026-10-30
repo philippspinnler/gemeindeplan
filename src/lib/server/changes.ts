@@ -54,6 +54,10 @@ export function recordChanges<T>(db: Db, userId: number | null, refs: ChangeRef[
 	});
 }
 
+export function recordImport(db: Db, summary: string, now = new Date()): void {
+	db.insert(changes).values({ at: now.toISOString(), userId: null, section: 'import', key: '', before: null, after: JSON.stringify({ summary }) }).run();
+}
+
 export function listChanges(db: Db, role: Role, filter: { key?: string; sections?: SectionId[]; area?: string; userId?: number } = {}, limit = 200): ChangeView[] {
 	const visible = (Object.keys(SECTIONS) as SectionId[]).filter(
 		(id) => can(role, SECTIONS[id].permission) && (!filter.sections || filter.sections.includes(id)) && (!filter.area || SECTIONS[id].area === filter.area)

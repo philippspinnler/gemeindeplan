@@ -2,6 +2,7 @@ import { asc, eq, sql } from 'drizzle-orm';
 import type { Db } from './db';
 import { members, stakeCallings, type StakeCalling } from './db/schema';
 import { UserError } from './forms';
+import { assertRecording } from './recording';
 
 export function listStakeCallings(db: Db): StakeCalling[] {
 	return db.select().from(stakeCallings).orderBy(asc(stakeCallings.position), asc(stakeCallings.name)).all();
@@ -13,6 +14,7 @@ export function findStakeCallingByName(db: Db, name: string): StakeCalling | und
 }
 
 export function createStakeCalling(db: Db, name: string): StakeCalling {
+	assertRecording();
 	const clean = name.trim();
 	if (!clean) throw new UserError('Name darf nicht leer sein');
 	if (findStakeCallingByName(db, clean)) throw new UserError('Berufung existiert bereits');
@@ -25,6 +27,7 @@ export function ensureStakeCalling(db: Db, name: string): StakeCalling {
 }
 
 export function renameStakeCalling(db: Db, id: number, name: string): void {
+	assertRecording();
 	const clean = name.trim();
 	if (!clean) throw new UserError('Name darf nicht leer sein');
 	const other = findStakeCallingByName(db, clean);
@@ -33,11 +36,13 @@ export function renameStakeCalling(db: Db, id: number, name: string): void {
 }
 
 export function setStakeCallingPresides(db: Db, id: number, presides: boolean): void {
+	assertRecording();
 	db.update(stakeCallings).set({ presides }).where(eq(stakeCallings.id, id)).run();
 }
 
 /** Deletes a calling; false if it is still used by stake officers. */
 export function deleteStakeCalling(db: Db, id: number): boolean {
+	assertRecording();
 	const used = db.select({ id: members.id }).from(members).where(eq(members.stakeCallingId, id)).get();
 	if (used) return false;
 	db.delete(stakeCallings).where(eq(stakeCallings.id, id)).run();
@@ -45,6 +50,7 @@ export function deleteStakeCalling(db: Db, id: number): boolean {
 }
 
 export function moveStakeCalling(db: Db, id: number, dir: -1 | 1): void {
+	assertRecording();
 	const list = listStakeCallings(db);
 	const i = list.findIndex((c) => c.id === id);
 	const j = i + dir;

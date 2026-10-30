@@ -1,6 +1,7 @@
 import { eq } from 'drizzle-orm';
 import type { Db } from './db';
 import { settings } from './db/schema';
+import { assertRecording } from './recording';
 
 export const SETTING_DEFAULTS = {
 	ward_name: 'Gemeinde',
@@ -28,6 +29,7 @@ export function getAllSettings(db: Db): Record<SettingKey, string> {
 }
 
 export function setSetting(db: Db, key: SettingKey, value: string): void {
+	assertRecording();
 	db.insert(settings)
 		.values({ key, value })
 		.onConflictDoUpdate({ target: settings.key, set: { value } })

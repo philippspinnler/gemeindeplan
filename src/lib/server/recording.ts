@@ -23,5 +23,6 @@ export function insideRecording<T>(fn: () => T): T {
 /** Write functions that call assertRecording; routes importing one of them must log through recordChanges. */
 export const GUARDED = [
 	'saveGeneral', 'savePrayers', 'saveTalks', 'saveAnnouncements', 'saveCallings', 'saveMusic', 'saveConductor', 'assignOpenSlot',
-	'saveYouthCommon', 'saveYouthPart', 'saveYouthAdults', 'createIdea', 'dismissIdea', 'planIdea', 'createBreak', 'updateBreak', 'deleteBreak'
+	'saveYouthCommon', 'saveYouthPart', 'saveYouthAdults', 'createIdea', 'dismissIdea', 'planIdea', 'createBreak', 'updateBreak', 'deleteBreak',
+	'createMember', 'updateMember', 'setBishopric', 'setBishopricMember', 'setMusicCalling', 'setYouth', 'removeYouth', 'setLeaders', 'createStakeCalling', 'renameStakeCalling', 'setStakeCallingPresides', 'deleteStakeCalling', 'moveStakeCalling', 'createHymn', 'updateHymn', 'setSetting', 'ensureStakeCalling'
 ];

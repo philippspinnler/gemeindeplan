@@ -4,6 +4,7 @@ import type { Db } from './db';
 import { members, youth, youthLeaders, YOUTH_GROUPS, type Member, type YouthLeaderRole, type YouthSide } from './db/schema';
 import { byName, memberQuery } from './members';
 import { UserError } from './forms';
+import { assertRecording } from './recording';
 
 export const YOUTH_GROUP_LABELS: Record<string, string> = {
 	diakone: 'Diakonenkollegium',
@@ -38,6 +39,7 @@ export function listYouth(db: Db, side?: YouthSide): YouthEntry[] {
 }
 
 export function setYouth(db: Db, memberId: number, side: YouthSide, group: string | null): void {
+	assertRecording();
 	const m = memberQuery(db, eq(members.id, memberId)).get();
 	if (!m || m.kind === 'pfahl') throw new UserError('Mitglied ist kein Gemeindemitglied');
 	if (group !== null && !YOUTH_GROUPS[side].includes(group)) throw new UserError('Ungültige Gruppe');
@@ -45,6 +47,7 @@ export function setYouth(db: Db, memberId: number, side: YouthSide, group: strin
 }
 
 export function removeYouth(db: Db, memberId: number): void {
+	assertRecording();
 	db.delete(youth).where(eq(youth.memberId, memberId)).run();
 }
 
@@ -57,6 +60,7 @@ export function listLeaders(db: Db): { id: number; member: Member; role: YouthLe
 }
 
 export function setLeaders(db: Db, role: YouthLeaderRole, memberIds: number[]): void {
+	assertRecording();
 	db.transaction((tx) => {
 		tx.delete(youthLeaders).where(eq(youthLeaders.role, role)).run();
 		for (const memberId of new Set(memberIds)) tx.insert(youthLeaders).values({ memberId, role }).run();

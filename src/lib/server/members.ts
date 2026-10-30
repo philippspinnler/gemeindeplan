@@ -3,6 +3,7 @@ import { normalizeName, stripPrefix } from '../names';
 import { collator } from '../table-sort';
 import type { Db } from './db';
 import { members, stakeCallings, type Member, type MemberKind } from './db/schema';
+import { assertRecording } from './recording';
 
 /** Maps an imported affiliation (e.g. from prefixes like HR-) to kind and calling name. */
 export function stakeFromAffiliation(affiliation: string | null): { kind: MemberKind; callingName: string | null } {
@@ -48,6 +49,7 @@ export function getMember(db: Db, id: number): Member | undefined {
 }
 
 export function createMember(db: Db, input: MemberInput): Member {
+	assertRecording();
 	const row = db
 		.insert(members)
 		.values({
@@ -68,6 +70,7 @@ export function createMember(db: Db, input: MemberInput): Member {
 }
 
 export function updateMember(db: Db, id: number, patch: Partial<MemberInput>): void {
+	assertRecording();
 	db.update(members)
 		.set({ ...patch, updatedAt: new Date().toISOString() })
 		.where(eq(members.id, id))

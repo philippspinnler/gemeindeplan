@@ -1,5 +1,6 @@
 import type { Db } from './db';
 import { getSetting, setSetting } from './settings';
+import { assertRecording } from './recording';
 
 export const MUSIC_ROLES = ['organist', 'dirigent'] as const;
 export type MusicRole = (typeof MUSIC_ROLES)[number];
@@ -16,5 +17,6 @@ export function getMusicCallings(db: Db): Record<MusicRole, number[]> {
 }
 
 export function setMusicCalling(db: Db, role: MusicRole, ids: number[]): void {
+	assertRecording();
 	setSetting(db, 'music_callings', JSON.stringify({ ...getMusicCallings(db), [role]: [...new Set(ids)] }));
 }

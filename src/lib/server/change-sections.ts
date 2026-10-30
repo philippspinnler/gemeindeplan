@@ -1,13 +1,19 @@
 import { and, asc, eq } from 'drizzle-orm';
 import { formatDateLong } from '../dates';
+import { UserError } from './forms';
 import type { Db } from './db';
 import {
-	HYMN_SLOTS, youthBreaks, youthEventAdults, youthEventParts, youthEvents, youthIdeas,
-	type CallingKind, type HymnSlot, type MeetingKind, type YouthArea, type YouthBreak, type YouthEventKind, type YouthPartSide
+	HYMN_SLOTS, YOUTH_LEADER_ROLES, hymns, members, stakeCallings, youth, youthBreaks, youthLeaders, youthEventAdults, youthEventParts, youthEvents, youthIdeas,
+	type CallingKind, type HymnSlot, type MeetingKind, type MemberKind, type YouthArea, type YouthSide, type YouthBreak, type YouthEventKind, type YouthPartSide
 } from './db/schema';
-import { spokenName } from './members';
+import { BISHOPRIC_ROLE_LABELS, BISHOPRIC_ROLES, getBishopric, setBishopric, type BishopricEntry } from './bishopric';
+import { spokenName, updateMember } from './members';
+import { getMusicCallings, MUSIC_ROLE_LABELS, MUSIC_ROLES, type MusicRole } from './music-callings';
+import { getAllSettings, getSetting, setSetting } from './settings';
+import { deleteStakeCalling } from './stake-callings';
+import { removeYouth, setLeaders, setYouth, YOUTH_GROUP_LABELS, YOUTH_LEADER_ROLE_LABELS } from './youth-people';
 import {
-	KIND_LABELS, SLOT_LABELS, loadMeetingFullByDate, membersById, saveAnnouncements, saveCallings, saveConductor, saveGeneral, saveMusic, savePrayers, saveTalks, type CallingRow
+	KIND_LABELS, SLOT_LABELS, loadMeetingFullByDate, versionHash, membersById, saveAnnouncements, saveCallings, saveConductor, saveGeneral, saveMusic, savePrayers, saveTalks, type CallingRow
 } from './meetings';
 import type { Action } from './permissions';
 import { saveYouthPart, YOUTH_AREA_LABELS, YOUTH_KIND_LABELS } from './youth';
@@ -15,7 +21,8 @@ import { YOUTH_BREAK_KIND_LABELS } from './youth-breaks';
 
 export type SectionId =
 	| 'sonntag.programm' | 'sonntag.gebete' | 'sonntag.musik' | 'sonntag.leitung'
-	| 'jugend.gemeinsam' | 'jugend.jd' | 'jugend.jm' | 'jugend.beide' | 'jugend.erwachsene' | 'idee' | 'ausfall';
+	| 'jugend.gemeinsam' | 'jugend.jd' | 'jugend.jm' | 'jugend.beide' | 'jugend.erwachsene' | 'idee' | 'ausfall'
+	| 'mitglied' | 'notiz.ansprache' | 'notiz.gebet' | 'berufungen' | 'jugendliche' | 'pfahlbeamte' | 'lied' | 'einstellungen' | 'jugendseite' | 'import';
 export interface ChangeRef { section: SectionId; key: string }
 export type Area = 'Sonntag' | 'Jugend' | 'Mitglieder' | 'Notizen' | 'Lieder' | 'Einstellungen';
 
@@ -342,7 +349,190 @@ const ausfall: SectionDef = {
 	}
 };
 
+interface MemberSnap { firstName: string; lastName: string; affiliation: string | null; kind: MemberKind; stakeCallingId: number | null; active: boolean; noTalk: boolean; noPrayer: boolean }
+interface CallingsSnap { bishopric: BishopricEntry[]; music: Record<MusicRole, number[]>; leaders: { role: string; memberId: number }[] }
+
+const memberRow = (db: Db, id: string) => db.select().from(members).where(eq(members.id, Number(id))).get();
+function memberTarget(db: Db, id: string) {
+	const m = memberRow(db, id);
+	return { label: m ? spokenName(m) : 'Mitglied', href: `/mitglieder/${id}` };
+}
+const settingsTarget = { label: 'Einstellungen', href: '/einstellungen' };
+
+const mitglied: SectionDef = {
+	area: 'Mitglieder',
+	label: 'Mitglied',
+	permission: 'members.edit',
+	read(db, id) {
+		const m = memberRow(db, id);
+		return m ? ({ firstName: m.firstName, lastName: m.lastName, affiliation: m.affiliation, kind: m.kind, stakeCallingId: m.stakeCallingId, active: m.active, noTalk: m.noTalk, noPrayer: m.noPrayer } satisfies MemberSnap) : null;
+	},
+	write: (db, id, snapshot) => updateMember(db, Number(id), snapshot as MemberSnap),
+	describe: (db, before, after) =>
+		diff<MemberSnap>(db, [
+			['Vorname', (s) => s.firstName],
+			['Nachname', (s) => s.lastName],
+			['Zusatz', (s) => s.affiliation ?? ''],
+			['Art', (s) => (s.kind === 'pfahl' ? 'Pfahl' : 'Gemeinde')],
+			['Pfahlberufung', (s) => (s.stakeCallingId === null ? '' : (db.select({ name: stakeCallings.name }).from(stakeCallings).where(eq(stakeCallings.id, s.stakeCallingId)).get()?.name ?? ''))],
+			['Ausgeblendet', (s) => yes(!s.active)],
+			['Keine Ansprache', (s) => yes(s.noTalk)],
+			['Kein Gebet', (s) => yes(s.noPrayer)]
+		], before, after),
+	target: memberTarget
+};
+
+function notiz(field: 'noteTalk' | 'notePrayer', label: string, permission: Action): SectionDef {
+	return {
+		area: 'Notizen',
+		label,
+		permission,
+		read: (db, id) => {
+			const m = memberRow(db, id);
+			return m ? { note: m[field] } : null;
+		},
+		write: (db, id, snapshot) => updateMember(db, Number(id), { [field]: (snapshot as { note: string | null }).note }),
+		describe: (db, before, after) => diff<{ note: string | null }>(db, [[label, (s) => s.note ?? '']], before, after),
+		target: memberTarget
+	};
+}
+
+const berufungen: SectionDef = {
+	area: 'Einstellungen',
+	label: 'Berufungen',
+	permission: 'settings.edit',
+	read: (db) => ({
+		bishopric: getBishopric(db),
+		music: getMusicCallings(db),
+		leaders: db.select({ role: youthLeaders.role, memberId: youthLeaders.memberId }).from(youthLeaders).orderBy(asc(youthLeaders.role), asc(youthLeaders.memberId)).all()
+	}) satisfies CallingsSnap,
+	write(db, _key, snapshot) {
+		const s = snapshot as CallingsSnap;
+		setBishopric(db, s.bishopric);
+		setSetting(db, 'music_callings', JSON.stringify(s.music));
+		for (const role of YOUTH_LEADER_ROLES) setLeaders(db, role, s.leaders.filter((l) => l.role === role).map((l) => l.memberId));
+	},
+	describe: (db, before, after) =>
+		diff<CallingsSnap>(db, [
+			...BISHOPRIC_ROLES.map((role): Line<CallingsSnap> => [BISHOPRIC_ROLE_LABELS[role], (s, n) => n(s.bishopric.find((e) => e.role === role)?.id)]),
+			...MUSIC_ROLES.map((role): Line<CallingsSnap> => [MUSIC_ROLE_LABELS[role], (s, n) => s.music[role].map(n).join(', ')]),
+			...YOUTH_LEADER_ROLES.map((role): Line<CallingsSnap> => [YOUTH_LEADER_ROLE_LABELS[role], (s, n) => s.leaders.filter((l) => l.role === role).map((l) => n(l.memberId)).join(', ')])
+		], before, after, (s) => [...s.bishopric.map((e) => e.id), ...MUSIC_ROLES.flatMap((r) => s.music[r]), ...s.leaders.map((l) => l.memberId)]),
+	target: () => ({ label: 'Berufungen', href: '/einstellungen/berufungen' })
+};
+
+const jugendliche: SectionDef = {
+	area: 'Einstellungen',
+	label: 'Jugendliche',
+	permission: 'settings.edit',
+	deletesCreated: true,
+	read: (db, id) => db.select({ side: youth.side, group: youth.group }).from(youth).where(eq(youth.memberId, Number(id))).get() ?? null,
+	write(db, id, snapshot) {
+		const s = snapshot as { side: YouthSide; group: string | null } | null;
+		if (s) setYouth(db, Number(id), s.side, s.group);
+		else removeYouth(db, Number(id));
+	},
+	describe: (db, before, after) =>
+		diff<{ side: YouthSide; group: string | null }>(db, [
+			['Jugend', (s) => s.side.toUpperCase()],
+			['Gruppe', (s) => (s.group ? (YOUTH_GROUP_LABELS[s.group] ?? s.group) : '')]
+		], before, after),
+	target: (db, id) => ({ label: memberTarget(db, id).label, href: '/einstellungen/jugendliche' })
+};
+
+type StakeSnap = { name: string; presides: boolean; position: number };
+const pfahlbeamte: SectionDef = {
+	area: 'Einstellungen',
+	label: 'Pfahlberufung',
+	permission: 'settings.edit',
+	deletesCreated: true,
+	read(db, id) {
+		const c = db.select().from(stakeCallings).where(eq(stakeCallings.id, Number(id))).get();
+		return c ? ({ name: c.name, presides: c.presides, position: c.position } satisfies StakeSnap) : null;
+	},
+	write(db, id, snapshot) {
+		const s = snapshot as StakeSnap | null;
+		if (!s) {
+			if (!deleteStakeCalling(db, Number(id))) throw new UserError('Die Pfahlberufung wird noch verwendet.');
+		} else db.insert(stakeCallings).values({ id: Number(id), ...s }).onConflictDoUpdate({ target: stakeCallings.id, set: s }).run();
+	},
+	describe: (db, before, after) =>
+		diff<StakeSnap>(db, [['Name', (s) => s.name], ['Präsidiert', (s) => yes(s.presides)], ['Position', (s) => String(s.position)]], before, after),
+	target: () => ({ label: 'Pfahlbeamte', href: '/einstellungen/pfahlbeamte' })
+};
+
+type HymnSnap = { title: string; durationSeconds: number | null };
+const lied: SectionDef = {
+	area: 'Lieder',
+	label: 'Lied',
+	permission: 'hymns.edit',
+	read(db, number) {
+		const h = db.select().from(hymns).where(eq(hymns.number, Number(number))).get();
+		return h ? ({ title: h.title, durationSeconds: h.durationSeconds } satisfies HymnSnap) : null;
+	},
+	write(db, number, snapshot) {
+		db.update(hymns).set({ ...(snapshot as HymnSnap), updatedAt: new Date().toISOString() }).where(eq(hymns.number, Number(number))).run();
+	},
+	describe: (db, before, after) =>
+		diff<HymnSnap>(db, [['Titel', (s) => s.title], ['Dauer', (s) => (s.durationSeconds ? `${s.durationSeconds} s` : '')]], before, after),
+	target: (_db, number) => ({ label: `Lied ${number}`, href: `/lieder/${number}` })
+};
+
+const SETTING_LABELS = {
+	ward_name: 'Gemeindename',
+	youth_wed_start: 'Mittwoch von',
+	youth_wed_end: 'Mittwoch bis',
+	youth_sun_start: 'Sonntag von',
+	youth_sun_end: 'Sonntag bis'
+} as const;
+type SettingsSnap = Record<keyof typeof SETTING_LABELS, string>;
+const SETTING_KEYS = Object.keys(SETTING_LABELS) as (keyof typeof SETTING_LABELS)[];
+
+const einstellungen: SectionDef = {
+	area: 'Einstellungen',
+	label: 'Allgemein',
+	permission: 'settings.edit',
+	read(db) {
+		const all = getAllSettings(db);
+		return Object.fromEntries(SETTING_KEYS.map((k) => [k, all[k]])) as SettingsSnap;
+	},
+	write(db, _key, snapshot) {
+		for (const k of SETTING_KEYS) setSetting(db, k, (snapshot as SettingsSnap)[k]);
+	},
+	describe: (db, before, after) => diff<SettingsSnap>(db, SETTING_KEYS.map((k): Line<SettingsSnap> => [SETTING_LABELS[k], (s) => s[k]]), before, after),
+	target: () => settingsTarget
+};
+
+const jugendseite: SectionDef = {
+	area: 'Einstellungen',
+	label: 'Jugendseiten-Link',
+	permission: 'settings.edit',
+	// Only a fingerprint: the token itself must not end up in the log.
+	read: (db) => ({ token: versionHash(getSetting(db, 'youth_page_token')) }),
+	describe: () => ['Link neu erzeugt'],
+	target: () => ({ label: 'Jugendseite', href: '/einstellungen/jugendliche' })
+};
+
+const importSection: SectionDef = {
+	area: 'Einstellungen',
+	label: 'Import',
+	permission: 'settings.edit',
+	read: () => null,
+	describe: (_db, _before, after) => [(after as { summary: string }).summary],
+	target: () => ({ label: 'Import', href: null })
+};
+
 export const SECTIONS: Record<SectionId, SectionDef> = {
+	mitglied,
+	'notiz.ansprache': notiz('noteTalk', 'Notiz Ansprache', 'notes.talk'),
+	'notiz.gebet': notiz('notePrayer', 'Notiz Gebet', 'notes.prayer'),
+	berufungen,
+	jugendliche,
+	pfahlbeamte,
+	lied,
+	einstellungen,
+	jugendseite,
+	import: importSection,
 	'jugend.gemeinsam': gemeinsam,
 	'jugend.jd': part('jd', 'youth.jd'),
 	'jugend.jm': part('jm', 'youth.jm'),

@@ -1,5 +1,6 @@
 import type { Db } from './db';
 import { getSetting, setSetting } from './settings';
+import { assertRecording } from './recording';
 
 const ABSENCE_PREFIX = 'ids:';
 
@@ -34,6 +35,7 @@ function normalize(entries: BishopricEntry[]): BishopricEntry[] {
 }
 
 export function setBishopric(db: Db, entries: BishopricEntry[]): void {
+	assertRecording();
 	setSetting(db, 'bishopric', JSON.stringify(normalize(entries)));
 }
 
@@ -43,6 +45,7 @@ export function getBishopricIds(db: Db): number[] {
 
 /** Assigns a role (null = vacant). The person loses any other role they held. */
 export function setBishopricMember(db: Db, role: BishopricRole, id: number | null): void {
+	assertRecording();
 	const rest = getBishopric(db).filter((e) => e.role !== role && e.id !== id);
 	setBishopric(db, id ? [...rest, { id, role }] : rest);
 }
