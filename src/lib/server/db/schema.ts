@@ -51,6 +51,9 @@ export const users = sqliteTable('users', {
 	newsSeen: integer('news_seen'),
 	/** The member this login belongs to; offers "Nur meine Termine" in the youth calendar. */
 	memberId: integer('member_id').references(() => members.id, { onDelete: 'set null' }),
+	/** SHA-256 of the personal MCP key; null = no key. */
+	mcpKeyHash: text('mcp_key_hash').unique(),
+	mcpKeyUsedAt: text('mcp_key_used_at'),
 	...timestamps
 });
 

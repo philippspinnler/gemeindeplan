@@ -1,9 +1,9 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import { createDb, type Db } from './db';
-import { invites, loginAttempts, sessions } from './db/schema';
+import { invites, loginAttempts, sessions, users } from './db/schema';
 import {
 	acceptInvite, changePassword, createInvite, createSession, createUser, deleteSession, findUserByEmail, getValidInvite,
-	hashPassword, listOpenInvites, loginWithPassword, setUserMember, userCount, validateSession, verifyPassword
+	createMcpKey, hashPassword, listOpenInvites, mcpKeyInfo, revokeMcpKey, userForMcpKey, loginWithPassword, setUserMember, userCount, validateSession, verifyPassword
 } from './auth';
 import { createMember } from './members';
 
@@ -179,5 +179,47 @@ describe('password reset via invite', () => {
 		expect((await loginWithPassword(db, 'm@b.ch', 'neuesPasswort')).ok).toBe(true);
 		expect((await loginWithPassword(db, 'm@b.ch', 'altesPasswort')).ok).toBe(false);
 		expect(getValidInvite(db, inv.token)).toBeNull();
+	});
+});
+
+describe('mcp key', () => {
+	const admin = () => db.insert(users).values({ email: 'eva@example.test', name: 'Eva Muster', role: 'admin', passwordHash: 'x' }).returning().get();
+	const row = (id: number) => db.select().from(users).all().find((u) => u.id === id)!;
+
+	it('creates a key, stores only its hash and finds the admin by it', () => {
+		const u = admin();
+		const raw = createMcpKey(db, u.id);
+		expect(raw).toMatch(/^gp_[A-Za-z0-9_-]{43}$/);
+		expect(row(u.id).mcpKeyHash).not.toBe(raw);
+		expect(mcpKeyInfo(db, u.id)).toEqual({ active: true, usedAt: null });
+		const now = new Date('2026-10-30T12:00:00Z');
+		expect(userForMcpKey(db, raw, now)?.id).toBe(u.id);
+		expect(mcpKeyInfo(db, u.id).usedAt).toBe(now.toISOString());
+	});
+
+	it('a new key replaces the old one; revoke ends it', () => {
+		const u = admin();
+		const first = createMcpKey(db, u.id);
+		const second = createMcpKey(db, u.id);
+		expect(userForMcpKey(db, first)).toBeNull();
+		expect(userForMcpKey(db, second)?.id).toBe(u.id);
+		revokeMcpKey(db, u.id);
+		expect(userForMcpKey(db, second)).toBeNull();
+		expect(mcpKeyInfo(db, u.id).active).toBe(false);
+	});
+
+	it('a key stops working for a deactivated or demoted account', () => {
+		const u = admin();
+		const raw = createMcpKey(db, u.id);
+		db.update(users).set({ role: 'bischofschaft' }).run();
+		expect(userForMcpKey(db, raw)).toBeNull();
+		db.update(users).set({ role: 'admin', active: false }).run();
+		expect(userForMcpKey(db, raw)).toBeNull();
+	});
+
+	it('an unknown or empty key finds nobody', () => {
+		admin();
+		expect(userForMcpKey(db, '')).toBeNull();
+		expect(userForMcpKey(db, 'gp_unbekannt')).toBeNull();
 	});
 });

@@ -183,6 +183,13 @@
       "when": 1793366373829,
       "tag": "0025_change_log",
       "breakpoints": true
+    },
+    {
+      "idx": 26,
+      "version": "6",
+      "when": 1793370498525,
+      "tag": "0026_mcp_key",
+      "breakpoints": true
     }
   ]
 }

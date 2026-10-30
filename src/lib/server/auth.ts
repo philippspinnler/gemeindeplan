@@ -117,6 +117,30 @@ export function validateSession(
 	return { user: { id: row.id, email: row.email, name: row.name, role: row.role }, expiresAt };
 }
 
+/** Personal key for the MCP endpoint, admins only for now; the table keeps only its hash. Returns the raw key once. */
+export function createMcpKey(db: Db, userId: number): string {
+	const raw = `gp_${randomBytes(32).toString('base64url')}`;
+	db.update(users).set({ mcpKeyHash: tokenKey(raw), mcpKeyUsedAt: null }).where(eq(users.id, userId)).run();
+	return raw;
+}
+
+export function revokeMcpKey(db: Db, userId: number): void {
+	db.update(users).set({ mcpKeyHash: null, mcpKeyUsedAt: null }).where(eq(users.id, userId)).run();
+}
+
+export function mcpKeyInfo(db: Db, userId: number): { active: boolean; usedAt: string | null } {
+	const u = db.select({ hash: users.mcpKeyHash, usedAt: users.mcpKeyUsedAt }).from(users).where(eq(users.id, userId)).get();
+	return { active: !!u?.hash, usedAt: u?.usedAt ?? null };
+}
+
+export function userForMcpKey(db: Db, raw: string, now: Date = new Date()): SessionUser | null {
+	if (!raw) return null;
+	const u = db.select().from(users).where(eq(users.mcpKeyHash, tokenKey(raw))).get();
+	if (!u || !u.active || u.role !== 'admin') return null;
+	db.update(users).set({ mcpKeyUsedAt: iso(now) }).where(eq(users.id, u.id)).run();
+	return { id: u.id, email: u.email, name: u.name, role: u.role };
+}
+
 export const MIN_PASSWORD_LENGTH = 8;
 
 /**
