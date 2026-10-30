@@ -28,6 +28,18 @@ export const NEWS: NewsEntry[] = [
 		area: 'youth.view',
 		title: 'Jugend',
 		text: 'Die Details einer Mittwochsaktivität (z.B. Treffpunkt, was mitbringen) erscheinen jetzt auch auf der öffentlichen Jugendseite.'
+	},
+	{
+		date: '2026-10-30',
+		area: 'settings.edit',
+		title: 'Einstellungen',
+		text: 'Unter Einstellungen lassen sich die üblichen Zeiten der Mittwochsaktivität und der Sonntagsklasse eintragen. Sie werden für das neue Kalender-Abo der Jugendseite gebraucht. Neue Benutzer lädt man jetzt direkt als Mitglied ein.'
+	},
+	{
+		date: '2026-10-30',
+		area: 'youth.view',
+		title: 'Jugend',
+		text: 'Auf der öffentlichen Jugendseite kann man die Termine jetzt im eigenen Kalender abonnieren. Wer angemeldet ist, kann auch nur die eigenen Termine abonnieren.'
 	}
 ];
 
