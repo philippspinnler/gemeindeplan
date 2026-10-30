@@ -178,6 +178,14 @@ export function saveYouthCommon(db: Db, eventId: number, input: YouthCommonInput
 	});
 }
 
+export type ClassTopics = Partial<Pick<YouthEvent, 'topic' | 'topicUrl' | 'topicJm' | 'topicUrlJm'>>;
+
+/** Only topics and links of a Sunday class; joint and the parts stay as they are. */
+export function setClassTopics(db: Db, eventId: number, patch: ClassTopics): void {
+	assertRecording();
+	db.update(youthEvents).set({ ...patch, updatedAt: nowIso() }).where(eq(youthEvents.id, eventId)).run();
+}
+
 export function saveYouthPart(db: Db, eventId: number, side: YouthPartSide, input: YouthPartInput): void {
 	assertRecording();
 	const ev = getEvent(db, eventId);

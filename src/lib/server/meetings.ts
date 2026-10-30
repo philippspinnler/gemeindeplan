@@ -269,6 +269,12 @@ export function saveMusic(
 	return { unknownNumbers };
 }
 
+/** Only the theme; the MCP tools must not touch the other program fields. */
+export function setMeetingTheme(db: Db, meetingId: number, theme: string): void {
+	assertRecording();
+	db.update(meetings).set({ theme, updatedAt: nowIso() }).where(eq(meetings.id, meetingId)).run();
+}
+
 export function saveConductor(db: Db, meetingId: number, conductorMemberId: number | null): void {
 	assertRecording();
 	db.update(meetings).set({ conductorMemberId, updatedAt: nowIso() }).where(eq(meetings.id, meetingId)).run();

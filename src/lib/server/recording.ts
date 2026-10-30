@@ -24,5 +24,5 @@ export function insideRecording<T>(fn: () => T): T {
 export const GUARDED = [
 	'saveGeneral', 'savePrayers', 'saveTalks', 'saveAnnouncements', 'saveCallings', 'saveMusic', 'saveConductor', 'assignOpenSlot',
 	'saveYouthCommon', 'saveYouthPart', 'saveYouthAdults', 'createIdea', 'dismissIdea', 'planIdea', 'createBreak', 'updateBreak', 'deleteBreak',
-	'createMember', 'updateMember', 'setBishopric', 'setBishopricMember', 'setMusicCalling', 'setYouth', 'removeYouth', 'setLeaders', 'createStakeCalling', 'renameStakeCalling', 'setStakeCallingPresides', 'deleteStakeCalling', 'moveStakeCalling', 'createHymn', 'updateHymn', 'setSetting', 'ensureStakeCalling'
+	'createMember', 'updateMember', 'setBishopric', 'setBishopricMember', 'setMusicCalling', 'setYouth', 'removeYouth', 'setLeaders', 'createStakeCalling', 'renameStakeCalling', 'setStakeCallingPresides', 'deleteStakeCalling', 'moveStakeCalling', 'createHymn', 'updateHymn', 'setSetting', 'ensureStakeCalling', 'setMeetingTheme', 'setClassTopics'
 ];
