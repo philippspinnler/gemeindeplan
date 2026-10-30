@@ -58,6 +58,12 @@ export const NEWS: NewsEntry[] = [
 		area: 'settings.edit',
 		title: 'Einstellungen',
 		text: 'Im Verlauf kannst du einzelne Änderungen rückgängig machen. Hat jemand den Abschnitt seither weiter bearbeitet, fragt die App vorher nach.'
+	},
+	{
+		date: '2026-10-30',
+		area: 'settings.edit',
+		title: 'Einstellungen',
+		text: 'Unter „Konto“ kannst du einen persönlichen Schlüssel für Claude Desktop oder Claude Code erzeugen. Damit kann Claude Themen für die Abendmahlsversammlung und die Sonntagsklassen lesen und eintragen. Jede Änderung erscheint unter deinem Namen im Verlauf.'
 	}
 ];
 
