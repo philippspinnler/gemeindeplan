@@ -127,7 +127,8 @@ const gebete: SectionDef = {
 	area: 'Sonntag',
 	label: 'Gebete',
 	permission: 'meeting.prayers',
-	read: (db, date) => loadMeetingFullByDate(db, date)?.prayers.map((p) => ({ position: p.position, memberId: p.member?.id ?? null })) ?? null,
+	// Empty slots count as no prayer: the program form always saves both positions.
+	read: (db, date) => loadMeetingFullByDate(db, date)?.prayers.flatMap((p) => (p.member ? [{ position: p.position, memberId: p.member.id }] : [])) ?? null,
 	write: (db, date, snapshot) => savePrayers(db, meetingId(db, date).meeting.id, snapshot as PrayerSnap),
 	describe: (db, before, after) =>
 		diff<PrayerSnap>(db, [1, 2].map((p): Line<PrayerSnap> => [p === 1 ? 'Anfangsgebet' : 'Schlussgebet', (s, n) => n(s.find((x) => x.position === p)?.memberId)]), before, after, (s) => s.map((p) => p.memberId)),
@@ -194,7 +195,10 @@ const eventIdOf = (db: Db, date: string) => {
 const partSnap = (p: typeof youthEventParts.$inferSelect): PartSnap => ({
 	text: p.text, details: p.details, leaderMemberId: p.leaderMemberId, leaderGroup: p.leaderGroup, area: p.area, teacherMemberId: p.teacherMemberId
 });
-const partsOf = (db: Db, eventId: number) => db.select().from(youthEventParts).where(eq(youthEventParts.eventId, eventId)).orderBy(asc(youthEventParts.side)).all();
+/** Parts with content only: a saved but empty part reads the same as none, so it logs no change. */
+const partsOf = (db: Db, eventId: number) =>
+	db.select().from(youthEventParts).where(eq(youthEventParts.eventId, eventId)).orderBy(asc(youthEventParts.side)).all()
+		.filter((p) => Object.values(partSnap(p)).some((v) => v !== null));
 
 const partLines: Line<PartSnap>[] = [
 	['Aktivität', (s) => s.text ?? ''],

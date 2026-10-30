@@ -64,6 +64,21 @@ describe('recording', () => {
 		expect(rows()).toEqual([]);
 	});
 
+	it('treats empty prayer slots like no prayers', () => {
+		recordChanges(db, u1, [programm, gebete], () => {
+			general('Glaube');
+			savePrayers(db, meetingId, [{ position: 1, memberId: null }, { position: 2, memberId: null }]);
+		}, t0);
+		expect(rows().map((r) => r.section)).toEqual(['sonntag.programm']);
+	});
+
+	it('treats an empty youth part like no part', () => {
+		ensureYouthEvents(db, '2026-11-01', 1);
+		const ev = loadYouthEvent(db, '2026-11-04')!.event.id;
+		recordChanges(db, u1, [{ section: 'jugend.jd', key: '2026-11-04' }], () => saveYouthPart(db, ev, 'jd', { text: null, leaderMemberId: null, leaderGroup: null }), t0);
+		expect(rows()).toEqual([]);
+	});
+
 	it('rolls back data and entry when the save throws', () => {
 		expect(() =>
 			recordChanges(db, u1, [programm], () => {
