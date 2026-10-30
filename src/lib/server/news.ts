@@ -40,6 +40,24 @@ export const NEWS: NewsEntry[] = [
 		area: 'youth.view',
 		title: 'Jugend',
 		text: 'Auf der öffentlichen Jugendseite kann man die Termine jetzt im eigenen Kalender abonnieren. Wer angemeldet ist, kann auch nur die eigenen Termine abonnieren.'
+	},
+	{
+		date: '2026-10-30',
+		area: 'meeting.view',
+		title: 'Sonntage',
+		text: 'Neben dem Titel eines Sonntags zeigt ein Verlaufssymbol, wer wann was geändert hat. Alle Änderungen deiner Bereiche findest du im Benutzermenü unter „Änderungen“.'
+	},
+	{
+		date: '2026-10-30',
+		area: 'youth.view',
+		title: 'Jugend',
+		text: 'Neben dem Titel eines Jugendtermins zeigt ein Verlaufssymbol, wer wann was geändert hat. Alle Änderungen deiner Bereiche findest du im Benutzermenü unter „Änderungen“.'
+	},
+	{
+		date: '2026-10-30',
+		area: 'settings.edit',
+		title: 'Einstellungen',
+		text: 'Im Verlauf kannst du einzelne Änderungen rückgängig machen. Hat jemand den Abschnitt seither weiter bearbeitet, fragt die App vorher nach.'
 	}
 ];
 
