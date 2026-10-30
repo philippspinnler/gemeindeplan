@@ -22,6 +22,7 @@ export type Action =
 	| 'notes.prayer'
 	| 'users.manage'
 	| 'settings.edit'
+	| 'changes.reset'
 	| 'youth.view'
 	| 'youth.jm'
 	| 'youth.jd'
@@ -47,6 +48,7 @@ const MATRIX: Record<Action, Role[]> = {
 	'notes.prayer': ['admin', 'bischofschaft', 'gebete'],
 	'users.manage': ['admin'],
 	'settings.edit': ['admin'],
+	'changes.reset': ['admin'],
 	'youth.view': ['admin', 'bischofschaft', 'jm_berater', 'jd_leitung'],
 	'youth.jm': ['admin', 'bischofschaft', 'jm_berater'],
 	'youth.jd': ['admin', 'jd_leitung'],

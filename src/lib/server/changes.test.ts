@@ -147,7 +147,7 @@ describe('reset', () => {
 	it('resets a section to the state before the entry', () => {
 		setPrayer(u1, max, t0);
 		const [entry] = listChanges(db, 'admin');
-		expect(resetChange(db, { id: u2, role: 'bischofschaft' }, entry.id, false, minutes(1))).toEqual({ ok: true });
+		expect(resetChange(db, { id: u2, role: 'admin' }, entry.id, false, minutes(1))).toEqual({ ok: true });
 		expect(loadMeetingFullByDate(db, date)!.prayers.find((p) => p.position === 2)?.member ?? null).toBeNull();
 		expect(rows()).toHaveLength(2);
 	});
@@ -161,6 +161,14 @@ describe('reset', () => {
 		expect(loadMeetingFullByDate(db, date)!.prayers.find((p) => p.position === 2)?.member?.id).toBe(anna);
 		expect(resetChange(db, { id: u1, role: 'admin' }, entry.id, true, minutes(3))).toEqual({ ok: true });
 		expect(loadMeetingFullByDate(db, date)!.prayers.find((p) => p.position === 2)?.member ?? null).toBeNull();
+	});
+
+	it('only admins may reset, others only see', () => {
+		setPrayer(u1, max, t0);
+		expect(listChanges(db, 'gebete')[0].resettable).toBe(false);
+		expect(listChanges(db, 'admin')[0].resettable).toBe(true);
+		const [entry] = listChanges(db, 'admin');
+		expect(() => resetChange(db, { id: u2, role: 'bischofschaft' }, entry.id, false, minutes(1))).toThrow(UserError);
 	});
 
 	it('refuses reset without permission', () => {
@@ -199,7 +207,7 @@ describe('youth sections', () => {
 		recordChanges(db, u1, [ref('jugend.gemeinsam')], () => common(true), minutes(10));
 		expect(parts()).toEqual({ both: 'Velotour\nFussball' });
 		const entry = listChanges(db, 'admin', { sections: ['jugend.gemeinsam'] })[0];
-		expect(resetChange(db, { id: u2, role: 'bischofschaft' }, entry.id, false, minutes(11))).toEqual({ ok: true });
+		expect(resetChange(db, { id: u2, role: 'admin' }, entry.id, false, minutes(11))).toEqual({ ok: true });
 		expect(loadYouthEvent(db, wed)!.event.joint).toBe(false);
 		expect(parts()).toEqual({ jd: 'Velotour', jm: 'Fussball' });
 	});
@@ -238,7 +246,7 @@ describe('youth sections', () => {
 		recordChanges(db, u1, [{ section: 'ausfall', key: String(id) }], () => deleteBreak(db, id), minutes(20));
 		expect(getBreak(db, id)).toBeUndefined();
 		const [deleted] = breakEntries();
-		expect(resetChange(db, { id: u2, role: 'bischofschaft' }, deleted.id, false, minutes(21))).toEqual({ ok: true });
+		expect(resetChange(db, { id: u2, role: 'admin' }, deleted.id, false, minutes(21))).toEqual({ ok: true });
 		expect(getBreak(db, id)?.label).toBe('Winterferien');
 	});
 
@@ -246,7 +254,7 @@ describe('youth sections', () => {
 		const id = makeBreak();
 		const [created] = breakEntries();
 		expect(created.resettable).toBe(true);
-		resetChange(db, { id: u2, role: 'bischofschaft' }, created.id, false, minutes(10));
+		resetChange(db, { id: u2, role: 'admin' }, created.id, false, minutes(10));
 		expect(getBreak(db, id)).toBeUndefined();
 	});
 

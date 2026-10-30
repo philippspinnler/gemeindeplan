@@ -90,7 +90,7 @@ export function listChanges(db: Db, role: Role, filter: { key?: string; sections
 				label: def.label,
 				target: def.target(db, c.key),
 				lines: def.describe(db, parse(c.before), parse(c.after)),
-				resettable: resettable(def, c.before)
+				resettable: can(role, 'changes.reset') && resettable(def, c.before)
 			};
 		});
 }
@@ -100,7 +100,7 @@ export function resetChange(db: Db, user: { id: number; role: Role }, id: number
 	const entry = db.select().from(changes).where(eq(changes.id, id)).get();
 	const def = entry && SECTIONS[entry.section as SectionId];
 	if (!entry || !def) throw new UserError('Änderung nicht gefunden.');
-	if (!can(user.role, def.permission)) throw new UserError('Dafür fehlt dir die Berechtigung.');
+	if (!can(user.role, def.permission) || !can(user.role, 'changes.reset')) throw new UserError('Dafür fehlt dir die Berechtigung.');
 	if (!resettable(def, entry.before)) throw new UserError('Diese Änderung lässt sich nicht zurücksetzen.');
 	const ref: ChangeRef = { section: entry.section as SectionId, key: entry.key };
 	if (!force && json(def.read(db, ref.key)) !== entry.after) {
