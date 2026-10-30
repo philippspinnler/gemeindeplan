@@ -9,6 +9,7 @@ import {
 import { getHymnByNumber } from './hymns';
 import { memberQuery } from './members';
 import { UserError } from './forms';
+import { assertRecording } from './recording';
 
 export const KIND_LABELS: Record<MeetingKind, string> = {
 	normal: 'Normal',
@@ -144,10 +145,12 @@ export function saveGeneral(
 		guestMemberId?: number | null; chairMemberId?: number | null; stakeChanges?: boolean;
 	}
 ): void {
+	assertRecording();
 	db.update(meetings).set({ ...input, updatedAt: nowIso() }).where(eq(meetings.id, meetingId)).run();
 }
 
 export function savePrayers(db: Db, meetingId: number, prayers: PrayerInput[]): void {
+	assertRecording();
 	db.transaction((tx) => {
 		tx.delete(meetingPrayers).where(eq(meetingPrayers.meetingId, meetingId)).run();
 		for (const p of prayers) tx.insert(meetingPrayers).values({ meetingId, ...p }).run();
@@ -156,6 +159,7 @@ export function savePrayers(db: Db, meetingId: number, prayers: PrayerInput[]): 
 }
 
 export function saveTalks(db: Db, meetingId: number, talks: TalkInput[]): void {
+	assertRecording();
 	db.transaction((tx) => {
 		tx.delete(meetingTalks).where(eq(meetingTalks.meetingId, meetingId)).run();
 		for (const t of talks) tx.insert(meetingTalks).values({ meetingId, ...t }).run();
@@ -213,6 +217,7 @@ export function assignOpenSlot(db: Db, date: string, kind: AskKind, memberId: nu
 }
 
 export function saveAnnouncements(db: Db, meetingId: number, texts: string[]): void {
+	assertRecording();
 	db.transaction((tx) => {
 		tx.delete(announcements).where(eq(announcements.meetingId, meetingId)).run();
 		texts.forEach((text, i) => tx.insert(announcements).values({ meetingId, position: i + 1, text }).run());
@@ -220,6 +225,7 @@ export function saveAnnouncements(db: Db, meetingId: number, texts: string[]): v
 }
 
 export function saveCallings(db: Db, meetingId: number, items: CallingRow[]): void {
+	assertRecording();
 	db.transaction((tx) => {
 		tx.delete(callings).where(eq(callings.meetingId, meetingId)).run();
 		items.forEach((c, i) => tx.insert(callings).values({ meetingId, position: i + 1, ...c }).run());
@@ -236,6 +242,7 @@ export function saveMusic(
 		musicNote: string | null;
 	}
 ): { unknownNumbers: number[] } {
+	assertRecording();
 	const meeting = db.select().from(meetings).where(eq(meetings.id, meetingId)).get();
 	const isFastSunday = !!meeting && isFastLike(meeting.kind);
 	const unknownNumbers: number[] = [];
@@ -263,6 +270,7 @@ export function saveMusic(
 }
 
 export function saveConductor(db: Db, meetingId: number, conductorMemberId: number | null): void {
+	assertRecording();
 	db.update(meetings).set({ conductorMemberId, updatedAt: nowIso() }).where(eq(meetings.id, meetingId)).run();
 }
 

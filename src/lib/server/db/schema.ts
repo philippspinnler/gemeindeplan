@@ -1,5 +1,5 @@
 import { sql } from 'drizzle-orm';
-import { integer, sqliteTable, text, uniqueIndex } from 'drizzle-orm/sqlite-core';
+import { index, integer, sqliteTable, text, uniqueIndex } from 'drizzle-orm/sqlite-core';
 
 export const ROLES = ['admin', 'bischofschaft', 'gebete', 'musik', 'dirigent', 'jm_berater', 'jd_leitung'] as const;
 export type Role = (typeof ROLES)[number];
@@ -283,3 +283,18 @@ export type Invite = typeof invites.$inferSelect;
 export type YouthEvent = typeof youthEvents.$inferSelect;
 export type YouthIdea = typeof youthIdeas.$inferSelect;
 export type YouthBreak = typeof youthBreaks.$inferSelect;
+
+/** Change log: one row per changed data section, `before`/`after` are JSON snapshots (null = did not exist). */
+export const changes = sqliteTable(
+	'changes',
+	{
+		id: integer('id').primaryKey({ autoIncrement: true }),
+		at: text('at').notNull(),
+		userId: integer('user_id').references(() => users.id, { onDelete: 'set null' }),
+		section: text('section').notNull(),
+		key: text('key').notNull(),
+		before: text('before'),
+		after: text('after')
+	},
+	(t) => [index('changes_section_key').on(t.section, t.key, t.id)]
+);
