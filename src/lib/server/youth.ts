@@ -8,6 +8,7 @@ import {
 import { hasProgram, KIND_LABELS, membersById, versionHash } from './meetings';
 import { breakFor, listBreaks, YOUTH_BREAK_KIND_LABELS } from './youth-breaks';
 import { UserError } from './forms';
+import { assertRecording } from './recording';
 
 export const YOUTH_KIND_LABELS: Record<YouthEventKind, string> = {
 	klasse: 'Klasse',
@@ -143,6 +144,7 @@ function getEvent(db: Reader, eventId: number): YouthEvent {
 }
 
 export function saveYouthCommon(db: Db, eventId: number, input: YouthCommonInput): void {
+	assertRecording();
 	db.transaction((tx) => {
 		const ev = getEvent(tx, eventId);
 		tx.update(youthEvents)
@@ -177,6 +179,7 @@ export function saveYouthCommon(db: Db, eventId: number, input: YouthCommonInput
 }
 
 export function saveYouthPart(db: Db, eventId: number, side: YouthPartSide, input: YouthPartInput): void {
+	assertRecording();
 	const ev = getEvent(db, eventId);
 	if ((side === 'both') !== ev.joint) throw new UserError('Seite passt nicht zum Termin');
 	db.transaction((tx) => {
@@ -188,6 +191,7 @@ export function saveYouthPart(db: Db, eventId: number, side: YouthPartSide, inpu
 }
 
 export function saveYouthAdults(db: Db, eventId: number, entries: { memberId: number; present: boolean | null }[]): void {
+	assertRecording();
 	db.transaction((tx) => {
 		for (const e of entries) {
 			if (e.present === null) {

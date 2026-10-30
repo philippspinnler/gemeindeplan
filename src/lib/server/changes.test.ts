@@ -7,6 +7,9 @@ import { UserError } from './forms';
 import { createMember } from './members';
 import { createMeeting, loadMeetingFullByDate, saveConductor, saveGeneral, savePrayers } from './meetings';
 import { requestScope } from './recording';
+import { ensureYouthEvents, loadYouthEvent, saveYouthCommon, saveYouthPart } from './youth';
+import { createBreak, deleteBreak, getBreak, updateBreak } from './youth-breaks';
+import { createIdea, dismissIdea } from './youth-ideas';
 
 let db: Db;
 let meetingId: number;
@@ -153,5 +156,98 @@ describe('guard', () => {
 		expect(() => requestScope(() => savePrayers(db, meetingId, []))).toThrow();
 		expect(() => requestScope(() => recordChanges(db, u1, [gebete], () => savePrayers(db, meetingId, [])))).not.toThrow();
 		expect(() => savePrayers(db, meetingId, [])).not.toThrow();
+	});
+});
+
+describe('youth sections', () => {
+	const wed = '2026-11-04';
+	const ref = (section: ChangeRef['section']): ChangeRef => ({ section, key: wed });
+	const eventId = () => loadYouthEvent(db, wed)!.event.id;
+	const none = { leaderMemberId: null, leaderGroup: null };
+	const common = (joint: boolean) =>
+		saveYouthCommon(db, eventId(), { kind: joint ? 'gemeinsam_jd' : 'aktivitaet', joint, details: null, topic: null, topicUrl: null, snack: null });
+	const parts = () => Object.fromEntries(loadYouthEvent(db, wed)!.parts.map((p) => [p.side, p.text]));
+
+	beforeEach(() => {
+		ensureYouthEvents(db, '2026-11-01', 1);
+		recordChanges(db, u1, [ref('jugend.jd'), ref('jugend.jm')], () => {
+			saveYouthPart(db, eventId(), 'jd', { ...none, text: 'Velotour' });
+			saveYouthPart(db, eventId(), 'jm', { ...none, text: 'Fussball' });
+		}, t0);
+	});
+
+	it('undoing a joint toggle restores both sides', () => {
+		recordChanges(db, u1, [ref('jugend.gemeinsam')], () => common(true), minutes(10));
+		expect(parts()).toEqual({ both: 'Velotour\nFussball' });
+		const entry = listChanges(db, 'admin', { sections: ['jugend.gemeinsam'] })[0];
+		expect(resetChange(db, { id: u2, role: 'bischofschaft' }, entry.id, false, minutes(11))).toEqual({ ok: true });
+		expect(loadYouthEvent(db, wed)!.event.joint).toBe(false);
+		expect(parts()).toEqual({ jd: 'Velotour', jm: 'Fussball' });
+	});
+
+	it('a part edit after the toggle makes the reset ask first', () => {
+		recordChanges(db, u1, [ref('jugend.gemeinsam')], () => common(true), minutes(10));
+		const entry = listChanges(db, 'admin', { sections: ['jugend.gemeinsam'] })[0];
+		recordChanges(db, u2, [ref('jugend.beide')], () => saveYouthPart(db, eventId(), 'both', { ...none, text: 'Grillen' }), minutes(11));
+		expect(resetChange(db, { id: u1, role: 'admin' }, entry.id, false, minutes(12))).toHaveProperty('conflict');
+	});
+
+	it('JD leaders see JD but not JM entries', () => {
+		const sections = listChanges(db, 'jd_leitung').map((c) => c.section);
+		expect(sections).toContain('jugend.jd');
+		expect(sections).not.toContain('jugend.jm');
+	});
+
+	it('describes a part change', () => {
+		expect(listChanges(db, 'admin', { sections: ['jugend.jd'] })[0].lines).toEqual(['Aktivität: – → Velotour']);
+	});
+
+	const breakInput = { fromDate: '2026-12-20', toDate: '2027-01-03', label: 'Weihnachten', kind: 'ferien' as const };
+	const makeBreak = () => {
+		let id = 0;
+		recordChanges(db, u1, [], (created) => {
+			id = createBreak(db, breakInput).id;
+			created({ section: 'ausfall', key: String(id) });
+		}, t0);
+		return id;
+	};
+	const breakEntries = () => listChanges(db, 'admin', { sections: ['ausfall'] });
+
+	it('a deleted break comes back with the same id', () => {
+		const id = makeBreak();
+		recordChanges(db, u1, [{ section: 'ausfall', key: String(id) }], () => updateBreak(db, id, { ...breakInput, label: 'Winterferien' }), minutes(10));
+		recordChanges(db, u1, [{ section: 'ausfall', key: String(id) }], () => deleteBreak(db, id), minutes(20));
+		expect(getBreak(db, id)).toBeUndefined();
+		const [deleted] = breakEntries();
+		expect(resetChange(db, { id: u2, role: 'bischofschaft' }, deleted.id, false, minutes(21))).toEqual({ ok: true });
+		expect(getBreak(db, id)?.label).toBe('Winterferien');
+	});
+
+	it('resetting a created break deletes it', () => {
+		const id = makeBreak();
+		const [created] = breakEntries();
+		expect(created.resettable).toBe(true);
+		resetChange(db, { id: u2, role: 'bischofschaft' }, created.id, false, minutes(10));
+		expect(getBreak(db, id)).toBeUndefined();
+	});
+
+	it('a reset of a changed-then-deleted break asks first', () => {
+		const id = makeBreak();
+		recordChanges(db, u1, [{ section: 'ausfall', key: String(id) }], () => updateBreak(db, id, { ...breakInput, label: 'Winterferien' }), minutes(10));
+		const update = breakEntries()[0];
+		recordChanges(db, u2, [{ section: 'ausfall', key: String(id) }], () => deleteBreak(db, id), minutes(11));
+		expect(resetChange(db, { id: u1, role: 'admin' }, update.id, false, minutes(12))).toHaveProperty('conflict');
+		resetChange(db, { id: u1, role: 'admin' }, update.id, true, minutes(13));
+		expect(getBreak(db, id)?.label).toBe('Weihnachten');
+	});
+
+	it('a created idea is not resettable, its dismissal is', () => {
+		let id = 0;
+		recordChanges(db, u1, [], (created) => {
+			id = createIdea(db, { text: 'Bowling', side: 'jm', note: null, createdBy: u1 }).id;
+			created({ section: 'idee', key: String(id) });
+		}, t0);
+		recordChanges(db, u1, [{ section: 'idee', key: String(id) }], () => dismissIdea(db, id), minutes(10));
+		expect(listChanges(db, 'admin', { sections: ['idee'] }).map((c) => c.resettable)).toEqual([true, false]);
 	});
 });

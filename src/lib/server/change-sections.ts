@@ -1,13 +1,21 @@
+import { and, asc, eq } from 'drizzle-orm';
 import { formatDateLong } from '../dates';
 import type { Db } from './db';
-import { HYMN_SLOTS, type CallingKind, type HymnSlot, type MeetingKind } from './db/schema';
+import {
+	HYMN_SLOTS, youthBreaks, youthEventAdults, youthEventParts, youthEvents, youthIdeas,
+	type CallingKind, type HymnSlot, type MeetingKind, type YouthArea, type YouthBreak, type YouthEventKind, type YouthPartSide
+} from './db/schema';
 import { spokenName } from './members';
 import {
 	KIND_LABELS, SLOT_LABELS, loadMeetingFullByDate, membersById, saveAnnouncements, saveCallings, saveConductor, saveGeneral, saveMusic, savePrayers, saveTalks, type CallingRow
 } from './meetings';
 import type { Action } from './permissions';
+import { saveYouthPart, YOUTH_AREA_LABELS, YOUTH_KIND_LABELS } from './youth';
+import { YOUTH_BREAK_KIND_LABELS } from './youth-breaks';
 
-export type SectionId = 'sonntag.programm' | 'sonntag.gebete' | 'sonntag.musik' | 'sonntag.leitung';
+export type SectionId =
+	| 'sonntag.programm' | 'sonntag.gebete' | 'sonntag.musik' | 'sonntag.leitung'
+	| 'jugend.gemeinsam' | 'jugend.jd' | 'jugend.jm' | 'jugend.beide' | 'jugend.erwachsene' | 'idee' | 'ausfall';
 export interface ChangeRef { section: SectionId; key: string }
 export type Area = 'Sonntag' | 'Jugend' | 'Mitglieder' | 'Notizen' | 'Lieder' | 'Einstellungen';
 
@@ -158,7 +166,190 @@ const leitung: SectionDef = {
 	target: (_db, date) => sunday(date)
 };
 
+interface PartSnap { text: string | null; details: string | null; leaderMemberId: number | null; leaderGroup: string | null; area: YouthArea | null; teacherMemberId: number | null }
+interface CommonSnap {
+	kind: YouthEventKind; joint: boolean; details: string | null; topic: string | null; topicUrl: string | null; topicJm: string | null; topicUrlJm: string | null;
+	snack: string | null; noSnack: boolean; noSeminar: boolean; thoughtMemberId: number | null;
+	parts: (PartSnap & { side: YouthPartSide })[];
+}
+type AdultsSnap = { memberId: number; present: boolean }[];
+type IdeaSnap = { text: string; side: YouthPartSide; note: string | null; plannedEventId: number | null; dismissedAt: string | null };
+type BreakSnap = Omit<YouthBreak, 'id'>;
+
+const SIDE_LABELS: Record<YouthPartSide, string> = { jd: 'JD', jm: 'JM', both: 'Gemeinsam' };
+const youthDate = (date: string) => ({ label: `Jugend, ${formatDateLong(date)}`, href: `/jugend/${date}` });
+const eventOf = (db: Db, date: string) => db.select().from(youthEvents).where(eq(youthEvents.date, date)).get();
+const eventIdOf = (db: Db, date: string) => {
+	const ev = eventOf(db, date);
+	if (!ev) throw new Error(`No youth event ${date}`);
+	return ev.id;
+};
+const partSnap = (p: typeof youthEventParts.$inferSelect): PartSnap => ({
+	text: p.text, details: p.details, leaderMemberId: p.leaderMemberId, leaderGroup: p.leaderGroup, area: p.area, teacherMemberId: p.teacherMemberId
+});
+const partsOf = (db: Db, eventId: number) => db.select().from(youthEventParts).where(eq(youthEventParts.eventId, eventId)).orderBy(asc(youthEventParts.side)).all();
+
+const partLines: Line<PartSnap>[] = [
+	['Aktivität', (s) => s.text ?? ''],
+	['Details', (s) => s.details ?? ''],
+	['Leitung', (s, n) => n(s.leaderMemberId) || (s.leaderGroup ?? '')],
+	['Bereich', (s) => (s.area ? YOUTH_AREA_LABELS[s.area] : '')],
+	['Lehrer', (s, n) => n(s.teacherMemberId)]
+];
+
+const gemeinsam: SectionDef = {
+	area: 'Jugend',
+	label: 'Allgemein',
+	permission: 'youth.common',
+	read(db, date) {
+		const e = eventOf(db, date);
+		if (!e) return null;
+		return {
+			kind: e.kind, joint: e.joint, details: e.details, topic: e.topic, topicUrl: e.topicUrl, topicJm: e.topicJm, topicUrlJm: e.topicUrlJm,
+			snack: e.snack, noSnack: e.noSnack, noSeminar: e.noSeminar, thoughtMemberId: e.thoughtMemberId,
+			parts: partsOf(db, e.id).map((p) => ({ side: p.side, ...partSnap(p) }))
+		} satisfies CommonSnap;
+	},
+	// Writes the parts directly: saveYouthCommon would merge or split them again on a joint change.
+	write(db, date, snapshot) {
+		const { parts, ...fields } = snapshot as CommonSnap;
+		const eventId = eventIdOf(db, date);
+		db.update(youthEvents).set({ ...fields, updatedAt: new Date().toISOString() }).where(eq(youthEvents.id, eventId)).run();
+		db.delete(youthEventParts).where(eq(youthEventParts.eventId, eventId)).run();
+		for (const p of parts) db.insert(youthEventParts).values({ eventId, ...p }).run();
+	},
+	describe: (db, before, after) =>
+		diff<CommonSnap>(db, [
+			['Art', (s) => YOUTH_KIND_LABELS[s.kind]],
+			['Gemeinsam', (s) => yes(s.joint)],
+			['Details', (s) => s.details ?? ''],
+			['Thema', (s) => s.topic ?? ''],
+			['Link', (s) => s.topicUrl ?? ''],
+			['Thema JM', (s) => s.topicJm ?? ''],
+			['Link JM', (s) => s.topicUrlJm ?? ''],
+			['Snack', (s) => (s.noSnack ? 'kein Snack' : (s.snack ?? ''))],
+			['Kein Seminar', (s) => yes(s.noSeminar)],
+			['Gedanke', (s, n) => n(s.thoughtMemberId)],
+			...(['jd', 'jm', 'both'] as const).map((side): Line<CommonSnap> => [SIDE_LABELS[side], (s) => s.parts.find((p) => p.side === side)?.text ?? ''])
+		], before, after, (s) => [s.thoughtMemberId]),
+	target: (_db, date) => youthDate(date)
+};
+
+function part(side: YouthPartSide, permission: Action): SectionDef {
+	return {
+		area: 'Jugend',
+		label: SIDE_LABELS[side],
+		permission,
+		read(db, date) {
+			const e = eventOf(db, date);
+			if (!e) return null;
+			const p = partsOf(db, e.id).find((x) => x.side === side);
+			return { part: p ? partSnap(p) : null };
+		},
+		write(db, date, snapshot) {
+			const p = (snapshot as { part: PartSnap | null }).part;
+			const eventId = eventIdOf(db, date);
+			if (p) saveYouthPart(db, eventId, side, p);
+			else db.delete(youthEventParts).where(and(eq(youthEventParts.eventId, eventId), eq(youthEventParts.side, side))).run();
+		},
+		describe: (db, before, after) =>
+			diff<PartSnap>(db, partLines, (before as { part: PartSnap | null } | null)?.part ?? null, (after as { part: PartSnap | null } | null)?.part ?? null, (s) => [s.leaderMemberId, s.teacherMemberId]),
+		target: (_db, date) => youthDate(date)
+	};
+}
+
+const erwachsene: SectionDef = {
+	area: 'Jugend',
+	label: 'Erwachsene',
+	permission: 'youth.common',
+	read(db, date) {
+		const e = eventOf(db, date);
+		if (!e) return null;
+		return db.select({ memberId: youthEventAdults.memberId, present: youthEventAdults.present }).from(youthEventAdults)
+			.where(eq(youthEventAdults.eventId, e.id)).orderBy(asc(youthEventAdults.memberId)).all() satisfies AdultsSnap;
+	},
+	write(db, date, snapshot) {
+		const eventId = eventIdOf(db, date);
+		db.delete(youthEventAdults).where(eq(youthEventAdults.eventId, eventId)).run();
+		for (const a of snapshot as AdultsSnap) db.insert(youthEventAdults).values({ eventId, ...a }).run();
+	},
+	describe(db, before, after) {
+		const ids = [...new Set([...((before as AdultsSnap | null) ?? []), ...((after as AdultsSnap | null) ?? [])].map((a) => a.memberId))];
+		const people = membersById(db, ids);
+		const lines = ids.map((id): Line<AdultsSnap> => [people.has(id) ? spokenName(people.get(id)!) : 'Unbekannt', (s) => {
+			const a = s.find((x) => x.memberId === id);
+			return a ? (a.present ? 'anwesend' : 'abwesend') : '';
+		}]);
+		return diff<AdultsSnap>(db, lines, before, after);
+	},
+	target: (_db, date) => youthDate(date)
+};
+
+const idee: SectionDef = {
+	area: 'Jugend',
+	label: 'Idee',
+	permission: 'youth.common',
+	read(db, id) {
+		const i = db.select().from(youthIdeas).where(eq(youthIdeas.id, Number(id))).get();
+		return i ? ({ text: i.text, side: i.side, note: i.note, plannedEventId: i.plannedEventId, dismissedAt: i.dismissedAt } satisfies IdeaSnap) : null;
+	},
+	write(db, id, snapshot) {
+		const { plannedEventId, dismissedAt } = snapshot as IdeaSnap;
+		db.update(youthIdeas).set({ plannedEventId, dismissedAt }).where(eq(youthIdeas.id, Number(id))).run();
+	},
+	describe(db, before, after) {
+		const status = (s: IdeaSnap) => {
+			if (s.dismissedAt) return 'verworfen';
+			if (s.plannedEventId === null) return 'offen';
+			const e = db.select({ date: youthEvents.date }).from(youthEvents).where(eq(youthEvents.id, s.plannedEventId)).get();
+			return e ? `eingeplant am ${formatDateLong(e.date)}` : 'eingeplant';
+		};
+		return diff<IdeaSnap>(db, [['Idee', (s) => s.text], ['Notiz', (s) => s.note ?? ''], ['Status', status]], before, after);
+	},
+	target(db, id) {
+		const i = db.select({ text: youthIdeas.text }).from(youthIdeas).where(eq(youthIdeas.id, Number(id))).get();
+		return { label: i ? `Idee: ${i.text}` : 'Idee', href: '/jugend/ideen' };
+	}
+};
+
+const ausfall: SectionDef = {
+	area: 'Jugend',
+	label: 'Ausfall',
+	permission: 'youth.common',
+	deletesCreated: true,
+	read(db, id) {
+		const b = db.select().from(youthBreaks).where(eq(youthBreaks.id, Number(id))).get();
+		if (!b) return null;
+		const { id: _, ...snap } = b;
+		return snap satisfies BreakSnap;
+	},
+	write(db, id, snapshot) {
+		const b = snapshot as BreakSnap | null;
+		if (!b) db.delete(youthBreaks).where(eq(youthBreaks.id, Number(id))).run();
+		else db.insert(youthBreaks).values({ id: Number(id), ...b }).onConflictDoUpdate({ target: youthBreaks.id, set: b }).run();
+	},
+	describe: (db, before, after) =>
+		diff<BreakSnap>(db, [
+			['Art', (s) => YOUTH_BREAK_KIND_LABELS[s.kind]],
+			['Bezeichnung', (s) => s.label ?? ''],
+			['Von', (s) => formatDateLong(s.fromDate)],
+			['Bis', (s) => formatDateLong(s.toDate)],
+			['Sagt Aktivität ab', (s) => yes(s.cancels)]
+		], before, after),
+	target(db, id) {
+		const b = db.select().from(youthBreaks).where(eq(youthBreaks.id, Number(id))).get();
+		return b ? { label: `Ausfall: ${b.label ?? YOUTH_BREAK_KIND_LABELS[b.kind]}`, href: `/jugend/ausfaelle/${id}` } : { label: 'Ausfall (gelöscht)', href: null };
+	}
+};
+
 export const SECTIONS: Record<SectionId, SectionDef> = {
+	'jugend.gemeinsam': gemeinsam,
+	'jugend.jd': part('jd', 'youth.jd'),
+	'jugend.jm': part('jm', 'youth.jm'),
+	'jugend.beide': part('both', 'youth.common'),
+	'jugend.erwachsene': erwachsene,
+	idee,
+	ausfall,
 	'sonntag.programm': programm,
 	'sonntag.gebete': gebete,
 	'sonntag.musik': musik,

@@ -3,6 +3,7 @@ import { addDays, toIso, parseIso } from '$lib/dates';
 import type { Db } from './db';
 import { YOUTH_BREAK_KINDS, youthBreaks, type YouthBreak } from './db/schema';
 import { optStr, str, UserError } from './forms';
+import { assertRecording } from './recording';
 
 export function listBreaks(db: Db, from?: string): YouthBreak[] {
 	const q = db.select().from(youthBreaks);
@@ -41,11 +42,13 @@ function check(input: BreakInput) {
 }
 
 export function createBreak(db: Db, input: BreakInput): YouthBreak {
+	assertRecording();
 	check(input);
 	return db.insert(youthBreaks).values(input).returning().get();
 }
 
 export function updateBreak(db: Db, id: number, input: BreakInput): void {
+	assertRecording();
 	check(input);
 	db.update(youthBreaks).set(input).where(eq(youthBreaks.id, id)).run();
 }
@@ -58,6 +61,7 @@ export function getBreak(db: Db, id: number): YouthBreak | undefined {
 export const breakVersion = (b: YouthBreak) => JSON.stringify([b.fromDate, b.toDate, b.label, b.kind, b.cancels]);
 
 export function deleteBreak(db: Db, id: number) {
+	assertRecording();
 	db.delete(youthBreaks).where(eq(youthBreaks.id, id)).run();
 }
 

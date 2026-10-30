@@ -1,6 +1,7 @@
 import { and, desc, eq, isNotNull, isNull, or } from 'drizzle-orm';
 import type { Db } from './db';
 import { users, youthIdeas, type YouthIdea, type YouthPartSide } from './db/schema';
+import { assertRecording } from './recording';
 
 export function listIdeas(db: Db, opts: { open: boolean }): (YouthIdea & { createdByName: string })[] {
 	const open = and(isNull(youthIdeas.dismissedAt), isNull(youthIdeas.plannedEventId));
@@ -15,14 +16,17 @@ export function listIdeas(db: Db, opts: { open: boolean }): (YouthIdea & { creat
 }
 
 export function createIdea(db: Db, input: { text: string; side: YouthPartSide; note: string | null; createdBy: number }): YouthIdea {
+	assertRecording();
 	return db.insert(youthIdeas).values(input).returning().get();
 }
 
 export function dismissIdea(db: Db, id: number) {
+	assertRecording();
 	db.update(youthIdeas).set({ dismissedAt: new Date().toISOString() }).where(eq(youthIdeas.id, id)).run();
 }
 
 export function planIdea(db: Db, id: number, eventId: number) {
+	assertRecording();
 	db.update(youthIdeas).set({ plannedEventId: eventId, dismissedAt: null }).where(eq(youthIdeas.id, id)).run();
 }
 
