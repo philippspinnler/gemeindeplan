@@ -124,6 +124,12 @@ describe('class topics', () => {
 		expect(setClassTopics(db, admin, [{ datum: sunday, thema: 'A' }], false)[0]).toMatchObject({ status: 'abgelehnt', grund: 'keine Klasse: Klasse mit den Erwachsenen' });
 	});
 
+	it('names why a class is off without free text', () => {
+		common(sunday, { kind: 'erwachsene', details: 'bei Familie Muster' });
+		expect(readClasses(db, admin, sunday, sunday)[0].grund).toBe('Klasse mit den Erwachsenen');
+		expect(JSON.stringify(setClassTopics(db, admin, [{ datum: sunday, thema: 'A' }], false))).not.toContain('Muster');
+	});
+
 	it('creates a class that is not stored yet', () => {
 		expect(setClassTopics(db, admin, [{ datum: '2027-06-06', thema: 'Gebet' }], false)[0].status).toBe('eingetragen');
 		expect(event('2027-06-06').topic).toBe('Gebet');

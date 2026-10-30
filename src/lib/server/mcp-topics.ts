@@ -5,7 +5,8 @@ import type { Role } from './db/schema';
 import { UserError } from './forms';
 import { createMeeting, getMeetingByDate, hasProgram, KIND_LABELS, setMeetingTheme } from './meetings';
 import { can, type Action } from './permissions';
-import { ensureYouthEvents, listYouthEvents, setClassTopics as writeClassTopics, type ClassTopics } from './youth';
+import { classHeld, ensureYouthEvents, listYouthEvents, setClassTopics as writeClassTopics, YOUTH_KIND_LABELS, type ClassTopics, type YouthEventFull } from './youth';
+import { YOUTH_BREAK_KIND_LABELS } from './youth-breaks';
 
 export type McpUser = { id: number; role: Role };
 export interface DateResult {
@@ -78,6 +79,13 @@ export function setSundayThemes(db: Db, user: McpUser, eintraege: { datum: strin
 	});
 }
 
+/** Why a class is off, from labels only: the app's off text can carry free-text details with names. */
+function offReason(e: YouthEventFull): string {
+	if (e.meetingKind && !classHeld(e.meetingKind)) return KIND_LABELS[e.meetingKind];
+	if (e.offBreak) return YOUTH_BREAK_KIND_LABELS[e.offBreak.kind];
+	return YOUTH_KIND_LABELS[e.event.kind];
+}
+
 const sundayClasses = (db: Db, von: string, bis: string) => listYouthEvents(db, von, bis).filter((e) => e.weekday === 'sunday');
 
 export function readClasses(db: Db, user: McpUser, von: string, bis: string) {
@@ -86,7 +94,7 @@ export function readClasses(db: Db, user: McpUser, von: string, bis: string) {
 	return sundayClasses(db, von, bis).map((e) => ({
 		datum: e.event.date,
 		findetStatt: e.status !== 'off',
-		grund: e.status === 'off' ? e.offLabel : null,
+		grund: e.status === 'off' ? offReason(e) : null,
 		gemeinsam: e.event.joint,
 		thema: e.event.topic,
 		link: e.event.topicUrl,
@@ -108,7 +116,7 @@ export function setClassTopics(
 		if ([x.link, x.link_jm].some((l) => l?.trim() && !/^https?:\/\//i.test(l.trim()))) return refused(datum, 'Der Link muss mit http:// oder https:// beginnen.');
 		ensureYouthEvents(db, datum, 0);
 		const [e] = sundayClasses(db, datum, datum);
-		if (e.status === 'off') return refused(datum, `keine Klasse: ${e.offLabel}`);
+		if (e.status === 'off') return refused(datum, `keine Klasse: ${offReason(e)}`);
 		if (e.event.joint && (x.thema_jm?.trim() || x.link_jm?.trim())) return refused(datum, 'Klasse ist gemeinsam, kein eigenes JM-Thema');
 		const ev = e.event;
 		const { patch, eingetragen, uebersprungen } = plan<keyof ClassTopics>([
