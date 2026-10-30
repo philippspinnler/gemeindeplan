@@ -20,12 +20,12 @@ Hauptzweck ist das Nachvollziehen. Zurücksetzen ist das Werkzeug, wenn man dabe
   - Einstellungen (Gemeindename, Jugend-Zeiten, Jugendseiten-Token als „neu erzeugt“ ohne Wert).
 - **Zusammenfassen:** Speicherungen derselben Person am selben Abschnitt innerhalb von 5 Minuten ergeben einen Eintrag (vorher = Stand vor der ersten, nachher = Stand nach der letzten Speicherung). Grund: Autosave speichert bei jeder Feldänderung.
 - **Anzeige beim Objekt:** Beim Sonntag und beim Jugendtermin eine Zeile „Zuletzt geändert von Anna B., Dienstag 20:14“. Ein Klick öffnet den Verlauf dieses Termins, neueste zuerst: Person, Zeitpunkt, Abschnitt, was sich geändert hat (vorher → nachher, lesbar mit Namen statt IDs).
-- **Gesamtliste** unter Einstellungen → Änderungen: alle Einträge, neueste zuerst, filterbar nach Person und Bereich, mit Link zum betroffenen Objekt.
+- **Gesamtliste** auf der Seite „Änderungen“ (Benutzermenü): alle Einträge, neueste zuerst, filterbar nach Person und Bereich, mit Link zum betroffenen Objekt.
 - **Zurücksetzen** pro Eintrag, beim Objekt und in der Gesamtliste: „Auf diesen Stand zurücksetzen“ schreibt den Stand *vorher* dieses Eintrags zurück. (Geplanter Wortlaut der Aktion bleibt dem Builder; wichtig ist, dass klar ist, welcher Stand entsteht.)
   - Das Zurücksetzen läuft über dieselbe Speicherlogik wie eine normale Änderung: es wird selbst protokolliert, sendet ein Live-Event, und andere offene Browser aktualisieren sich.
   - Wurde der Abschnitt seit diesem Eintrag weiter geändert, fragt die App vorher nach („Seither von Max T. geändert. Trotzdem zurücksetzen?“) statt still zu überschreiben.
   - Ein Eintrag „gelöscht“ (Ausfall/Pfahlanlass) lässt sich zurücksetzen, d. h. der Eintrag wird wiederhergestellt. Ein „angelegt“-Eintrag zurücksetzen heisst löschen – nur wo die App das Löschen ohnehin anbietet; sonst kein Zurücksetzen-Knopf.
-- **Rechte:** Wer einen Bereich bearbeiten darf (`permissions.ts`), sieht dessen Einträge und darf sie zurücksetzen. Die Gesamtliste zeigt jeder Person nur diese Bereiche. Der Link „Einstellungen → Änderungen“ ist für alle Rollen erreichbar, die irgendetwas bearbeiten dürfen.
+- **Rechte:** Wer einen Bereich bearbeiten darf (`permissions.ts`), sieht dessen Einträge und darf sie zurücksetzen. Die Gesamtliste zeigt jeder Person nur diese Bereiche. Die Seite „Änderungen“ ist für alle Rollen erreichbar, die irgendetwas bearbeiten dürfen.
 - **Aufbewahrung:** Einträge älter als 90 Tage werden automatisch gelöscht.
 
 ## Nicht-Ziele
@@ -56,7 +56,7 @@ Hauptzweck ist das Nachvollziehen. Zurücksetzen ist das Werkzeug, wenn man dabe
 
 - Aufbewahrung 90 Tage.
 - Zusammenfassen innerhalb von 5 Minuten, gleiche Person, gleicher Abschnitt.
-- Ort der Gesamtliste: Einstellungen → Änderungen.
+- Ort der Gesamtliste: eigene Seite `/aenderungen`, verlinkt im Benutzermenü (Einstellungen ist nur für Admins sichtbar).
 - Verweist ein alter Stand auf ein inzwischen deaktiviertes Mitglied, wird es trotzdem eingesetzt (wie heute, wenn ein deaktiviertes Mitglied schon eingetragen ist).
 - Für Mitglieder, Lieder, Pfahlbeamte usw. gibt es keinen Verlauf „beim Objekt“, nur die Gesamtliste (gefiltert). Ausnahme lohnt sich nicht.
 - Einträge aus Bereichen, auf die die eigene Rolle nur Leserechte hat, werden nicht angezeigt (Recht = Bearbeitungsrecht).
