@@ -51,7 +51,7 @@
 		<h2>Offene Einladungen</h2>
 		<div class="table-wrap">
 			<table class="table stack">
-				<thead><tr><th>Name</th><th>E-Mail</th><th>Rolle</th><th>Gültig bis</th><th></th></tr></thead>
+				<thead><tr><th>Mitglied</th><th>E-Mail</th><th>Rolle</th><th>Gültig bis</th><th></th></tr></thead>
 				<tbody>
 					{#each data.invites as inv}
 						<tr>
@@ -74,7 +74,7 @@
 	<h2>Konten</h2>
 	<div class="table-wrap">
 		<table class="table stack">
-			<thead><tr><th>Name</th><th>E-Mail</th><th>Rolle</th><th>Status</th><th></th></tr></thead>
+			<thead><tr><th>Mitglied</th><th>E-Mail</th><th>Rolle</th><th>Status</th><th></th></tr></thead>
 			<tbody>
 				{#each data.users as u}
 					<tr>
