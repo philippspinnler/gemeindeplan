@@ -6,7 +6,7 @@ import { ROLE_VIEW_COOKIE, effectiveRole } from '$lib/server/role-view';
 import { live } from '$lib/server/live';
 import { requestScope } from '$lib/server/recording';
 
-const PUBLIC = new Set(['/login', '/setup', '/health']);
+const PUBLIC = new Set(['/login', '/setup', '/health', '/mcp']);
 
 export const handle: Handle = (input) => requestScope(() => handleRequest(input));
 
@@ -41,7 +41,7 @@ const handleRequest: Handle = async ({ event, resolve }) => {
 	}
 	const response = await resolve(event);
 	// Every successful POST changes data (form actions): all open browsers reload.
-	if (event.request.method === 'POST' && response.status < 400 && path !== '/presence' && path !== '/neuigkeiten') live.changed(path);
+	if (event.request.method === 'POST' && response.status < 400 && path !== '/presence' && path !== '/neuigkeiten' && path !== '/mcp') live.changed(path);
 	return response;
 };
 
